@@ -1,0 +1,3 @@
+#!/bin/bash
+cat docs-markdown.tmp/globals.md | grep -v '^Defined in' > api.md
+rm -fr docs-markdown.tmp

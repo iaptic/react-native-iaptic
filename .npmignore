@@ -1,5 +1,7 @@
 # Ignore source files
 src/
+docs/
+example/
 tsconfig.json
 jest.config.js
 *.test.ts

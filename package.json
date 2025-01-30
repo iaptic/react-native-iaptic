@@ -1,5 +1,5 @@
 {
-  "name": "iaptic-rn",
+  "name": "react-native-iaptic",
   "version": "1.0.0",
   "description": "React Native In-App Purchase library with Iaptic receipt validation",
   "main": "lib/index.js",
@@ -14,7 +14,10 @@
     "build": "rm -rf lib/ && tsc",
     "prepare": "npm run build",
     "test": "jest --setupFiles ./jest.setup.js",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "docs": "typedoc src/index.ts",
+    "docs-md": "typedoc --plugin typedoc-plugin-markdown --out ./docs-markdown.tmp --outputFileStrategy modules src/index.ts && ./postprocessMarkdown",
+    "prepublishOnly": "npm run build && npm run docs-md"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.0",
@@ -43,7 +46,9 @@
     "metro-react-native-babel-preset": "^0.77.0",
     "react-test-renderer": "18.2.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "typedoc": "^0.27.6",
+    "typedoc-plugin-markdown": "^4.4.1"
   },
   "keywords": [
     "react-native",
