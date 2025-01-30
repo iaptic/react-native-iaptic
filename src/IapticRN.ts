@@ -56,6 +56,14 @@ export class IapticRN {
   /**
    * Creates a new instance of IapticRN
    * @param config - Configuration for the iaptic service
+   * @example
+   * ```typescript
+   * const iaptic = new IapticRN({
+   *   apiKey: 'prod_123456789',
+   *   iosBundleId: 'com.yourcompany.app',
+   *   androidPackageName: 'com.yourcompany.app',
+   * });
+   * ```
    */
   constructor(config: IapticConfig) {
     logger.debug('IapticRN constructor');
@@ -102,6 +110,15 @@ export class IapticRN {
    * - prepare the connection with the store.
    * - load products defined with setProductDefinitions()
    * - load available purchases
+   * @example
+   * ```typescript
+   * try {
+   *   await iaptic.initialize();
+   *   console.log('Products loaded:', iaptic.products.all());
+   *   console.log('Active purchases:', iaptic.purchases.list());
+   * } catch (error) {
+   *   console.error('Initialization failed:', error);
+   * }
    */
   async initialize() {
     await this.initConnection();
@@ -179,6 +196,18 @@ export class IapticRN {
    * Order a product with an offer.
    * 
    * @param offer - The offer to order
+   * @example
+   * ```typescript
+   * // Order a subscription offer
+   * const subscriptionOffer = iaptic.products.get('premium_monthly')?.offers[0];
+   * if (subscriptionOffer) {
+   *   try {
+   *     await iaptic.order(subscriptionOffer);
+   *     console.log('Purchase started successfully');
+   *   } catch (error) {
+   *     console.error('Purchase failed:', error);
+   *   }
+   * }
    */
   async order(offer: IapticOffer) {
     logger.info(`order(${JSON.stringify(offer)}) applicationUsername:${this.applicationUsername}`);
@@ -307,6 +336,22 @@ export class IapticRN {
    *   { id: 'coins_500', type: 'consumable', tokenType: 'coins', tokenValue: 500 },
    * ]);
    * ```
+   * @example
+   * ```typescript
+   * // Define a subscription and consumable product
+   * iaptic.setProductDefinitions([
+   *   {
+   *     id: 'premium_monthly',
+   *     type: 'paid subscription',
+   *     entitlements: ['premium'],
+   *   },
+   *   {
+   *     id: 'coins_1000',
+   *     type: 'consumable',
+   *     tokenType: 'coins',
+   *     tokenValue: 1000,
+   *   }
+   * ]);
    */
   setProductDefinitions(definitions: IapticProductDefinition[]): void {
     this.products.add(definitions, [], []);
@@ -405,8 +450,15 @@ export class IapticRN {
    * 
    * @example
    * ```typescript
-   * // Check if user has premium access
-   * const hasPremium = iaptic.checkEntitlement('premium');
+   * // Check premium access
+   * if (iaptic.checkEntitlement('premium')) {
+   *   showPremiumContent();
+   * } else {
+   *   showUpgradePrompt();
+   * }
+   * 
+   * // Check specific feature access
+   * const hasCoolFeature = iaptic.checkEntitlement('cool_feature');
    * ```
    * 
    * @param featureId - The unique identifier for the feature/content (e.g. "premium", "gold_status")
@@ -514,7 +566,28 @@ export class IapticRN {
     }
   }
 
-  /** Returns the number of purchases restored */
+  /**
+   * Restore purchases from the Store.
+   * 
+   * @param progressCallback - Callback function that will be called with the progress of the restore operation
+   *                           - The initial call is with -1, 0
+   *                           - Subsequent calls are with the current progress
+   *                           - The final call will have processed === total
+   * 
+   * @returns The number of purchases restored
+   * @example
+   * ```typescript
+   * // Restore purchases with progress updates
+   * iaptic.restorePurchases((processed, total) => {
+   *   console.log(`Processed ${processed} of ${total} purchases`);
+   * })
+   * .then(numRestored => {
+   *   console.log(`Restored ${numRestored} purchases`);
+   * })
+   * .catch(error => {
+   *   console.error('Restore failed:', error);
+   * });
+   */
   async restorePurchases(progressCallback: (processed: number, total: number) => void): Promise<number> {
     // Make sure the user-provided callback doesn't impact the processing
     const progress = (processed: number, total: number) => {

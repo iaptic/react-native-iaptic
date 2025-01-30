@@ -4,6 +4,46 @@
  * Provides in-app purchase functionality with integrated receipt validation
  * through the Iaptic service.
  * 
+ * @example Quick Start
+ * ```typescript
+ * // 1. Initialize with your configuration
+ * const iaptic = new IapticRN({
+ *   apiKey: 'YOUR_API_KEY',
+ *   iosBundleId: 'com.yourcompany.app',
+ *   androidPackageName: 'com.yourcompany.app',
+ *   showAlerts: true
+ * });
+ * 
+ * // 2. Define your products
+ * iaptic.setProductDefinitions([
+ *   {
+ *     id: 'premium_monthly',
+ *     type: 'paid subscription',
+ *     entitlements: ['premium']
+ *   },
+ *   {
+ *     id: 'coins_100',
+ *     type: 'consumable',
+ *     tokenType: 'coins',
+ *     tokenValue: 100
+ *   }
+ * ]);
+ * 
+ * // 3. Initialize connection and load products/purchases
+ * await iaptic.initialize();
+ * 
+ * // 4. Handle purchases
+ * const offer = iaptic.products.get('premium_monthly')?.offers[0];
+ * if (offer) {
+ *   await iaptic.order(offer); 
+ * }
+ * 
+ * // 5. Check access
+ * if (iaptic.checkEntitlement('premium')) {
+ *   // Unlock premium features
+ * }
+ * ```
+ * 
  * @packageDocumentation
  */
 

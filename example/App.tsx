@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Text, ScrollView } from 'react-native';
-import { AppStateManager, initialAppState } from './src/AppState';
-import { AppService } from './src/AppService';
-import { IapticActiveSubscription, IapticLogger, IapticLoggerVerbosityLevel, IapticUtils } from './src/iaptic-rn';
+import { IapticActiveSubscription, IapticLogger, IapticLoggerVerbosityLevel, IapticUtils } from 'react-native-iaptic';
+import { AppStateManager, initialAppState } from './AppState';
+import { AppService } from './AppService';
 
 IapticLogger.VERBOSITY = IapticLoggerVerbosityLevel.DEBUG;
 

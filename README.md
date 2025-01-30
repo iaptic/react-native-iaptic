@@ -22,113 +22,178 @@ A robust in-app purchase library for React Native that simplifies receipt valida
 ## 📦 Installation
 
 ```bash
-npm install iaptic-rn
+npm install react-native-iaptic
 # or
-yarn add iaptic-rn
+yarn add react-native-iaptic
 ```
-
-> **Note**  
-> Follow [react-native-iap setup instructions](https://github.com/dooboolab-community/react-native-iap) 
-> for platform-specific configuration. Requires React Native 0.63+.
 
 ## 🚀 Quick Start
 
-```typescript
-import { IapticRN } from 'iaptic-rn';
+Here's a complete example to get you started:
 
-// Initialize with your configuration
+```typescript
+import { IapticRN } from 'react-native-iaptic';
+
+// 1. Initialize with your configuration
 const iaptic = new IapticRN({
-  appName: 'MyApp',
-  publicKey: 'YOUR_IAPTIC_PUBLIC_KEY',
-  iosBundleId: 'com.yourcompany.yourapp',
+  appName: 'app.example.com',
+  publicKey: 'YOUR_PUBLIC_KEY',
+  iosBundleId: 'com.yourcompany.app',
 });
 
-// Initialize connection
+// 2. Define your products
+iaptic.setProductDefinitions([
+  {
+    id: 'premium_monthly',
+    type: 'paid subscription',
+    entitlements: ['premium']
+  },
+  {
+    id: 'coins_100',
+    type: 'consumable',
+    tokenType: 'coins',
+    tokenValue: 100
+  }
+]);
+
+// 3. Initialize connection and load products/purchases
 await iaptic.initialize();
 
-// Fetch available products
-const products = await iaptic.listProducts();
+// 4. Handle purchases
+const offer = iaptic.products.get('premium_monthly')?.offers[0];
+if (offer) {
+  await iaptic.order(offer);
+}
+
+// 5. Check access
+if (iaptic.checkEntitlement('premium')) {
+  // Unlock premium features
+}
 ```
 
-## 💡 Core Functionality
+## 💡 Core Concepts
 
-### Product Listing
+### Product Definitions
+
+Products can be subscriptions, consumables, or non-consumables. Each product can grant one or more entitlements:
+
 ```typescript
-const products = await iaptic.listProducts();
-products.forEach(product => {
-  console.log(`Product: ${product.title}`);
-  product.offers.forEach(offer => {
-    console.log(`- Offer: ${offer.pricingPhases[0].price}`);
-  });
-});
+iaptic.setProductDefinitions([
+  // Subscription that unlocks premium features
+  { 
+    id: 'premium_monthly',
+    type: 'paid subscription',
+    entitlements: ['premium']
+  },
+  // Non-consumable that unlocks a specific feature
+  {
+    id: 'dark_theme',
+    type: 'non consumable',
+    entitlements: ['cool_feature']
+  },
+  // Consumable tokens/currency
+  { 
+    id: 'coins_100',
+    type: 'consumable',
+    tokenType: 'coins',
+    tokenValue: 100
+  }
+]);
 ```
 
 ### Purchase Flow
+
+Handle purchases with proper error management:
+
 ```typescript
 try {
-  const purchase = await iaptic.order(selectedOffer);
-  console.log('Purchase successful:', purchase);
+  await iaptic.order(productOffer);
 } catch (error) {
-  if (error.code === 'E_USER_CANCELLED') {
-    console.log('User cancelled purchase');
+  showError(error);
+}
+```
+
+### Restore Purchases
+
+Allow users to restore their previous purchases:
+
+```typescript
+try {
+  iaptic.restorePurchases((processed, total) => {
+    console.log(`Processed ${processed} of ${total} purchases`);
+  });
+}
+catch (error) {
+  showError(error);
+}
+```
+
+### Event Handling
+
+Listen for purchase and subscription updates:
+
+```typescript
+// Listen for subscription updates
+iaptic.addEventListener('subscription.updated', (reason, purchase) => {
+  console.log(`Subscription ${purchase.id} ${reason}`);
+});
+
+// Listen for pending purchase updates
+iaptic.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
+  console.log(`Purchase ${pendingPurchase.productId} is now ${pendingPurchase.status}`);
+});
+
+// Listen for purchase updates
+iaptic.addEventListener('purchase.updated', (purchase) => {
+  console.log(`Purchase ${purchase.id} ${purchase.status}`);
+});
+```
+
+### Feature Access Control
+
+Check if users have access to specific features:
+
+```typescript
+// Check premium access
+if (iaptic.checkEntitlement('premium')) {
+  showPremiumContent();
+} else {
+  showUpgradePrompt();
+}
+
+// List all active entitlements
+const unlockedFeatures = iaptic.listEntitlements();
+// ['basic', 'premium', 'cool_feature']
+```
+
+## Error Handling
+
+```typescript
+function showError(error: Error | IapticError) {
+  if (error instanceof IapticError) {
+    trackAnalyticsEvent(error.code);
+    if (error.severity === IapticErrorSeverity.INFO) {
+      console.log('Info:', error.localizedMessage);
+      return;
+    }
+    Alert.alert(error.localizedTitle, error.localizedMessage);
   } else {
-    console.error('Purchase failed:', error.message);
+    Alert.alert('Unknown error', error.message);
   }
 }
 ```
 
 ## 📚 API Reference
 
-### Core Methods
-| Method                | Description                               |
-|-----------------------|-------------------------------------------|
-| `initialize()`        | Initialize IAP connections               |
-| `listProducts()`      | Fetch available products                  |
-| `order(offer)`        | Initiate purchase flow                    |
-| `restorePurchases()`  | Restore previous purchases                |
-| `listEntitlements()`  | Get current valid purchases               |
-| `manageSubscriptions()` | Open platform subscription management  |
+For complete API documentation, visit our [API Reference](https://www.iaptic.com/documentation/react-native).
 
-### Configuration Options
-```typescript
-interface IapticConfig {
-  appName: string;          // Your application name
-  publicKey: string;        // Iaptic public key
-  iosBundleId?: string;     // iOS bundle ID (required for iOS)
-  baseUrl?: string;         // Iaptic API endpoint (default: production)
-  autoRefresh?: boolean;    // Auto-refresh entitlements (default: true)
-  validationTimeout?: number; // Receipt validation timeout in ms (default: 5000)
-}
-```
+## 🤝 Need Help?
 
-## 🔍 Demo Implementation
+- 📘 [Documentation](https://www.iaptic.com/documentation/api/react-native-iaptic)
+- 🐛 [Issue Tracker](https://github.com/iaptic/iaptic-react-native-sdk/issues)
+- 📱 [Demo app](https://github.com/iaptic/react-native-iaptic-demo)
+- 📧 [Support](mailto:support@iaptic.com)
 
-See complete implementation in our [demo app repository](https://github.com/iaptic/react-native-demo-app):
+## 📄 License
 
-```tsx
-function ProductList({ products }) {
-  return (
-    <View>
-      {products.map(product => (
-        <View key={product.id}>
-          <Text>{product.title}</Text>
-          {product.offers.map(offer => (
-            <Button
-              key={offer.id}
-              title={`Buy for ${offer.pricingPhases[0].price}`}
-              onPress={() => handlePurchase(offer)}
-            />
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-}
-```
-
----
-
-📘 **License**  
-MIT © [Iaptic](https://www.iaptic.com)  
-📮 **Support**  
-Need help? Contact support@iaptic.com
+MIT © [Iaptic](https://www.iaptic.com)

@@ -1,5 +1,5 @@
 import { Platform, Alert, ToastAndroid } from 'react-native';
-import { IapticError, IapticErrorSeverity, IapticLoggerVerbosityLevel, IapticOffer, IapticRN } from './iaptic-rn';
+import { IapticError, IapticErrorSeverity, IapticLoggerVerbosityLevel, IapticOffer, IapticRN } from 'react-native-iaptic';
 import { AppStateManager } from './AppState';
 import { Config } from './Config';
 

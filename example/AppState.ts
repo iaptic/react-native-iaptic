@@ -1,4 +1,4 @@
-import { IapticPendingPurchase, IapticProduct, IapticVerifiedPurchase } from './iaptic-rn';
+import { IapticPendingPurchase, IapticProduct } from 'react-native-iaptic';
 
 /**
  * The state of the app

@@ -9,6 +9,47 @@ Iaptic React Native SDK
 Provides in-app purchase functionality with integrated receipt validation
 through the Iaptic service.
 
+## Example
+
+```typescript
+// 1. Initialize with your configuration
+const iaptic = new IapticRN({
+  apiKey: 'YOUR_API_KEY',
+  iosBundleId: 'com.yourcompany.app',
+  androidPackageName: 'com.yourcompany.app',
+  showAlerts: true
+});
+
+// 2. Define your products
+iaptic.setProductDefinitions([
+  {
+    id: 'premium_monthly',
+    type: 'paid subscription',
+    entitlements: ['premium']
+  },
+  {
+    id: 'coins_100',
+    type: 'consumable',
+    tokenType: 'coins',
+    tokenValue: 100
+  }
+]);
+
+// 3. Initialize connection and load products/purchases
+await iaptic.initialize();
+
+// 4. Handle purchases
+const offer = iaptic.products.get('premium_monthly')?.offers[0];
+if (offer) {
+  await iaptic.order(offer); 
+}
+
+// 5. Check access
+if (iaptic.checkEntitlement('premium')) {
+  // Unlock premium features
+}
+```
+
 ## Enumerations
 
 ### IapticCancelationReason
@@ -522,7 +563,26 @@ The purchases manager
 ### IapticError
 
 
-Error class for iaptic-related errors
+Represents an error in the Iaptic purchase flow
+
+#### Example
+
+```typescript
+try {
+  await iaptic.order(productOffer);
+} catch (error) {
+  if (error instanceof IapticError) {
+    trackAnalyticsEvent(error.code);
+    if (error.severity === IapticErrorSeverity.INFO) {
+      console.log('Info:', error.localizedMessage);
+      return;
+    }
+    Alert.alert(error.localizedTitle, error.localizedMessage);
+  } else {
+    Alert.alert('Unknown error', error.message);
+  }
+}
+```
 
 #### Extends
 
@@ -1500,6 +1560,16 @@ Configuration for the iaptic service
 
 [`IapticRN`](globals.md#iapticrn)
 
+###### Example
+
+```typescript
+const iaptic = new IapticRN({
+  apiKey: 'prod_123456789',
+  iosBundleId: 'com.yourcompany.app',
+  androidPackageName: 'com.yourcompany.app',
+});
+```
+
 #### Properties
 
 ##### config
@@ -1671,8 +1741,15 @@ True if the user has active access to the specified feature
 ###### Example
 
 ```typescript
-// Check if user has premium access
-const hasPremium = iaptic.checkEntitlement('premium');
+// Check premium access
+if (iaptic.checkEntitlement('premium')) {
+  showPremiumContent();
+} else {
+  showUpgradePrompt();
+}
+
+// Check specific feature access
+const hasCoolFeature = iaptic.checkEntitlement('cool_feature');
 ```
 
 ##### consume()
@@ -1739,6 +1816,17 @@ Initializes the In-App Purchase component.
 ###### Returns
 
 `Promise`\<`void`\>
+
+###### Example
+
+```typescript
+try {
+  await iaptic.initialize();
+  console.log('Products loaded:', iaptic.products.all());
+  console.log('Active purchases:', iaptic.purchases.list());
+} catch (error) {
+  console.error('Initialization failed:', error);
+}
 
 ##### listEntitlements()
 
@@ -1862,6 +1950,20 @@ The offer to order
 
 `Promise`\<`void`\>
 
+###### Example
+
+```typescript
+// Order a subscription offer
+const subscriptionOffer = iaptic.products.get('premium_monthly')?.offers[0];
+if (subscriptionOffer) {
+  try {
+    await iaptic.order(subscriptionOffer);
+    console.log('Purchase started successfully');
+  } catch (error) {
+    console.error('Purchase failed:', error);
+  }
+}
+
 ##### owned()
 
 > **owned**(`productId`): `boolean`
@@ -1908,7 +2010,7 @@ Optional event type to remove listeners for
 > **restorePurchases**(`progressCallback`): `Promise`\<`number`\>
 
 
-Returns the number of purchases restored
+Restore purchases from the Store.
 
 ###### Parameters
 
@@ -1916,9 +2018,30 @@ Returns the number of purchases restored
 
 (`processed`, `total`) => `void`
 
+Callback function that will be called with the progress of the restore operation
+                          - The initial call is with -1, 0
+                          - Subsequent calls are with the current progress
+                          - The final call will have processed === total
+
 ###### Returns
 
 `Promise`\<`number`\>
+
+The number of purchases restored
+
+###### Example
+
+```typescript
+// Restore purchases with progress updates
+iaptic.restorePurchases((processed, total) => {
+  console.log(`Processed ${processed} of ${total} purchases`);
+})
+.then(numRestored => {
+  console.log(`Restored ${numRestored} purchases`);
+})
+.catch(error => {
+  console.error('Restore failed:', error);
+});
 
 ##### setApplicationUsername()
 
@@ -1980,6 +2103,22 @@ iaptic.setProductDefinitions([
   { id: 'coins_500', type: 'consumable', tokenType: 'coins', tokenValue: 500 },
 ]);
 ```
+
+```typescript
+// Define a subscription and consumable product
+iaptic.setProductDefinitions([
+  {
+    id: 'premium_monthly',
+    type: 'paid subscription',
+    entitlements: ['premium'],
+  },
+  {
+    id: 'coins_1000',
+    type: 'consumable',
+    tokenType: 'coins',
+    tokenValue: 1000,
+  }
+]);
 
 ##### setVerbosity()
 

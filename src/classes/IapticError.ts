@@ -80,7 +80,27 @@ export function toIapticError(err: IAP.PurchaseError | Error, severity: IapticEr
   });
 }
 
-/** Error class for iaptic-related errors */
+/**
+ * Represents an error in the Iaptic purchase flow
+ * 
+ * @example Handling errors
+ * ```typescript
+ * try {
+ *   await iaptic.order(productOffer);
+ * } catch (error) {
+ *   if (error instanceof IapticError) {
+ *     trackAnalyticsEvent(error.code);
+ *     if (error.severity === IapticErrorSeverity.INFO) {
+ *       console.log('Info:', error.localizedMessage);
+ *       return;
+ *     }
+ *     Alert.alert(error.localizedTitle, error.localizedMessage);
+ *   } else {
+ *     Alert.alert('Unknown error', error.message);
+ *   }
+ * }
+ * ```
+ */
 export class IapticError extends Error {
   public readonly severity: IapticErrorSeverity;
   public readonly code: IapticErrorCode;
