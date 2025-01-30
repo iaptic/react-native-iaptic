@@ -1,0 +1,12 @@
+# Ignore source files
+src/
+tsconfig.json
+jest.config.js
+*.test.ts
+.eslintrc
+.gitignore
+
+# Keep compiled output and docs
+!lib/
+!README.md
+!LICENSE
