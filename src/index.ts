@@ -8,10 +8,9 @@
  * ```typescript
  * // 1. Initialize with your configuration
  * const iaptic = new IapticRN({
- *   apiKey: 'YOUR_API_KEY',
+ *   appName: 'com.example.app',
+ *   publicKey: 'YOUR_API_KEY',
  *   iosBundleId: 'com.yourcompany.app',
- *   androidPackageName: 'com.yourcompany.app',
- *   showAlerts: true
  * });
  * 
  * // 2. Define your products
