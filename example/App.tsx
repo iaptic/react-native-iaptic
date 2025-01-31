@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Text, ScrollView } from 'react-native';
-import { IapticActiveSubscription, IapticLogger, IapticLoggerVerbosityLevel, IapticUtils } from 'react-native-iaptic';
+import { IapticActiveSubscription, IapticLogger, IapticLoggerVerbosityLevel, IapticRN } from '../src'; // 'react-native-iaptic'
 import { AppStateManager, initialAppState } from './AppState';
 import { AppService } from './AppService';
 
@@ -9,7 +9,6 @@ IapticLogger.VERBOSITY = IapticLoggerVerbosityLevel.DEBUG;
 // Create stable references outside component
 let appStateManagerInstance: AppStateManager | null = null;
 let iapServiceInstance: AppService | null = null;
-let utilsInstance: IapticUtils | null = null;
 
 function App(): React.JSX.Element {
   const [appState, setAppState] = useState(initialAppState);
@@ -23,10 +22,6 @@ function App(): React.JSX.Element {
     iapServiceInstance || (iapServiceInstance = new AppService(appStateManager))
   ).current;
 
-  const utils = useRef<IapticUtils>(
-    utilsInstance || (utilsInstance = new IapticUtils())
-  ).current;
-
   // One-time initialization with proper cleanup
   useEffect(() => iapService.onAppStartup(), []);
 
@@ -38,7 +33,7 @@ function App(): React.JSX.Element {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.productsContainer}>
         <Text style={styles.subscriptionText}>Subscription</Text>
         
-        <IapticActiveSubscription iaptic={iapService.iaptic} />
+        <IapticActiveSubscription />
 
         {/* A feature that will only be available if the user has any subscription */}
         <TouchableOpacity
@@ -76,14 +71,14 @@ function App(): React.JSX.Element {
                     <Text style={styles.buttonText}>
                       {pendingPurchase?.productId === product.id && (pendingPurchase?.offerId === offer.id || !pendingPurchase?.offerId)
                         ? `${pendingPurchase.status}...`
-                        : `${offer.pricingPhases[0].price} ${utils.formatBillingCycleEN(offer.pricingPhases[0])}`}
+                        : `${offer.pricingPhases[0].price} ${IapticRN.utils.formatBillingCycleEN(offer.pricingPhases[0])}`}
                     </Text>
                   </TouchableOpacity>
                   
                   {offer.pricingPhases.length > 1 && (
                     <Text style={styles.pricingPhasesText}>
                       {offer.pricingPhases.slice(1).map((phase, index) => (
-                        `then ${phase.price} ${utils.formatBillingCycleEN(phase)}`
+                        `then ${phase.price} ${IapticRN.utils.formatBillingCycleEN(phase)}`
                       )).join('\n')}
                     </Text>
                   )}

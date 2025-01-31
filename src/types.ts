@@ -3,7 +3,7 @@ import { IapticError } from "./classes/IapticError";
 /**
  * Configuration for the iaptic validator
  */
-export interface IapticConfig {
+export interface IapticStoreConfig {
   iosBundleId?: string;
   appName: string;
   publicKey: string;
@@ -115,12 +115,18 @@ export interface IapticValidateSuccessPayload {
 type ISODate = string;
 
 /**
- * A purchase object returned by the receipt validator.
+ * Purchase verified by the receipt validator.
  */
 export interface IapticVerifiedPurchase {
 
-  /** Product identifier */
+  /**
+   * Product identifier
+   * @deprecated Use `productId` instead
+   */
   id: string;
+
+  /** Product identifier */
+  productId: string
 
   /** Platform this purchase was made on */
   platform?: IapticPurchasePlatform;
@@ -140,8 +146,14 @@ export interface IapticVerifiedPurchase {
   /** True when a subscription is expired. */
   isExpired?: boolean;
 
-  /** Renewal intent. */
-  renewalIntent?: string;
+  /**
+   * Whether or not the user intends to let the subscription auto-renew.
+   * 
+   * Possible values:
+   * - `"Renew"` - The user intends to renew the subscription.
+   * - `"Lapse"` - The user intends to let the subscription expire without renewing.
+   */
+  renewalIntent?: 'Renew' | 'Lapse';
 
   /** Date the renewal intent was updated by the user. */
   renewalIntentChangeDate?: number;

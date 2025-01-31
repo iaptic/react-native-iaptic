@@ -1,311 +1,140 @@
-import { getReceiptIOS, ProductPurchase } from "react-native-iap";
-import { Platform, Linking } from "react-native";
-import { IapticConfig, IapticErrorCode, IapticProduct, IapticVerifiedPurchase, IapticOffer, IapticLoggerVerbosityLevel, IapticPurchasePlatform, IapticProductDefinition } from "./types";
-import * as IAP from 'react-native-iap';
-import { StoreProducts } from "./classes/StoreProducts";
-import { Purchases } from "./classes/Purchases";
-import { Subscriptions } from "./classes/Subscriptions";
-import { validateReceipt } from "./functions/validateReceipt";
-import { IapticError, IapticErrorSeverity, toIapticError } from "./classes/IapticError";
-import { Utils } from "./classes/Utils";
-import { PendingPurchases } from "./classes/PendingPurchases";
-import { logger } from "./classes/IapticLogger";
-import { isUUID, md5UUID } from "./functions/md5UUID";
-import { IapticEvents } from './classes/IapticEvents';
-import { IapticEventType, IapticEventListener } from './types';
-import { NonConsumables } from "./classes/NonConsumables";
-import { Consumables } from "./classes/Consumables";
+import { IapticError, IapticErrorSeverity } from "./classes/IapticError";
+import { IapticLogger } from "./classes/IapticLogger";
+import { IapticStore } from "./classes/IapticStore";
 import { Locales } from "./classes/Locales";
-import { IapEventsProcessor } from "./classes/IapEventsProcessor";
+import { Utils } from "./classes/Utils";
+import {
+  IapticStoreConfig,
+  IapticErrorCode,
+  IapticLoggerVerbosityLevel,
+  IapticProductDefinition,
+  IapticVerifiedPurchase,
+  IapticEventType,
+  IapticEventListener,
+  IapticProduct,
+  IapticOffer
+} from "./types";
+import type { md5UUID } from "./functions/md5UUID";
+import type { md5 } from "./functions/md5";
 
+/**
+ * Configuration for Iaptic React Native SDK
+ */
+export interface IapticConfig extends IapticStoreConfig {
+  products?: IapticProductDefinition[];
+  applicationUsername?: string;
+  verbosity?: IapticLoggerVerbosityLevel;
+}
 
-/** Main class for handling in-app purchases with iaptic */
+/**
+ * Iaptic React Native SDK
+ */
 export class IapticRN {
 
-  /** Configuration for the iaptic service */
-  readonly config: IapticConfig;
-
-  /** Manages user-side event listeners */
-  private events: IapticEvents = new IapticEvents();
-
-  /** Product catalog containing all available products */
-  readonly products: StoreProducts = new StoreProducts([], [], []);
-  /** Manages all verified purchases */
-  readonly purchases: Purchases = new Purchases(this.events);
-  /** Manages subscription-specific functionality */
-  readonly subscriptions: Subscriptions = new Subscriptions(this.purchases, this.products, this.events);
-  /** Manages non-consumable purchases */
-  readonly nonConsumables: NonConsumables = new NonConsumables(this.purchases, this.products, this.events);
-  /** Manages consumable purchases */
-  readonly consumables: Consumables = new Consumables(this.purchases, this.products, this.events);
-  /** Manages pending purchases */
-  readonly pendingPurchases: PendingPurchases = new PendingPurchases(this.events);
-
-  /** Utility functions */
-  readonly utils: Utils = new Utils();
-
-  /** Process events from react-native-iap plugin */
-  private iapEventsProcessor = new IapEventsProcessor(this, this.events);
-
-  /** Flag to check if the initialize() method has been called and succeeded */
-  private initialized = false;
-
-  /** The application username */
-  private applicationUsername: string | undefined;
+  /**
+   * Utility functions
+   */
+  static readonly utils: Utils = new Utils();
 
   /**
-   * Creates a new instance of IapticRN
-   * @param config - Configuration for the iaptic service
+   * Singleton instance of IapticStore
+   */
+  static store: IapticStore | undefined;
+
+  /**
+   * Initialize the IapticRN singleton
+   * 
+   * @param config - The configuration for the IapticRN singleton
+   * 
    * @example
    * ```typescript
-   * const iaptic = new IapticRN({
-   *   apiKey: 'prod_123456789',
-   *   iosBundleId: 'com.yourcompany.app',
-   *   androidPackageName: 'com.yourcompany.app',
+   * IapticRN.initialize({
+   *   appName: 'com.example.app',
+   *   publicKey: '1234567890',
+   *   iosBundleId: 'com.example.app',
    * });
    * ```
    */
-  constructor(config: IapticConfig) {
-    logger.debug('IapticRN constructor');
-    this.config = config;
-    if (!this.config.baseUrl) {
-      this.config.baseUrl = 'https://validator.iaptic.com';
+  static async initialize(config: IapticConfig) {
+    IapticRN.store = new IapticStore(config);
+    if (config.verbosity) IapticRN.setVerbosity(config.verbosity);
+    await IapticRN.store.initialize();
+    if (config.products) {
+      await IapticRN.loadProducts(config.products);
+      await IapticRN.loadPurchases();
     }
-    if (this.config.showAlerts === undefined) {
-      this.config.showAlerts = true;
-    }
-  }
-
-  /** Set the application username */
-  setApplicationUsername(value: string) {
-    logger.info(`setApplicationUsername(${value})`);
-    this.applicationUsername = value;
   }
 
   /**
+   * Instanciate the singleton instance of IapticStore
    * 
+   * For advanced use-cases only.
    */
-  async initConnection() {
-    logger.info('initConnection()');
-    if (this.initialized) {
-      logger.info('Connection already initialized');
-      return;
-    }
-    this.initialized = true;
-    try {
-      await IAP.initConnection();
-      logger.info('initialized');
-      this.iapEventsProcessor.addListeners();
-      return null;
-    } catch (err: any) {
-      this.initialized = false;
-      logger.error(`Failed to initialize IAP #${err.code}: ${err.message}`);
-      throw toIapticError(err, IapticErrorSeverity.WARNING, IapticErrorCode.SETUP, 'Failed to initialize the in-app purchase library, check your configuration.');
-    }
+  static createStore(config: IapticConfig): IapticStore {
+    IapticRN.store = new IapticStore(config);
+    return IapticRN.store;
   }
 
   /**
-   * Initializes the In-App Purchase component.
+   * Destroy the IapticRN singleton, cleanup everything.
+   */
+  static destroy() {
+    if (IapticRN.store) IapticRN.store.destroy();
+    IapticRN.store = undefined;
+  }
+
+  /**
+   * Get the singleton instance of IapticStore
    * 
-   * - prepare the connection with the store.
-   * - load products defined with setProductDefinitions()
-   * - load available purchases
+   * @throws {IapticError} If the store is not initialized
+   */
+  static getStore(): IapticStore {
+    if (!IapticRN.store) throw new IapticError('IapticRN.store is not initialized', {
+      severity: IapticErrorSeverity.ERROR,
+      code: IapticErrorCode.SETUP,
+      localizedTitle: Locales.get('ProgrammingError'),
+      localizedMessage: Locales.get('IapticError_StoreNotInitialized'),
+      debugMessage: 'IapticRN.store is not initialized, call IapticRN.initialize() first',
+    });
+    return IapticRN.store;
+  }
+
+  /**
+   * Set the application username for the iaptic service.
+   * 
+   * This is used to track which user is making the purchase and associate it with the user's account.
+   * 
+   * - On iOS, the application username is also added as an appAccountToken in the form of a UUID formatted MD5 ({@link md5UUID}).
+   * - On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string ({@link md5}).
+   *
+   * Don't forget to update the username in the app service if the user changes (login/logout).
+   * 
    * @example
    * ```typescript
-   * try {
-   *   await iaptic.initialize();
-   *   console.log('Products loaded:', iaptic.products.all());
-   *   console.log('Active purchases:', iaptic.purchases.list());
-   * } catch (error) {
-   *   console.error('Initialization failed:', error);
-   * }
-   */
-  async initialize() {
-    await this.initConnection();
-    await this.loadProducts();
-    await this.loadPurchases();
-  }
-
-  /**
-   * Set iaptic plugin's verbosity level
-   * @param verbosity 
-   */
-  setVerbosity(verbosity: IapticLoggerVerbosityLevel) {
-    logger.verbosity = verbosity;
-  }
-
-  /**
-   * Destroys the iaptic service
-   */
-  destroy() {
-    logger.info('destroy()');
-    this.iapEventsProcessor.removeListeners();
-    this.events.removeAllEventListeners();
-    this.initialized = false;
-  }
-
-  /**
-   * Check if a product can be purchased.
+   * IapticRN.setApplicationUsername('user_123');
+   * ```  
    * 
-   * @param product - The product to check
-   * @returns True if the product can be purchased, false otherwise
+   * @example Clear the username (on logout)
+   * ```typescript
+   * IapticRN.setApplicationUsername(undefined);
+   * ```
    */
-  canPurchase(product: IapticProduct): boolean {
-    return !this.owned(product.id) && !this.pendingPurchases.getStatus(product.id);
+  static setApplicationUsername(username: string | undefined) {
+    IapticRN.getStore().setApplicationUsername(username);
   }
 
   /**
-   * Check if a product is owned.
+   * Set the verbosity level for the iaptic service.
    * 
-   * @param productId - The product identifier
-   * @returns True if the product is owned, false otherwise
-   */
-  owned(productId: string): boolean {
-    const purchase = this.purchases.getPurchase(productId);
-    if (!purchase) return false;
-    if (purchase.isExpired) return false;
-    if (purchase.cancelationReason) return false;
-    if (purchase.expiryDate && new Date(purchase.expiryDate) < new Date()) return false;
-    return true;
-  }
-
-  /**
-   * Add the application username to a purchase request
-   * 
-   * On iOS, the application username is added as an appAccountToken in the form of a UUID.
-   * On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string.
-   * 
-   * @param request - The request to add the application username to
-   * @returns The request with the application username added
-   */
-  private addApplicationUsernameToRequest<T extends IAP.RequestPurchase | IAP.RequestSubscription>(request: T): T {
-    if (!this.applicationUsername) return request;
-    if (Platform.OS === 'ios') {
-      if (isUUID(this.applicationUsername)) {
-        (request as IAP.RequestPurchaseIOS).appAccountToken = this.applicationUsername;
-      } else {
-        (request as IAP.RequestPurchaseIOS).appAccountToken = md5UUID(this.applicationUsername);
-      }
-    } else {
-      (request as IAP.RequestPurchaseAndroid).obfuscatedAccountIdAndroid = this.applicationUsername.slice(0, 64); // max 64 characters
-    }
-    return request;
-  }
-
-  /**
-   * Order a product with an offer.
-   * 
-   * @param offer - The offer to order
    * @example
    * ```typescript
-   * // Order a subscription offer
-   * const subscriptionOffer = iaptic.products.get('premium_monthly')?.offers[0];
-   * if (subscriptionOffer) {
-   *   try {
-   *     await iaptic.order(subscriptionOffer);
-   *     console.log('Purchase started successfully');
-   *   } catch (error) {
-   *     console.error('Purchase failed:', error);
-   *   }
-   * }
+   * IapticRN.setVerbosity(IapticLoggerVerbosityLevel.DEBUG);
+   * ```
    */
-  async order(offer: IapticOffer) {
-    logger.info(`order(${JSON.stringify(offer)}) applicationUsername:${this.applicationUsername}`);
-    try {
-      this.pendingPurchases.add(offer);
-      switch (this.products.getType(offer.productId)) {
-        case 'non consumable':
-        case 'consumable':
-          logger.info(`requestPurchase(${offer.productId}) applicationUsername:${this.applicationUsername}`);
-          await IAP.requestPurchase(this.addApplicationUsernameToRequest({
-            sku: offer.productId,
-          }));
-          break;
-        case 'paid subscription':
-          if (offer.platform === IapticPurchasePlatform.GOOGLE_PLAY && offer.offerToken) {
-            const requestSubscription = this.addApplicationUsernameToRequest({
-              sku: offer.productId,
-              subscriptionOffers: [{
-                sku: offer.productId,
-                offerToken: offer.offerToken!
-              }]
-            });
-            logger.info(`requestSubscription(${JSON.stringify(requestSubscription)})`);
-            await IAP.requestSubscription(requestSubscription);
-          } else {
-            await IAP.requestSubscription(this.addApplicationUsernameToRequest({ sku: offer.productId }));
-          }
-          break;
-      }
-      this.pendingPurchases.update(offer.productId, 'processing');
-    }
-    catch (err: any) {
-      const iapticError = toIapticError(err,
-        (err.code === 'E_USER_CANCELLED') ? IapticErrorSeverity.INFO : IapticErrorSeverity.ERROR,
-        IapticErrorCode.PURCHASE,
-        'Failed to place a purchase. Offer: ' + JSON.stringify(offer));
-      this.pendingPurchases.remove(offer.productId);
-      throw iapticError;
-    }
+  static setVerbosity(verbosity: IapticLoggerVerbosityLevel) {
+    IapticLogger.VERBOSITY = verbosity;
+    if (IapticRN.store) IapticRN.store.setVerbosity(verbosity);
   }
-
-  /**
-   * Validate and register a purchase with iaptic receipt validator.
-   * 
-   * @param purchase - The purchase to validate
-   * @param productType - The type of the product
-   * @param applicationUsername - The username of the application
-   * @returns The validated purchase or undefined if the purchase is not valid
-   */
-  async validate(purchase: ProductPurchase): Promise<IapticVerifiedPurchase | undefined> {
-    const productType = this.products.getType(purchase.productId);
-    logger.info(`validate(${purchase.transactionId}, ${purchase.productId})`);
-    logger.debug('🔄 Validating purchase: ' + JSON.stringify(purchase) + ' productType: ' + productType + ' applicationUsername: ' + this.applicationUsername);
-    if (!purchase.transactionId) {
-      throw new IapticError('Transaction ID is required', {
-        severity: IapticErrorSeverity.ERROR,
-        code: IapticErrorCode.VERIFICATION_FAILED,
-        localizedTitle: Locales.get('ValidationError'),
-        localizedMessage: Locales.get('ValidationError_MissingTransactionId'),
-        debugMessage: 'Transaction ID is required for the call to iaptic.validate()',
-      });
-    }
-
-    let receipt: string | undefined | null = purchase.transactionReceipt;
-    if (!receipt && Platform.OS === 'ios' && !IAP.isIosStorekit2()) {
-      receipt = await getReceiptIOS({ forceRefresh: true });
-    }
-
-    const result = await validateReceipt({
-      productId: purchase.productId,
-      transactionId: purchase.transactionId,
-      receipt: receipt || '',
-      receiptSignature: purchase.signatureAndroid || '',
-      productType,
-      applicationUsername: this.applicationUsername,
-    }, this.products.all(), this.config);
-    logger.debug('Validation result: ' + JSON.stringify(result));
-
-    if (result.ok) {
-      if (result.data.collection) {
-        result.data.collection.forEach(purchase => this.purchases.addPurchase(purchase));
-      }
-      return result.data.collection?.find(vPurchase => vPurchase.id === purchase.productId);
-    }
-    else {
-      const code = result.code ?? IapticErrorCode.UNKNOWN;
-      const message = result.message ?? 'Failed to validate purchase';
-      throw new IapticError(message, {
-        severity: IapticErrorSeverity.WARNING,
-        code,
-        localizedTitle: Locales.get('ValidationError'),
-        localizedMessage: Locales.get(`IapticError_${code}`),
-        debugMessage: message,
-      });
-    }
-  }
-
-  /// High level functions
 
   /**
    * Add product definitions to the product catalog.
@@ -315,7 +144,7 @@ export class IapticRN {
    * 
    * @example Non-consumable and subscription products
    * ```typescript
-   * iaptic.setProductDefinitions([
+   * IapticRN.setProductDefinitions([
    *   { 
    *     id: 'premium_monthly',
    *     type: 'paid subscription',
@@ -331,15 +160,16 @@ export class IapticRN {
    * 
    * @example Tokens
    * ```typescript
-   * iaptic.setProductDefinitions([
+   * IapticRN.setProductDefinitions([
    *   { id: 'coins_100', type: 'consumable', tokenType: 'coins', tokenValue: 100 },
    *   { id: 'coins_500', type: 'consumable', tokenType: 'coins', tokenValue: 500 },
    * ]);
    * ```
+   * 
    * @example
    * ```typescript
    * // Define a subscription and consumable product
-   * iaptic.setProductDefinitions([
+   * IapticRN.setProductDefinitions([
    *   {
    *     id: 'premium_monthly',
    *     type: 'paid subscription',
@@ -353,8 +183,8 @@ export class IapticRN {
    *   }
    * ]);
    */
-  setProductDefinitions(definitions: IapticProductDefinition[]): void {
-    this.products.add(definitions, [], []);
+  static setProductDefinitions(productDefinitions: IapticProductDefinition[]) {
+    IapticRN.getStore().setProductDefinitions(productDefinitions);
   }
 
   /**
@@ -362,7 +192,7 @@ export class IapticRN {
    * 
    * @example
    * ```typescript
-   * await iaptic.loadProducts([
+   * await IapticRN.loadProducts([
    *   { id: 'basic_subscription', type: 'paid subscription', entitlements: [ 'basic' ] },
    *   { id: 'premium_subscription', type: 'paid subscription', entitlements: [ 'basic', 'premium' ] },
    *   { id: 'premium_lifetime', type: 'non consumable', entitlements: [ 'basic', 'premium' ] },
@@ -371,110 +201,69 @@ export class IapticRN {
    * ```
    * @param definitions - The products to load
    */
-  async loadProducts(definitions?: IapticProductDefinition[]) {
-    logger.info('loadProducts()');
-    return this.products.load(definitions);
+  static async loadProducts(definitions?: IapticProductDefinition[]) {
+    return IapticRN.getStore().loadProducts(definitions);
   }
 
   /**
    * Load and validate active purchases details from the Store and Iaptic using their receipts
    * 
+   * Notice that this is done when initialize the Store already.
+   * 
    * @example
    * ```typescript
-   * const purchases = await iaptic.loadPurchases();
+   * const purchases = await IapticRN.loadPurchases();
    * ```
    *
    * @returns List of verified purchases.
    */
-  async loadPurchases(): Promise<IapticVerifiedPurchase[]> {
-    logger.info('loadPurchases()');
-    if (Platform.OS === 'ios' && !IAP.isIosStorekit2()) {
-      return this.getVerifiedPurchasesStorekit1(this.applicationUsername);
-    }
-    const purchases = await IAP.getAvailablePurchases();
-    logger.info('Found ' + purchases.length + ' pending purchases');
-    const results = await Promise.all(purchases.map(p => this.validate(p)));
-    logger.info('Validation results: ' + JSON.stringify(results));
-    return results.filter(r => r !== undefined);
+  static async loadPurchases(): Promise<IapticVerifiedPurchase[]> {
+    return IapticRN.getStore().loadPurchases();
   }
 
   /**
-   * Load active purchases details from the Store and Iaptic using Storekit applicationReceipt
+   * Consume a purchase. Only for consumable products.
    * 
-   * Passing applicationUsername allows to associate the purchases with a specific user.
-   * 
-   * @param applicationUsername - The username of the application
-   * @returns List of verified purchases.
-   */
-  private async getVerifiedPurchasesStorekit1(applicationUsername?: string): Promise<IapticVerifiedPurchase[]> {
-    const receipt = await IAP.getReceiptIOS({ forceRefresh: false });
-    if (!receipt) {
-      throw new Error('Receipt not found');
-    }
-    if (!this.config.iosBundleId) {
-      throw new Error('iOS bundle ID is not set');
-    }
-    const bundleId = this.config.iosBundleId;
-    const result = await validateReceipt({
-      productId: bundleId,
-      transactionId: bundleId,
-      receipt: receipt,
-      productType: 'application',
-      applicationUsername,
-      receiptSignature: '',
-    }, this.products.all(), this.config);
-    if (result.ok) {
-      if (result.data.collection) {
-        result.data.collection.forEach(purchase => this.purchases.addPurchase(purchase));
-      }
-      return result.data.collection ?? [];
-    }
-    else {
-      throw new IapticError(result.message ?? 'Failed to validate purchase', {
-        severity: IapticErrorSeverity.WARNING,
-        code: result.code ?? IapticErrorCode.UNKNOWN,
-        status: result.status,
-        localizedTitle: Locales.get('ValidationError'),
-        localizedMessage: Locales.get(`IapticError_${result.code ?? IapticErrorCode.UNKNOWN}`),
-        debugMessage: 'A receipt validation call failed with status ' + result.status,
-      });
-    }
-  }
-
-  /**
-   * Check if the user has active access to a specific feature or content.
-   * 
-   * Entitlements represent features/content that users unlock through purchases.
-   * They are defined in product definitions and automatically tracked when purchases are validated.
-   * @see {@link setProductDefinitions}
+   * @param purchase - The purchase to consume
    * 
    * @example
    * ```typescript
-   * // Check premium access
-   * if (iaptic.checkEntitlement('premium')) {
-   *   showPremiumContent();
-   * } else {
-   *   showUpgradePrompt();
-   * }
-   * 
-   * // Check specific feature access
-   * const hasCoolFeature = iaptic.checkEntitlement('cool_feature');
+   * IapticRN.consume(purchase);
    * ```
    * 
-   * @param featureId - The unique identifier for the feature/content (e.g. "premium", "gold_status")
-   * @returns True if the user has active access to the specified feature
+   * @see {@link TokensManager} for a convenient way to handle your consumable products.
    */
-  checkEntitlement(featureId: string): boolean {
-    for (const purchase of this.purchases.list()) {
-      if (this.owned(purchase.id)) {
-        const definition = this.products.getDefinition(purchase.id);
-        if (definition?.entitlements?.some(e => e === featureId)) {
-          return true;
-        }
-      }
-    }
-    return false;
+  static consume(purchase: IapticVerifiedPurchase) {
+    IapticRN.getStore().consume(purchase);
   }
+
+  /**
+     * Check if the user has active access to a specific feature or content.
+     * 
+     * Entitlements represent features/content that users unlock through purchases.
+     * They are defined in product definitions and automatically tracked when purchases are validated.
+     * @see {@link setProductDefinitions}
+     * 
+     * @example
+     * ```typescript
+     * // Check premium access
+     * if (IapticRN.checkEntitlement('premium')) {
+     *   showPremiumContent();
+     * } else {
+     *   showUpgradePrompt();
+     * }
+     * 
+     * // Check specific feature access
+     * const hasCoolFeature = IapticRN.checkEntitlement('cool_feature');
+     * ```
+     * 
+     * @param featureId - The unique identifier for the feature/content (e.g. "premium", "gold_status")
+     * @returns True if the user has active access to the specified feature
+     */
+  static checkEntitlement(featureId: string): boolean {
+    return IapticRN.getStore().checkEntitlement(featureId);
+  }
+
 
   /**
    * Get all currently active entitlements for the user.
@@ -490,25 +279,20 @@ export class IapticRN {
    * @example
    * ```typescript
    * // Get all unlocked features
-   * const unlockedFeatures = iaptic.listEntitlements();
+   * const unlockedFeatures = IapticRN.listEntitlements();
    * // ['basic', 'premium', 'dark_theme']
    * ```
    * 
    * @returns Array of entitlement IDs the user currently has access to
    */
-  listEntitlements(): string[] {
-    const entitlements = new Set<string>();
-    for (const purchase of this.purchases.list()) {
-      const definition = this.products.getDefinition(purchase.id);
-      if (definition?.entitlements) {
-        definition.entitlements.forEach(e => entitlements.add(e));
-      }
-    }
-    return Array.from(entitlements);
+  static listEntitlements(): string[] {
+    return IapticRN.getStore().listEntitlements();
   }
 
   /**
    * Add an event listener for iaptic events
+   * 
+   * To remove a listener, call the returned object's `remove()` method.
    * 
    * @param eventType - Type of event to listen for
    * @param listener - Callback function that will be called when the event occurs
@@ -517,28 +301,38 @@ export class IapticRN {
    * @example
    * ```typescript
    * // Listen for subscription updates
-   * iaptic.addEventListener('subscription.updated', (reason, purchase) => {
+   * IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
    *   console.log(`Subscription ${purchase.id} ${reason}`);
    * });
    * 
    * // Listen for pending purchase updates
-   * iaptic.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
+   * IapticRN.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
    *   console.log(`Purchase ${pendingPurchase.productId} is now ${pendingPurchase.status}`);
    * });
    * 
    * // Listen for purchase updates
-   * iaptic.addEventListener('purchase.updated', (purchase) => {
+   * IapticRN.addEventListener('purchase.updated', (purchase) => {
    *   console.log(`Purchase ${purchase.id} ${purchase.status}`);
    * });
    * 
    * // Listen for non-consumable purchases
-   * iaptic.addEventListener('nonConsumable.owned', (purchase) => {
+   * IapticRN.addEventListener('nonConsumable.owned', (purchase) => {
    *   console.log(`Non-consumable purchase ${purchase.id} is now owned`);
    * });
    * ```
+   * 
+   * @example Remove a listener
+   * ```typescript
+   * const listener = IapticRN.addEventListener('purchase.updated', (purchase) => {
+   *   console.log(`Purchase ${purchase.id} ${purchase.status}`);
+   * });
+   * listener.remove();
+   * ```
+   * 
+   * @see {@link IapticEventType} for all possible event types
    */
-  addEventListener<T extends IapticEventType>(eventType: T, listener: IapticEventListener<T>, context: string = 'User') {
-    return this.events.addEventListener(eventType, listener, context);
+  static addEventListener<T extends IapticEventType>(eventType: T, listener: IapticEventListener<T>) {
+    return IapticRN.getStore().addEventListener(eventType, listener, 'User');
   }
 
   /**
@@ -547,124 +341,142 @@ export class IapticRN {
    * 
    * @param eventType - Optional event type to remove listeners for
    */
-  removeAllEventListeners(eventType?: IapticEventType): void {
-    this.events.removeAllEventListeners(eventType);
+  static removeAllEventListeners(eventType?: IapticEventType): void {
+    IapticRN.getStore().removeAllEventListeners(eventType);
   }
 
   /**
-   * Function used in developement to cleanup the cache of pending transactions.
+   * Get all products from the product catalog
+   * 
+   * @returns List of products
    */
-  async flushTransactions() {
-    if (Platform.OS === 'android') {
-      // On Android, try to flush failed purchases as a recovery mechanism
-      try {
-        await IAP.flushFailedPurchasesCachedAsPendingAndroid();
-      }
-      catch (e: any) {
-        throw toIapticError(e, IapticErrorSeverity.ERROR);
-      }
-    }
+  static getProducts(): IapticProduct[] {
+    return IapticRN.getStore().products.all();
   }
+
+  /**
+   * Get all verified purchases.
+   * 
+   * @returns List of purchases, most recent first
+   * 
+   * @example
+   * ```typescript
+   * const purchases = IapticRN.getPurchases();
+   * ```
+   * 
+   * @see {@link IapticVerifiedPurchase} for more information on the purchase object
+   */
+  static getPurchases(): IapticVerifiedPurchase[] {
+    return IapticRN.getStore().purchases.sorted();
+  }
+
+  /**
+   * Order a product with an offer.
+   * 
+   * @param offer - The offer to order
+   * 
+   * @example
+   * ```typescript
+   * // Order a subscription offer
+   * const subscriptionOffer = IapticRN.products.get('premium_monthly')?.offers[0];
+   * if (subscriptionOffer) {
+   *   try {
+   *     await IapticRN.order(subscriptionOffer);
+   *     console.log('Purchase started successfully');
+   *   } catch (error) {
+   *     console.error('Purchase failed:', error);
+   *   }
+   * }
+   * ```
+   */
+  static async order(offer: IapticOffer) {
+    return IapticRN.getStore().order(offer);
+  }
+
 
   /**
    * Restore purchases from the Store.
    * 
    * @param progressCallback - Callback function that will be called with the progress of the restore operation
-   *                           - The initial call is with -1, 0
-   *                           - Subsequent calls are with the current progress
-   *                           - The final call will have processed === total
+   *                           - An initial call with -1, 0 when the operation starts.
+   *                           - Subsequent calls are with the current progress (processed, total).
+   *                           - The final call will have processed === total, you know the operation is complete.
    * 
    * @returns The number of purchases restored
    * @example
    * ```typescript
    * // Restore purchases with progress updates
-   * iaptic.restorePurchases((processed, total) => {
+   * const numRestored = await IapticRN.restorePurchases((processed, total) => {
    *   console.log(`Processed ${processed} of ${total} purchases`);
-   * })
-   * .then(numRestored => {
-   *   console.log(`Restored ${numRestored} purchases`);
-   * })
-   * .catch(error => {
-   *   console.error('Restore failed:', error);
    * });
+   * ```
    */
-  async restorePurchases(progressCallback: (processed: number, total: number) => void): Promise<number> {
-    // Make sure the user-provided callback doesn't impact the processing
-    const progress = (processed: number, total: number) => {
-      try {
-        progressCallback(processed, total);
-      } catch (error) {
-        logger.warn('Error in restorePurchases progress callback: ' + error);
-      }
-    };
-    try {
-      progress(-1, 0);
-      logger.info('Checking for any pending purchases');
-      const purchases = await IAP.getAvailablePurchases();
-      logger.info('Found ' + purchases.length + ' pending purchases');
-
-      if (purchases.length === 0) {
-        progress(0, 0);
-        return 0;
-      }
-
-      progress(0, purchases.length);
-      for (let i = 0; i < purchases.length; i++) {
-        logger.debug('Processing purchase ' + (i + 1) + ' of ' + purchases.length);
-
-        await this.iapEventsProcessor.processPurchase(purchases[i]);
-        progress(i + 1, purchases.length);
-      }
-      logger.debug('Finished processing ' + purchases.length + ' purchases');
-      return purchases.length;
-    } catch (error: any) {
-      progress(0, 0);
-      throw toIapticError(error, IapticErrorSeverity.ERROR);
-    }
+  static async restorePurchases(progressCallback: (processed: number, total: number) => void): Promise<number> {
+    return IapticRN.getStore().restorePurchases(progressCallback);
   }
 
   /**
-   * Consume a purchase. Only for consumable products.
+   * Get the active subscription (if any)
    * 
-   * @param purchase - The purchase to consume
+   * For **apps that sell multiple subscriptions** that can be active at the same time,
+   * this returns the first one. To check if there is any active subscription:
+   * - {@link getPurchases} to manually parse and find all active subscriptions.
+   * - {@link isOwned} with all your product ids to check if there is any active subscription.
+   * 
+   * @returns The active subscription or undefined if there is no active subscription
+   * 
+   * @see {@link IapticVerifiedPurchase} for more information on the purchase object
+   * 
+   * @example
+   * ```typescript
+   * const activeSubscription = IapticRN.getActiveSubscription();
+   * if (activeSubscription) {
+   *   console.log(`Active subscription: ${activeSubscription.productId}`);
+   *   if (activeSubscription.renewalIntent === 'Renew') {
+   *     console.log('Will renew on: ' + new Date(activeSubscription.expiryDate).toLocaleDateString());
+   *   }
+   *   else {
+   *     console.log('Will expire on: ' + new Date(activeSubscription.expiryDate).toLocaleDateString());
+   *   }
+   * }
+   * ```
    */
-  consume(purchase: IapticVerifiedPurchase) {
-    const nativePurchase = this.iapEventsProcessor.purchases.get(purchase.transactionId ?? purchase.id);
-    if (nativePurchase) {
-      IAP.finishTransaction({
-        purchase: nativePurchase,
-        isConsumable: this.products.getType(purchase.id) === 'consumable'
-      });
-    }
+  static getActiveSubscription(): IapticVerifiedPurchase | undefined {
+    return IapticRN.getStore().subscriptions.active();
   }
 
   /**
-   * Opens the platform-specific subscription management page in the default browser
+   * Check if a product is owned.
+   * 
+   * - For non-consumable products, this checks if the product is owned.
+   * - For paid subscriptions, this checks if there is an active subscription.
+   * - For consumables, this always returns false.
+   * 
+   * @param productId - The product identifier
+   * @returns True if the product is owned
+   * 
+   * @example
+   * ```typescript
+   * if (IapticRN.isOwned('premium_subscription')) {
+   *   console.log('User has an active subscription');
+   * }
+   * ```
    */
-  async manageSubscriptions() {
-    const url = Platform.select({
-      ios: 'https://apps.apple.com/account/subscriptions',
-      android: 'https://play.google.com/store/account/subscriptions',
-      default: '',
-    });
-    
-    if (url) {
-      await Linking.openURL(url);
-    }
+  static isOwned(productId: string): boolean {
+    return IapticRN.getStore().isOwned(productId);
   }
 
   /**
-   * Opens the platform-specific billing management page in the default browser
+   * Opens the platform-specific subscription management page.
    */
-  async manageBilling() {
-    const url = Platform.select({
-      ios: 'https://apps.apple.com/account/billing',
-      android: 'https://play.google.com/store/paymentmethods',
-      default: '',
-    });
-    
-    if (url) {
-      await Linking.openURL(url);
-    }
+  static async manageSubscriptions() {
+    return IapticRN.getStore().manageSubscriptions();
+  }
+
+  /**
+   * Opens the platform-specific billing management page.
+   */
+  static async manageBilling() {
+    return IapticRN.getStore().manageBilling();
   }
 }

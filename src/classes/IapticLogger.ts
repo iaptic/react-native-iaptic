@@ -1,7 +1,15 @@
 import { IapticLoggerVerbosityLevel } from "../types";
 
+/**
+ * Iaptic logger
+ * 
+ * @internal
+ */
 export class IapticLogger {
 
+  /**
+   * Default verbosity level
+   */
   static VERBOSITY = IapticLoggerVerbosityLevel.WARN;
 
   verbosity: IapticLoggerVerbosityLevel = IapticLogger.VERBOSITY;

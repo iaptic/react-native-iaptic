@@ -15,6 +15,13 @@ export enum IapticErrorSeverity {
   ERROR = 2,
 }
 
+/**
+ * Convert an error code from react-native-iap to an Iaptic error code
+ * 
+ * @param code - The error code from react-native-iap
+ * @returns The Iaptic error code
+ * @internal
+ */
 export function toIapticErrorCode(code: IAP.ErrorCode | undefined): IapticErrorCode {
   if (!code) {
     return IapticErrorCode.UNKNOWN;
@@ -59,6 +66,16 @@ export function toIapticErrorCode(code: IAP.ErrorCode | undefined): IapticErrorC
   }
 }
 
+/**
+ * Convert an error from react-native-iap to an Iaptic error
+ * 
+ * @param err - The error from react-native-iap
+ * @param severity - The severity of the error
+ * @param defaultCode - The default error code
+ * @param extraDebugMessage - Extra debug message
+ * @returns The Iaptic error
+ * @internal
+ */
 export function toIapticError(err: IAP.PurchaseError | Error, severity: IapticErrorSeverity, defaultCode: IapticErrorCode = IapticErrorCode.UNKNOWN, extraDebugMessage: string = ''): IapticError {
   if (err instanceof IAP.PurchaseError) {
     return new IapticError(err.message, {
@@ -108,6 +125,10 @@ export class IapticError extends Error {
   public readonly localizedMessage: string;
   public readonly debugMessage: string;
   public readonly status: number | undefined;
+
+  /**
+   * @internal
+   */
   constructor(message: string, options: {
     severity: IapticErrorSeverity,
     code: IapticErrorCode,

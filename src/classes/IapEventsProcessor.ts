@@ -1,14 +1,16 @@
 import * as IAP from 'react-native-iap';
 import { IapticEvents } from './IapticEvents';
-import { IapticRN } from '../IapticRN';
 import { DebouncedProcessor } from './DebouncedProcessor';
 import { IapticErrorSeverity, toIapticError } from './IapticError';
 import { EmitterSubscription } from 'react-native';
 import { logger } from './IapticLogger';
 import { globalsGet, globalsSet } from '../functions/globals';
+import { IapticStore } from './IapticStore';
 
 /**
  * Process events from react-native-iap
+ * 
+ * @internal
  */
 export class IapEventsProcessor {
 
@@ -33,7 +35,7 @@ export class IapEventsProcessor {
 
   purchases: Map<string, IAP.ProductPurchase | IAP.SubscriptionPurchase> = new Map();
 
-  constructor(private readonly iaptic: IapticRN, private readonly events: IapticEvents) {
+  constructor(private readonly store: IapticStore, private readonly events: IapticEvents) {
     globalsSet('active_iap_events_processor', this.id);
   }
 
@@ -98,30 +100,30 @@ export class IapEventsProcessor {
     // First validate the purchase with iaptic
     try {
 
-      if (this.iaptic.pendingPurchases.getStatus(purchase.productId) === 'validating') {
+      if (this.store.pendingPurchases.getStatus(purchase.productId) === 'validating') {
         logger.info('🔄 Purchase is already being validated, waiting for status to change');
         while (true) {
           await new Promise<void>(resolve => setTimeout(resolve, 100));
-          if (this.iaptic.pendingPurchases.getStatus(purchase.productId) !== 'validating') {
+          if (this.store.pendingPurchases.getStatus(purchase.productId) !== 'validating') {
             return; // this.iaptic.purchases.getPurchase(purchase.productId, purchase.transactionId);
           }
         }
       }
 
-      this.iaptic.pendingPurchases.update(purchase.productId, 'validating');
-      const verified = await this.iaptic.validate(purchase);
+      this.store.pendingPurchases.update(purchase.productId, 'validating');
+      const verified = await this.store.validate(purchase);
       logger.debug('processPurchase has validated the purchase (verified: ' + verified + ')');
       if (!verified) {
         // the receipt is valid, but transaction does not exist, let's finish it
         logger.debug('processPurchase is finishing the purchase');
-        this.iaptic.pendingPurchases.update(purchase.productId, 'finishing');
+        this.store.pendingPurchases.update(purchase.productId, 'finishing');
         try {
-          await IAP.finishTransaction({ purchase, isConsumable: this.iaptic.products.getType(purchase.productId) === 'consumable' });
+          await IAP.finishTransaction({ purchase, isConsumable: this.store.products.getType(purchase.productId) === 'consumable' });
         }
         catch (error: any) {
           logger.info('Failed to finish unverified purchase: ' + error + ' (this is fine, we tried)');
         }
-        this.iaptic.pendingPurchases.update(purchase.productId, 'completed');
+        this.store.pendingPurchases.update(purchase.productId, 'completed');
         return;
       }
     }
@@ -131,7 +133,7 @@ export class IapEventsProcessor {
     }
 
     // Let's handle subscriptions
-    switch (this.iaptic.products.getType(purchase.productId)) {
+    switch (this.store.products.getType(purchase.productId)) {
       case 'consumable':
         // We let the user consume the purchase
         break;
@@ -141,8 +143,8 @@ export class IapEventsProcessor {
         // because iaptic has the status now
         logger.debug('processPurchase is finishing the purchase because it is a non-consumable or paid subscription');
         try {
-          this.iaptic.pendingPurchases.update(purchase.productId, 'finishing');
-          await IAP.finishTransaction({ purchase, isConsumable: this.iaptic.products.getType(purchase.productId) === 'consumable' });
+          this.store.pendingPurchases.update(purchase.productId, 'finishing');
+          await IAP.finishTransaction({ purchase, isConsumable: this.store.products.getType(purchase.productId) === 'consumable' });
         } catch (finishError: any) {
           logger.info('Failed to finish unverified purchase: ' + finishError.message);
           // reportError(finishError, IapticErrorSeverity.WARNING);
@@ -151,7 +153,7 @@ export class IapEventsProcessor {
     }
 
     logger.debug('processPurchase completed');
-    this.iaptic.pendingPurchases.update(purchase.productId, 'completed');
+    this.store.pendingPurchases.update(purchase.productId, 'completed');
     return;
   }
 

@@ -70,7 +70,6 @@ import { IapticRN } from '../IapticRN';
  * | manageLink      | "Manage" links                      | Blue underlined text        |
  */
 interface ActiveSubscriptionProps {
-  iaptic: IapticRN;
   /**
    * Style customization object allowing overrides for specific UI components
    */
@@ -114,27 +113,26 @@ interface ActiveSubscriptionProps {
  * />
  */
 export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
-  iaptic,
   styles: customStyles,
 }) => {
   // Track subscription state
   const [state, setState] = useState({
-    subscription: iaptic.subscriptions.active(),
-    entitlements: iaptic.listEntitlements(),
+    subscription: IapticRN.getActiveSubscription(),
+    entitlements: IapticRN.listEntitlements(),
   });
 
   useEffect(() => {
     // Subscribe to changes in the IapticRN instance
-    const listener = iaptic.addEventListener('subscription.updated', (_subscription) => {
+    const listener = IapticRN.addEventListener('subscription.updated', (_subscription) => {
       setState({
-        subscription: iaptic.subscriptions.active(),
-        entitlements: iaptic.listEntitlements(),
+        subscription: IapticRN.getActiveSubscription(),
+        entitlements: IapticRN.listEntitlements(),
       });
     });
     
     // Cleanup on unmount
     return () => listener.remove();
-  }, [iaptic]);
+  }, []);
 
   if (!state.subscription) {
     return null;
@@ -199,14 +197,14 @@ export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
         ))}
       </View>
       <TouchableOpacity onPress={
-        () => iaptic.manageSubscriptions()
+        () => IapticRN.manageSubscriptions()
       }>
         <Text style={[styles.manageLink, customStyles?.manageLink]}>
           {Locales.get('ActiveSubscription_ManageSubscriptions')}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={
-        () => iaptic.manageBilling()
+        () => IapticRN.manageBilling()
       }>
         <Text style={[styles.manageLink, customStyles?.manageLink]}>
           {Locales.get('ActiveSubscription_ManageBilling')}

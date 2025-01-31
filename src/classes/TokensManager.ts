@@ -51,20 +51,20 @@ export class TokensManager {
      */
     private storageKey = 'iaptic_tokens_transactions';
   
-    constructor(iaptic: IapticRN, consumePurchases: boolean = true) {
-      this.storageKey = (iaptic.config.appName ?? 'app') + '.tokens.iaptic';
+    constructor(consumePurchases: boolean = true) {
+      this.storageKey = (IapticRN.getStore().config.appName ?? 'app') + '.tokens.iaptic';
       this.transactions = new Map();
       this.loadTransactions(); // Load stored transactions when instantiated
-      iaptic.addEventListener('consumable.purchased', (purchase: IapticVerifiedPurchase) => {
-        const product = iaptic.products.getDefinition(purchase.id);
+      IapticRN.getStore().addEventListener('consumable.purchased', (purchase: IapticVerifiedPurchase) => {
+        const product = IapticRN.getStore().products.getDefinition(purchase.id);
         if (product && product.tokenValue && product.tokenType) {
           this.addTransaction(this.typeSafeTransactionId(purchase), product.tokenType, product.tokenValue);
         }
         if (consumePurchases) {
-          iaptic.consume(purchase);
+          IapticRN.consume(purchase);
         }
       }, 'TokensManager');
-      iaptic.addEventListener('consumable.refunded', (purchase: IapticVerifiedPurchase) => {
+      IapticRN.getStore().addEventListener('consumable.refunded', (purchase: IapticVerifiedPurchase) => {
         this.removeTransaction(this.typeSafeTransactionId(purchase));
       }, 'TokensManager');
     }

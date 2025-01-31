@@ -4,7 +4,7 @@ import { IapticRN } from '../IapticRN';
 import * as IAP from 'react-native-iap';
 import { Platform, Linking } from 'react-native';
 import { IapticProductDefinition, IapticProductType, IapticPurchasePlatform, IapticOffer, IapticPricingPhase, IapticErrorCode } from '../types';
-import { IapticErrorSeverity } from '../classes/IapticError';
+import { IapticStore } from '../classes/IapticStore';
 
 // Mock react-native-iap
 jest.mock('react-native-iap', () => {
@@ -78,7 +78,7 @@ jest.mock('../functions/validateReceipt', () => ({
 // });
 
 describe('IapticRN', () => {
-  let iaptic: IapticRN;
+  let iaptic: IapticStore;
   const mockPricingPhase: IapticPricingPhase = {
     price: '0.99',
     priceMicros: 990000,
@@ -108,7 +108,7 @@ describe('IapticRN', () => {
     // Reset Platform.OS
     Platform.OS = 'ios';
     // Create new instance
-    iaptic = new IapticRN({
+    iaptic = IapticRN.createStore({
       appName: 'TestApp',
       publicKey: 'test-key',
       iosBundleId: 'com.test.app'
@@ -128,7 +128,7 @@ describe('IapticRN', () => {
 
   describe('initialization', () => {
     it('initializes correctly', () => {
-      expect(iaptic).toBeInstanceOf(IapticRN);
+      expect(iaptic).toBeInstanceOf(IapticStore);
       expect(iaptic.config.appName).toBe('TestApp');
       expect(iaptic.config.publicKey).toBe('test-key');
       expect(iaptic.config.baseUrl).toBe('https://validator.iaptic.com');

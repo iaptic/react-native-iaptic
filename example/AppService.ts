@@ -1,7 +1,24 @@
 import { Platform, Alert, ToastAndroid } from 'react-native';
-import { IapticError, IapticErrorSeverity, IapticLoggerVerbosityLevel, IapticOffer, IapticRN } from 'react-native-iaptic';
+import { IapticError, IapticErrorSeverity, IapticLoggerVerbosityLevel, IapticOffer, IapticRN, IapticConfig } from '../src';
 import { AppStateManager } from './AppState';
-import { Config } from './Config';
+
+export const config = {
+  iaptic: {
+    appName: 'test',
+    publicKey: '',
+    iosBundleId: 'com.example.app',
+    verbosity: IapticLoggerVerbosityLevel.DEBUG,
+    products: [{
+      id: 'com.example.app.pro',
+      type: 'paid subscription',
+      entitlements: ['pro_feature'],
+    }, {
+      id: 'com.example.app.premium',
+      type: 'non consumable',
+      entitlements: ['premium_feature'],
+    }],
+  } as IapticConfig
+};
 
 export class AppService {
 
@@ -12,9 +29,6 @@ export class AppService {
 
   /** Stateful app state returned by useState */
   private appState: AppStateManager;
-
-  /** The iaptic library */
-  public iaptic: IapticRN = new IapticRN(Config.iaptic);
 
   constructor(appState: AppStateManager) {
     this.appState = appState;
@@ -29,30 +43,28 @@ export class AppService {
     this.log('onAppStartup');    
     this.initIaptic();
     return () => {
-      this.iaptic.removeAllEventListeners();
+      IapticRN.removeAllEventListeners();
     }
   }
 
   async initIaptic() {
     try {
-      this.iaptic.setVerbosity(IapticLoggerVerbosityLevel.DEBUG);
-      this.iaptic.setApplicationUsername(this.appState.getState().applicationUsername);
-      this.iaptic.setProductDefinitions(Config.products);
+      await IapticRN.initialize(config.iaptic);
+      IapticRN.setApplicationUsername(this.appState.getState().applicationUsername);
 
-      this.iaptic.addEventListener('pendingPurchase.updated', purchase => {
+      IapticRN.addEventListener('pendingPurchase.updated', purchase => {
         this.log('🔄 Pending purchase updated: ' + JSON.stringify(purchase));
         this.appState.updatePendingPurchase(purchase);
       });
   
-      this.iaptic.addEventListener('subscription.updated', (reason, purchase) => {
+      IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
         this.log('🔄 Subscription updated: ' + reason + ' for ' + JSON.stringify(purchase));
-        this.appState.set({ entitlements: this.iaptic.listEntitlements() });
+        this.appState.set({ entitlements: IapticRN.listEntitlements() });
       });
 
-      await this.iaptic.initialize();
       this.appState.set({
-        availableProducts: this.iaptic.products.all(),
-        entitlements: this.iaptic.listEntitlements(),
+        availableProducts: IapticRN.getProducts(),
+        entitlements: IapticRN.listEntitlements(),
       });
     }
     catch (err: any) {
@@ -86,7 +98,7 @@ export class AppService {
    */
   async handleSubscribeButton(offer: IapticOffer) {
     try {
-      await this.iaptic.order(offer);
+      await IapticRN.order(offer);
     }
     catch (err: any) {
       this.showError(err);
@@ -105,7 +117,7 @@ export class AppService {
    */
   public async restorePurchases() {
     try {
-      const numRestored = await this.iaptic.restorePurchases((processed, total) => {
+      const numRestored = await IapticRN.restorePurchases((processed, total) => {
         this.appState.setRestorePurchasesProgress(processed, total);
       });
       Alert.alert(`${numRestored} purchases restored.`);
@@ -120,7 +132,7 @@ export class AppService {
    * @param featureId - The feature ID to check
    */
   public checkFeatureAccess(featureId: string) {
-    if (this.iaptic.checkEntitlement(featureId)) {
+    if (IapticRN.checkEntitlement(featureId)) {
       Alert.alert(`"${featureId}" feature is unlocked.`);
     }
     else {

@@ -13,8 +13,10 @@ import { StoreProducts } from "./StoreProducts";
 export class Consumables {
   /**
    * Creates a new consumables manager
+   * 
    * @param purchases - The purchases manager
    * @param catalog - The product catalog
+   * @internal
    */
   constructor(private readonly purchases: Purchases, private readonly products: StoreProducts, private readonly events: IapticEvents) {
     this.events.addEventListener('purchase.updated', (purchase: IapticVerifiedPurchase) => this.purchaseUpdated(purchase), 'Consumables');

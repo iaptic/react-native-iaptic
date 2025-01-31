@@ -1,4 +1,6 @@
 const EN = {
+  ProgrammingError: "Programming Error",
+  IapticError_StoreNotInitialized: "IapticRN.store is not initialized, call IapticRN.initialize() first",
   Error: "Error",
   ValidationError: "Receipt Validation Error",
   PurchaseError_title: "Purchase Error #{0}",
@@ -91,6 +93,8 @@ const EN_AU: typeof EN = {
 
 const ES: typeof EN = {
   Error: "Error",
+  ProgrammingError: "Error de programación",
+  IapticError_StoreNotInitialized: "IapticRN.store no está inicializado, llame a IapticRN.initialize() primero",
   ValidationError: "Error de validación del recibo",
   PurchaseError_title: "Error con el Store #{0}",
   PurchaseError_E_UNKNOWN: "Se produjo un error inesperado.",

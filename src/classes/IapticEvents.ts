@@ -8,6 +8,11 @@ export type IapticRegisteredEventListener = {
   remove: () => void;
 };
 
+/**
+ * Manages event listeners for Iaptic events
+ * 
+ * @internal
+ */
 export class IapticEvents {
 
   private eventListeners: IapticRegisteredEventListener[] = [];

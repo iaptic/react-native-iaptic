@@ -162,6 +162,8 @@ function computeMD5(str: string, shiftFunction?: ShiftFunction): [number, number
  * Code was imported from https://github.com/pvorb/node-md5
  *
  * I cleaned up the all-including minified version of it.
+ * 
+ * This is used to generate an obfuscatedAccountIdAndroid for Google Play purchases and an appAccountToken for Apple App Store purchases from the applicationUsername.
  */
 export function md5(str: string): string {
   if (!str) return '';

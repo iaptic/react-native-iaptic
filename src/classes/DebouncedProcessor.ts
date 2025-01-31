@@ -7,6 +7,8 @@
  * This is a workaround for the iap plugin bug.
  * 
  * To use it, provide the processing function and a function that returns a unique identifier for the data to process.
+ * 
+ * @internal
  */
 export class DebouncedProcessor<T> {
 
@@ -27,6 +29,7 @@ export class DebouncedProcessor<T> {
    * 
    * @param processFunction The function that processes the items
    * @param idFunction The function that returns a unique identifier for the data to process
+   * @internal
    */
   constructor(processFunction: (data: T) => void, idFunction: (data: T) => string) {
     this.processFunction = processFunction;

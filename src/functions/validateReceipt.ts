@@ -1,6 +1,6 @@
 import { IapticError, IapticErrorSeverity } from "../classes/IapticError";
 import { Locales } from "../classes/Locales";
-import { IapticConfig, IapticErrorCode, IapticProduct, IapticValidateRequest, IapticValidateRequestTransaction, IapticValidateResponse, IapticValidationData } from "../types";
+import { IapticStoreConfig, IapticErrorCode, IapticProduct, IapticValidateRequest, IapticValidateRequestTransaction, IapticValidateResponse, IapticValidationData } from "../types";
 import { Platform } from "react-native";
 import { encode } from 'base-64';
 
@@ -8,13 +8,13 @@ import { encode } from 'base-64';
 * Gets the authorization header for API requests
 * @returns The Basic auth header string
 */
-function getAuthHeader(config: IapticConfig): string {
+function getAuthHeader(config: IapticStoreConfig): string {
   const auth = encode(`${config.appName}:${config.publicKey}`);
   return `Basic ${auth}`;
 }
 
 /** Internal function to validate a receipt */
-export async function validateReceipt(data: IapticValidationData, products: IapticProduct[], config: IapticConfig): Promise<IapticValidateResponse> {
+export async function validateReceipt(data: IapticValidationData, products: IapticProduct[], config: IapticStoreConfig): Promise<IapticValidateResponse> {
   const os = Platform.OS;
 
   const id = os === 'android' ? data.productId : config.iosBundleId ?? data.productId;
@@ -116,6 +116,13 @@ export async function validateReceipt(data: IapticValidationData, products: Iapt
         debugMessage: data.message ?? '',
         code: data.code ?? IapticErrorCode.UNKNOWN,
         status: data.status ?? 0,
+      });
+    }
+
+    if (data?.data?.collection) {
+      data.data.collection.forEach(product => {
+        // Add the more user-friendly productId property
+        product.productId = product.id;
       });
     }
 

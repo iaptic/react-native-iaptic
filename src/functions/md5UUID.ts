@@ -3,6 +3,10 @@ import { md5 } from './md5';
 /**
  * Generate a UUID v3-like string from an account string.
  * 
+ * The username is first hashed with MD5, then formatted as a UUID v3-like string by adding dashes between the different parts of the hash.
+ * 
+ * This is used to generate a appAccountToken for Apple App Store purchases.
+ * 
  * @param account - The account string
  * @returns The UUID v3-like string
  */
