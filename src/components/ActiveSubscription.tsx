@@ -71,6 +71,16 @@ import { IapticRN } from '../IapticRN';
  */
 interface ActiveSubscriptionProps {
   /**
+   * Localized labels for each entitlement
+   * 
+   * @default {}
+   * @example {
+   *   pro: { label: 'Pro Features', detail: 'Unlimited access to premium features' },
+   *   premium: { label: 'Premium Access', detail: 'Unlimited downloads and priority support' }
+   * }
+   */
+  entitlementLabels?: Record<string, { label: string, detail?: string }>;
+  /**
    * Style customization object allowing overrides for specific UI components
    */
   styles?: {
@@ -104,6 +114,10 @@ interface ActiveSubscriptionProps {
  * // Full example with entitlements
  * <ActiveSubscription
  *   iaptic={iapticInstance}
+ *   entitlementLabels={{
+ *     pro: { label: 'Pro Features', detail: 'Unlimited access to premium features' },
+ *     premium: { label: 'Premium Access', detail: 'Unlimited downloads and priority support' }
+ *   }}
  *   styles={{
  *     entitlementTag: { 
  *       backgroundColor: '#e3f2fd',
@@ -114,24 +128,32 @@ interface ActiveSubscriptionProps {
  */
 export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
   styles: customStyles,
+  entitlementLabels,
 }) => {
   // Track subscription state
   const [state, setState] = useState({
     subscription: IapticRN.getActiveSubscription(),
     entitlements: IapticRN.listEntitlements(),
+    products: IapticRN.getProducts(),
   });
 
   useEffect(() => {
-    // Subscribe to changes in the IapticRN instance
-    const listener = IapticRN.addEventListener('subscription.updated', (_subscription) => {
+    function updateState() {
       setState({
         subscription: IapticRN.getActiveSubscription(),
         entitlements: IapticRN.listEntitlements(),
+        products: IapticRN.getProducts(),
       });
-    });
+    }
+
+    // Subscribe to changes in the IapticRN instance
+    const listeners = [
+      IapticRN.addEventListener('subscription.updated', updateState),
+      IapticRN.addEventListener('products.updated', updateState),
+    ];
     
     // Cleanup on unmount
-    return () => listener.remove();
+    return () => listeners.forEach(listener => listener.remove());
   }, []);
 
   if (!state.subscription) {
@@ -149,22 +171,19 @@ export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
   return (
     <View style={[styles.subscriptionItem, customStyles?.container]}>
       <Text style={[styles.subscriptionTitle, customStyles?.title]}>
-        {state.subscription.id}
+        {state.products.find(p => p.id === state.subscription?.productId)?.title ?? state.subscription.productId}
       </Text>
       <Text style={[
         styles.subscriptionStatus,
         { color: !state.subscription.isExpired ? 'green' : 'red' },
         customStyles?.status
       ]}>
-        {!state.subscription.isExpired 
-          ? Locales.get('ActiveSubscription_Status_Active')
-          : Locales.get('ActiveSubscription_Status_Expired')
-        }
+        {state.subscription.isExpired && Locales.get('ActiveSubscription_Status_Expired')}
         {!state.subscription.isExpired && state.subscription.renewalIntent === 'Lapse' && (
-          `\n ⚠️ ${Locales.get('ActiveSubscription_WillCancel', formatDateTime(state.subscription.expiryDate))}`
+          `⚠️ ${Locales.get('ActiveSubscription_WillCancel', formatDateTime(state.subscription.expiryDate))}`
         )}
         {!state.subscription.isExpired && state.subscription.renewalIntent === 'Renew' && (
-          `\n${Locales.get('ActiveSubscription_WillRenew', formatDateTime(state.subscription.expiryDate))}`
+          `${Locales.get('ActiveSubscription_WillRenew', formatDateTime(state.subscription.expiryDate))}`
         )}
       </Text>
       <View style={[styles.tagsContainer, customStyles?.tagContainer]}>
@@ -194,7 +213,7 @@ export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
             customStyles?.baseTag,
             customStyles?.entitlementTag
           ]}>
-            {entitlement}
+            {entitlementLabels?.[entitlement]?.label ?? entitlement}
           </Text>
         ))}
       </View>
