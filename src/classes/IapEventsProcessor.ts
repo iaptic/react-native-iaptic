@@ -161,6 +161,7 @@ export class IapEventsProcessor {
     if (globalsGet('active_iap_events_processor') !== this.id) {
       return;
     }
+    if (error.code === 'E_USER_CANCELLED') return; // ignore user cancelled errors
     logger.warn(`[${this.id}] IAP.PurchaseError #${this.id} #${error.code} - ${error.message}`);
   }
 }
