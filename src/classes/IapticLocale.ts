@@ -175,6 +175,8 @@ export interface IapticLocale {
   SubscriptionView_Title: string;
   /** "Close" */
   SubscriptionView_Close: string;
+  /** "Back" */
+  SubscriptionView_Back: string;
   /** "Includes:" */
   SubscriptionView_Includes: string;
   /** "Billing Options" */
@@ -187,6 +189,10 @@ export interface IapticLocale {
   SubscriptionView_CurrentPlan: string;
   /** "Update Plan" */
   SubscriptionView_UpdatePlan: string;
+  /** "Your Subscription" */
+  SubscriptionView_CurrentSubscription: string;
+  /** "Change Plan" */
+  SubscriptionView_ChangePlan: string;
   /** "Date" */
   DateFormatter_Date: string;
   /** "Time" */
