@@ -51,7 +51,107 @@ IapticRN.initialize({
     tokenValue: 100
   }
 ]);
+```
 
+## Subscription Management UI
+
+The `IapticSubscriptionView` component provides a complete subscription management interface with purchase handling.
+
+### Key Features
+- Automatic product loading and sorting
+- Feature grid
+- Purchase flow feedback
+- Restore purchases functionality
+- Terms & conditions link
+- Style customization
+
+### Basic Usage
+
+```typescript
+// App initialization
+await IapticRN.initialize({
+  appName: 'com.example.app',
+  publicKey: 'YOUR_API_KEY',
+  products: [{
+    id: 'premium_subscription',
+    type: 'paid subscription',
+    entitlements: ['premium']
+  }]
+});
+
+// In your component
+<IapticSubscriptionView
+  entitlementLabels={{
+    premium: {
+      label: "Premium Features",
+      detail: "Exclusive content and advanced tools"
+    }
+  }}
+  onPurchaseComplete={() => {
+    // Update app state after purchase
+    setEntitlements(IapticRN.listEntitlements());
+  }}
+  termsUrl="https://yourdomain.com/terms"
+/>
+```
+
+### Props Reference
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `entitlementLabels` | `Record<string, { label: string, detail?: string }>` | Labels and descriptions for each entitlement |
+| `onPurchaseComplete` | `() => void` | Callback after successful purchase |
+| `termsUrl` | `string` | URL for terms & conditions |
+| `styles` | `Partial<SubscriptionViewStyles>` | Custom style overrides |
+| `showRestorePurchase` | `boolean` | Show restore purchases button (default: true) |
+
+### Entitlement Management Example
+
+```typescript
+// AppState.ts
+interface AppState {
+  entitlements: string[];
+}
+
+// In your component
+<TouchableOpacity
+  onPress={() => checkAccess('premium')}
+  style={styles.button}
+>
+  <Text>
+    Premium Access: {appState.entitlements.includes('premium') ? '✅' : '🔒'}
+  </Text>
+</TouchableOpacity>
+```
+
+### Customization
+
+Customize styles using the `styles` prop:
+
+```typescript
+<IapticSubscriptionView
+  styles={{
+    productCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12
+    },
+    ctaButton: {
+      backgroundColor: '#4CAF50'
+    }
+  }}
+/>
+```
+
+The component automatically handles:
+- Landscape/portrait layouts
+- Localization
+- Purchase states
+- Active subscription management
+- Receipt validation
+
+## Manual Purchase Flow
+
+```typescript
 // 4. Handle purchases
 const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
 if (offer) {

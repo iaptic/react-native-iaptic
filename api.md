@@ -20,7 +20,7 @@ const app = (props) => {
     IapticRN.initialize({
       appName: 'com.example.app',
       publicKey: 'YOUR_API_KEY',
-      iosBundleId: 'com.yourcompany.app',,
+      iosBundleId: 'com.yourcompany.app',
       products: [{
         id: 'premium_subscription',
         type: 'paid subscription',
@@ -931,7 +931,7 @@ For advanced use-cases only.
 
 ###### config
 
-`IapticConfig`
+[`IapticConfig`](globals.md#iapticconfig)
 
 ###### Returns
 
@@ -984,6 +984,19 @@ if (activeSubscription) {
   }
 }
 ```
+
+##### getPendingPurchases()
+
+> `static` **getPendingPurchases**(): [`IapticPendingPurchase`](globals.md#iapticpendingpurchase)[]
+
+
+Get all pending purchases.
+
+###### Returns
+
+[`IapticPendingPurchase`](globals.md#iapticpendingpurchase)[]
+
+List of pending purchases
 
 ##### getProduct()
 
@@ -1097,7 +1110,7 @@ Initialize the IapticRN singleton
 
 ###### config
 
-`IapticConfig`
+[`IapticConfig`](globals.md#iapticconfig)
 
 The configuration for the IapticRN singleton
 
@@ -1943,6 +1956,87 @@ formatDurationEN(iso?: string, options?: { omitOne?: boolean }): string {
 
 ## Interfaces
 
+### IapticConfig
+
+
+Configuration for Iaptic React Native SDK
+
+#### Extends
+
+- `IapticStoreConfig`
+
+#### Properties
+
+##### applicationUsername?
+
+> `optional` **applicationUsername**: `string`
+
+
+##### appName
+
+> **appName**: `string`
+
+
+###### Inherited from
+
+`IapticStoreConfig.appName`
+
+##### baseUrl?
+
+> `optional` **baseUrl**: `string`
+
+
+The base URL of the iaptic validator
+
+###### Inherited from
+
+`IapticStoreConfig.baseUrl`
+
+##### iosBundleId?
+
+> `optional` **iosBundleId**: `string`
+
+
+###### Inherited from
+
+`IapticStoreConfig.iosBundleId`
+
+##### products?
+
+> `optional` **products**: [`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
+
+
+##### publicKey
+
+> **publicKey**: `string`
+
+
+###### Inherited from
+
+`IapticStoreConfig.publicKey`
+
+##### showAlerts?
+
+> `optional` **showAlerts**: `boolean`
+
+
+Disable alert by setting this to false.
+
+By default, IapticRN will display relevant alerts to the user when something goes wrong.
+
+Default is true.
+
+###### Inherited from
+
+`IapticStoreConfig.showAlerts`
+
+##### verbosity?
+
+> `optional` **verbosity**: [`IapticVerbosity`](globals.md#iapticverbosity)
+
+
+***
+
 ### IapticEventMap
 
 
@@ -2586,6 +2680,34 @@ An error occurred in the application.
 
 Purchase Error #{0}
 
+##### SubscriptionView\_Back
+
+> **SubscriptionView\_Back**: `string`
+
+
+"Back"
+
+##### SubscriptionView\_BillingOptions
+
+> **SubscriptionView\_BillingOptions**: `string`
+
+
+"Billing Options"
+
+##### SubscriptionView\_Cancel
+
+> **SubscriptionView\_Cancel**: `string`
+
+
+Cancel
+
+##### SubscriptionView\_ChangePlan
+
+> **SubscriptionView\_ChangePlan**: `string`
+
+
+"Change Plan"
+
 ##### SubscriptionView\_Close
 
 > **SubscriptionView\_Close**: `string`
@@ -2600,12 +2722,33 @@ Purchase Error #{0}
 
 "Continue"
 
+##### SubscriptionView\_CurrentPlan
+
+> **SubscriptionView\_CurrentPlan**: `string`
+
+
+"Current Plan"
+
+##### SubscriptionView\_CurrentSubscription
+
+> **SubscriptionView\_CurrentSubscription**: `string`
+
+
+"Your Subscription"
+
 ##### SubscriptionView\_Includes
 
 > **SubscriptionView\_Includes**: `string`
 
 
 "Includes:"
+
+##### SubscriptionView\_PleaseWait
+
+> **SubscriptionView\_PleaseWait**: `string`
+
+
+Please wait...
 
 ##### SubscriptionView\_Processing
 
@@ -2614,12 +2757,103 @@ Purchase Error #{0}
 
 "Processing..."
 
+##### SubscriptionView\_ProcessingStatus\_cancelled
+
+> **SubscriptionView\_ProcessingStatus\_cancelled**: `string`
+
+
+"Cancelled"
+
+##### SubscriptionView\_ProcessingStatus\_completed
+
+> **SubscriptionView\_ProcessingStatus\_completed**: `string`
+
+
+Completed
+
+##### SubscriptionView\_ProcessingStatus\_finishing
+
+> **SubscriptionView\_ProcessingStatus\_finishing**: `string`
+
+
+Finalizing purchase...
+
+##### SubscriptionView\_ProcessingStatus\_processing
+
+> **SubscriptionView\_ProcessingStatus\_processing**: `string`
+
+
+Processing...
+
+##### SubscriptionView\_ProcessingStatus\_purchasing
+
+> **SubscriptionView\_ProcessingStatus\_purchasing**: `string`
+
+
+Purchasing...
+
+##### SubscriptionView\_ProcessingStatus\_validating
+
+> **SubscriptionView\_ProcessingStatus\_validating**: `string`
+
+
+Validating receipt...
+
+##### SubscriptionView\_ProcessingTitle
+
+> **SubscriptionView\_ProcessingTitle**: `string`
+
+
+Purchasing...
+
+##### SubscriptionView\_RestoreProgress
+
+> **SubscriptionView\_RestoreProgress**: `string`
+
+
+"Processed {0} of {1} purchases"
+
+##### SubscriptionView\_RestorePurchase
+
+> **SubscriptionView\_RestorePurchase**: `string`
+
+
+"Restore Purchases"
+
+##### SubscriptionView\_RestoringTitle
+
+> **SubscriptionView\_RestoringTitle**: `string`
+
+
+"Restoring..."
+
+##### SubscriptionView\_TermsLink
+
+> **SubscriptionView\_TermsLink**: `string`
+
+
+"Terms and Conditions"
+
+##### SubscriptionView\_TermsPrefix
+
+> **SubscriptionView\_TermsPrefix**: `string`
+
+
+"By subscribing, you agree to our"
+
 ##### SubscriptionView\_Title
 
 > **SubscriptionView\_Title**: `string`
 
 
 "Choose Your Plan"
+
+##### SubscriptionView\_UpdatePlan
+
+> **SubscriptionView\_UpdatePlan**: `string`
+
+
+"Update Plan"
 
 ##### UnknownError
 
@@ -3141,6 +3375,36 @@ Callback when modal is closed (either via button or backdrop tap)
 onClose={() => console.log('Modal closed')}
 ```
 
+##### onPurchaseComplete()?
+
+> `optional` **onPurchaseComplete**: () => `void`
+
+
+Callback when a purchase is complete (you should show a thank you message)
+
+###### Returns
+
+`void`
+
+###### Example
+
+```ts
+onPurchaseComplete={() => console.log('Purchase complete')}
+```
+
+##### showRestorePurchase?
+
+> `optional` **showRestorePurchase**: `boolean`
+
+
+Show restore purchases button when there's no active subscription
+
+###### Default
+
+```ts
+true
+```
+
 ##### sortProducts?
 
 > `optional` **sortProducts**: `boolean`
@@ -3174,6 +3438,19 @@ styles={{
   modalContainer: { backgroundColor: 'rgba(0,0,0,0.8)' },
   ctaButton: { backgroundColor: '#FF3B30' }
 }}
+```
+
+##### termsUrl?
+
+> `optional` **termsUrl**: `string`
+
+
+URL to Terms & Conditions (optional)
+
+###### Example
+
+```ts
+termsUrl="https://example.com/terms"
 ```
 
 ##### visible?
@@ -3720,7 +3997,7 @@ Mode of payment
 
 ### IapticPendingPurchaseState
 
-> **IapticPendingPurchaseState**: `"purchasing"` \| `"processing"` \| `"validating"` \| `"finishing"` \| `"completed"`
+> **IapticPendingPurchaseState**: `"purchasing"` \| `"processing"` \| `"validating"` \| `"finishing"` \| `"completed"` \| `"cancelled"`
 
 
 Status of a purchase being processed.
@@ -3800,6 +4077,10 @@ Subscription status component that automatically updates when subscription chang
 // Full example with entitlements
 <ActiveSubscription
   iaptic={iapticInstance}
+  entitlementLabels={{
+    pro: { label: 'Pro Features', detail: 'Unlimited access to premium features' },
+    premium: { label: 'Premium Access', detail: 'Unlimited downloads and priority support' }
+  }}
   styles={{
     entitlementTag: { 
       backgroundColor: '#e3f2fd',

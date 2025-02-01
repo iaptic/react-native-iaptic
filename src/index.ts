@@ -14,7 +14,7 @@
  *     IapticRN.initialize({
  *       appName: 'com.example.app',
  *       publicKey: 'YOUR_API_KEY',
- *       iosBundleId: 'com.yourcompany.app',,
+ *       iosBundleId: 'com.yourcompany.app',
  *       products: [{
  *         id: 'premium_subscription',
  *         type: 'paid subscription',
