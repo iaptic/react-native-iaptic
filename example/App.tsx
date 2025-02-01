@@ -31,8 +31,8 @@ function App(): React.JSX.Element {
     <SafeAreaView style={styles.container}>
       <SubscriptionView 
         entitlementLabels={{
-          pro_feature: 'Professional Features',
-          premium_feature: 'Premium Content'
+          pro_feature: { label: 'Professional Features', detail: 'Access to professional features' },
+          premium_feature: { label: 'Premium Content', detail: 'Access to premium content' }
         }}
       />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.productsContainer}>

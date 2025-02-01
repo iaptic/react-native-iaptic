@@ -13,7 +13,8 @@ import {
   IapticEventType,
   IapticEventListener,
   IapticProduct,
-  IapticOffer
+  IapticOffer,
+  IapticPendingPurchase
 } from "./types";
 import type { md5UUID } from "./functions/md5UUID";
 import type { md5 } from "./functions/md5";
@@ -432,6 +433,16 @@ export class IapticRN {
   static getPurchases(): IapticVerifiedPurchase[] {
     if (!IapticRN.store) return [];
     return IapticRN.getStore().purchases.sorted();
+  }
+
+  /**
+   * Get all pending purchases.
+   * 
+   * @returns List of pending purchases
+   */
+  static getPendingPurchases(): IapticPendingPurchase[] {
+    if (!IapticRN.store) return [];
+    return IapticRN.getStore().pendingPurchases.get();
   }
 
   /**

@@ -191,4 +191,20 @@ export interface IapticLocale {
   DateFormatter_Time: string;
   /** "✓" */
   EntitlementGrid_Checkmark: string;
+  /** Purchasing... */
+  SubscriptionView_ProcessingTitle: string;
+  /** Please wait... */
+  SubscriptionView_PleaseWait: string;
+  /** Cancel */
+  SubscriptionView_Cancel: string;
+  /** Purchasing... */
+  SubscriptionView_ProcessingStatus_purchasing: string;
+  /** Processing... */
+  SubscriptionView_ProcessingStatus_processing: string;
+  /** Validating receipt... */
+  SubscriptionView_ProcessingStatus_validating: string;
+  /** Finalizing purchase... */
+  SubscriptionView_ProcessingStatus_finishing: string;
+  /** Completed */
+  SubscriptionView_ProcessingStatus_completed: string;
 }

@@ -73,7 +73,7 @@
  * @packageDocumentation
  */
 
-export { IapticRN } from './IapticRN';
+export { IapticRN, IapticConfig } from './IapticRN';
 export * from './types';
 
 export { IapticError, IapticSeverity } from './classes/IapticError';

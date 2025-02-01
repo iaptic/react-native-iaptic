@@ -36,6 +36,12 @@ export interface SubscriptionViewProps {
   onClose?: () => void;
 
   /** 
+   * Callback when a purchase is complete (you should show a thank you message)
+   * @example onPurchaseComplete={() => console.log('Purchase complete')}
+   */
+  onPurchaseComplete?: () => void;
+
+  /** 
    * Localized descriptions for each entitlement/feature
    * 
    * @default {}
@@ -198,6 +204,46 @@ const defaultStyles = StyleSheet.create({
   ctaButtonCurrentPlan: {
     backgroundColor: '#4CAF50',
   },
+  processingContainer: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  processingTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginVertical: 24,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+    borderRadius: 4,
+    width: '33%', // Will be updated based on status
+  },
+  statusText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  cancelButton: {
+    marginTop: 32,
+    padding: 16,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 
@@ -209,6 +255,7 @@ const defaultStyles = StyleSheet.create({
 
 export const SubscriptionView = ({
   onClose,
+  onPurchaseComplete,
   entitlementLabels = {},
   styles: customStyles = {},
   sortProducts = true,
@@ -227,14 +274,14 @@ export const SubscriptionView = ({
   // }));
 
   function updateProducts() {
-    const subsProducts = IapticRN.getProducts().filter(p => 
+    const subsProducts = IapticRN.getProducts().filter(p =>
       p.type === 'paid subscription' || p.type === 'non renewing subscription'
     );
-    
+
     if (sortProducts) {
       subsProducts.sort((a, b) => (a.entitlements?.length || 0) - (b.entitlements?.length || 0));
     }
-    
+
     setProducts(subsProducts);
     if (subsProducts.length > 0) {
       setSelectedProduct(subsProducts[0]);
@@ -255,7 +302,7 @@ export const SubscriptionView = ({
       setVisible(false);
       subscriptionViewEvents.emit('dismissed');
     });
-    
+
     return () => {
       showListener.remove();
       hideListener.remove();
@@ -270,6 +317,7 @@ export const SubscriptionView = ({
   // Load subscription products
   useEffect(() => {
     updateProducts();
+    setPendingPurchase(IapticRN.getPendingPurchases()[0] ?? null);
   }, [sortProducts]);
 
   // Listen to purchase updates
@@ -277,6 +325,9 @@ export const SubscriptionView = ({
     const listeners = [
       IapticRN.addEventListener('pendingPurchase.updated', purchase => {
         setPendingPurchase(purchase.status === 'completed' ? null : purchase);
+        if (purchase.status === 'completed') {
+          if (onPurchaseComplete) onPurchaseComplete();
+        }
       }),
       IapticRN.addEventListener('products.updated', () => {
         updateProducts();
@@ -309,7 +360,7 @@ export const SubscriptionView = ({
   const handleProductSelect = (product: IapticProduct) => {
     setSelectedProduct(product);
     setSelectedOffer(product.offers[0]);
-    
+
     const index = products.findIndex(p => p.id === product.id);
     if (index === -1) return;
 
@@ -331,95 +382,25 @@ export const SubscriptionView = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalContainer}>
-        <View style={[
-          styles.contentContainer,
-          isLandscape ? { 
-            flexDirection: 'row',
-            maxHeight: Math.min(windowHeight * 0.8, 600),
-            paddingHorizontal: 16,
-            minHeight: 400
-          } : {
-            maxHeight: '90%',
-            paddingHorizontal: 24
-          }
-        ]}>
-          {/* Landscape mode columns */}
-          {isLandscape && (
-            <ScrollView 
-              ref={landscapeScrollRef}
-              style={{ width: '50%', marginRight: 16 }}
-              contentContainerStyle={{ paddingVertical: 16 }}
-            >
-              {products.map(product => {
-                const isCurrentPlan = activeSubscription?.productId === product.id;
-                return (
-                  <TouchableOpacity
-                    key={product.id}
-                    style={[
-                      styles.productCard,
-                      { 
-                        width: '100%',
-                        minWidth: 0,
-                        marginHorizontal: 0,
-                        marginBottom: 16,
-                        ...(product.id === selectedProduct?.id && styles.productCardSelected),
-                        ...(isCurrentPlan && styles.currentPlanCard)
-                      }
-                    ]}
-                    onPress={() => handleProductSelect(product)}
-                  >
-                    {isCurrentPlan && (
-                      <View style={styles.currentPlanBadge}>
-                        <Text style={styles.currentPlanBadgeText}>
-                          {Locales.get('SubscriptionView_CurrentPlan')}
-                        </Text>
-                      </View>
-                    )}
-                    <Text style={styles.productTitle}>{product.title}</Text>
-                    {product.offers[0] && (
-                      <Text style={styles.productPrice}>
-                        <ProductPrice product={product} styles={styles} />
-                      </Text>
-                    )}
-                    <Text style={styles.productDescription}>
-                      {product.description}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-
-          {/* Main content */}
-          <ScrollView 
-            style={isLandscape ? { width: '50%' } : { width: '100%' }}
-            contentContainerStyle={{ 
-              paddingBottom: 24,
-              paddingHorizontal: isLandscape ? 8 : 0
-            }}
-          >
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={[
-                styles.title,
-                isLandscape ? { maxWidth: '85%' } : { maxWidth: windowWidth * 0.6 }
-              ]}>
-                {Locales.get('SubscriptionView_Title')}
-              </Text>
-              <TouchableOpacity style={styles.closeButton} onPress={onClose ?? dismissSubscriptionView}>
-                <Text style={styles.closeButtonText}>
-                  {Locales.get('SubscriptionView_Close')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Portrait product carousel */}
-            {!isLandscape && (
-              <ScrollView 
-                ref={portraitScrollRef}
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
+        {!pendingPurchase && (
+          <View style={[
+            styles.contentContainer,
+            isLandscape ? {
+              flexDirection: 'row',
+              maxHeight: Math.min(windowHeight * 0.8, 600),
+              paddingHorizontal: 16,
+              minHeight: 400
+            } : {
+              maxHeight: '90%',
+              paddingHorizontal: 24
+            }
+          ]}>
+            {/* Landscape mode columns */}
+            {isLandscape && (
+              <ScrollView
+                ref={landscapeScrollRef}
+                style={{ width: '50%', marginRight: 16 }}
+                contentContainerStyle={{ paddingVertical: 16 }}
               >
                 {products.map(product => {
                   const isCurrentPlan = activeSubscription?.productId === product.id;
@@ -428,9 +409,11 @@ export const SubscriptionView = ({
                       key={product.id}
                       style={[
                         styles.productCard,
-                        { 
-                          width: windowWidth * 0.7,
-                          minWidth: 280,
+                        {
+                          width: '100%',
+                          minWidth: 0,
+                          marginHorizontal: 0,
+                          marginBottom: 16,
                           ...(product.id === selectedProduct?.id && styles.productCardSelected),
                           ...(isCurrentPlan && styles.currentPlanCard)
                         }
@@ -459,78 +442,198 @@ export const SubscriptionView = ({
               </ScrollView>
             )}
 
-            {/* Billing Options */}
-            <ScrollView 
-              horizontal={!isLandscape}
-              showsHorizontalScrollIndicator={false}
-              style={styles.billingSelector}
+            {/* Main content */}
+            <ScrollView
+              style={isLandscape ? { width: '50%' } : { width: '100%' }}
               contentContainerStyle={{
-                paddingHorizontal: isLandscape ? 0 : 16,
-                flexDirection: isLandscape ? 'column' : 'row',
-                gap: 8
+                paddingBottom: 24,
+                paddingHorizontal: isLandscape ? 8 : 0
               }}
             >
-              {selectedProduct.offers.map(offer => (
-                <TouchableOpacity
-                  key={offer.id}
-                  style={[
-                    styles.billingOption,
-                    { 
-                      minWidth: isLandscape ? '50%' : 120,
-                      paddingVertical: isLandscape ? 12 : 8 
-                    },
-                    offer.id === selectedOffer?.id && styles.billingOptionSelected
-                  ]}
-                  onPress={() => setSelectedOffer(offer)}
-                >
-                  <Text style={styles.billingOptionText}>
-                    {offer.pricingPhases[0].price} {IapticRN.utils.formatBillingCycle(offer.pricingPhases[0])}
-                    {offer.pricingPhases.length > 1 && (
-                      <>
-                        {'\n'}
-                        <Text style={{fontSize: 12}}>
-                          {offer.pricingPhases
-                            .slice(1)
-                            .map(p => `then ${p.price} ${IapticRN.utils.formatBillingCycle(p)}`)
-                            .join('\n')}
-                        </Text>
-                      </>
-                    )}
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={[
+                  styles.title,
+                  isLandscape ? { maxWidth: '85%' } : { maxWidth: windowWidth * 0.6 }
+                ]}>
+                  {Locales.get('SubscriptionView_Title')}
+                </Text>
+                <TouchableOpacity style={styles.closeButton} onPress={dismissSubscriptionView}>
+                  <Text style={styles.closeButtonText}>
+                    {Locales.get('SubscriptionView_Close')}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
+              </View>
 
-            {/* Features and CTA */}
-            <Text style={styles.featuresTitle}>
-              {Locales.get('SubscriptionView_Includes')}
+              {/* Portrait product carousel */}
+              {!isLandscape && (
+                <ScrollView
+                  ref={portraitScrollRef}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                >
+                  {products.map(product => {
+                    const isCurrentPlan = activeSubscription?.productId === product.id;
+                    return (
+                      <TouchableOpacity
+                        key={product.id}
+                        style={[
+                          styles.productCard,
+                          {
+                            width: windowWidth * 0.7,
+                            minWidth: 280,
+                            ...(product.id === selectedProduct?.id && styles.productCardSelected),
+                            ...(isCurrentPlan && styles.currentPlanCard)
+                          }
+                        ]}
+                        onPress={() => handleProductSelect(product)}
+                      >
+                        {isCurrentPlan && (
+                          <View style={styles.currentPlanBadge}>
+                            <Text style={styles.currentPlanBadgeText}>
+                              {Locales.get('SubscriptionView_CurrentPlan')}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={styles.productTitle}>{product.title}</Text>
+                        {product.offers[0] && (
+                          <Text style={styles.productPrice}>
+                            <ProductPrice product={product} styles={styles} />
+                          </Text>
+                        )}
+                        <Text style={styles.productDescription}>
+                          {product.description}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              )}
+
+              {/* Billing Options */}
+              <ScrollView
+                horizontal={!isLandscape}
+                showsHorizontalScrollIndicator={false}
+                style={styles.billingSelector}
+                contentContainerStyle={{
+                  paddingHorizontal: isLandscape ? 0 : 16,
+                  flexDirection: isLandscape ? 'column' : 'row',
+                  gap: 8
+                }}
+              >
+                {selectedProduct.offers.map(offer => (
+                  <TouchableOpacity
+                    key={offer.id}
+                    style={[
+                      styles.billingOption,
+                      {
+                        minWidth: isLandscape ? '50%' : 120,
+                        paddingVertical: isLandscape ? 12 : 8
+                      },
+                      offer.id === selectedOffer?.id && styles.billingOptionSelected
+                    ]}
+                    onPress={() => setSelectedOffer(offer)}
+                  >
+                    <Text style={styles.billingOptionText}>
+                      {offer.pricingPhases[0].price} {IapticRN.utils.formatBillingCycle(offer.pricingPhases[0])}
+                      {offer.pricingPhases.length > 1 && (
+                        <>
+                          {'\n'}
+                          <Text style={{ fontSize: 12 }}>
+                            {offer.pricingPhases
+                              .slice(1)
+                              .map(p => `then ${p.price} ${IapticRN.utils.formatBillingCycle(p)}`)
+                              .join('\n')}
+                          </Text>
+                        </>
+                      )}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {/* Features and CTA */}
+              <Text style={styles.featuresTitle}>
+                {Locales.get('SubscriptionView_Includes')}
+              </Text>
+              <EntitlementGrid
+                entitlements={selectedProduct.entitlements || []}
+                labels={entitlementLabels ?? {}}
+              />
+
+
+              <TouchableOpacity
+                style={[
+                  styles.ctaButton,
+                  pendingPurchase && styles.ctaButtonDisabled,
+                  isCurrentPlan && styles.ctaButtonCurrentPlan,
+                  isLandscape && { marginTop: 16 }
+                ]}
+                onPress={handlePurchase}
+                disabled={!!pendingPurchase || (isCurrentPlan && selectedProduct.offers.length === 1)}
+              >
+                <Text style={styles.ctaButtonText}>
+                  {isCurrentPlan ?
+                    (selectedProduct.offers.length > 1
+                      ? Locales.get('SubscriptionView_UpdatePlan')
+                      : Locales.get('SubscriptionView_CurrentPlan')) :
+                    (pendingPurchase ? Locales.get('SubscriptionView_Processing') : Locales.get('SubscriptionView_Continue'))
+                  }
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        )}
+        {pendingPurchase && (
+          <View style={[styles.contentContainer, styles.processingContainer]}>
+            <Text style={styles.processingTitle}>
+              {Locales.get('SubscriptionView_ProcessingTitle')}
             </Text>
-            <EntitlementGrid 
-              entitlements={selectedProduct.entitlements || []}
-              labels={entitlementLabels ?? {}}
-            />
+
+            {/* Product Details */}
+            {products.find(p => p.id === pendingPurchase.productId) && (
+              <>
+                <Text style={styles.statusText}>
+                  {products.find(p => p.id === pendingPurchase.productId)!.title}
+                </Text>
+              </>
+            )}
+
+            {/* Progress Bar */}
+            <View style={styles.progressBar}>
+              <View style={[
+                styles.progressFill,
+                {
+                  width: pendingPurchase.status === 'processing' ? '25%' :
+                    pendingPurchase.status === 'validating' ? '50%' :
+                      pendingPurchase.status === 'finishing' ? '75%' : '100%'
+                }
+              ]} />
+            </View>
+
+            {/* Status Text */}
+            <Text style={styles.statusText}>
+              {Locales.get(`SubscriptionView_ProcessingStatus_${pendingPurchase.status}`)}
+            </Text>
+
+            {/* <Text style={styles.statusText}>
+              {Locales.get('SubscriptionView_PleaseWait')}
+            </Text> */}
 
             <TouchableOpacity
-              style={[
-                styles.ctaButton,
-                pendingPurchase && styles.ctaButtonDisabled,
-                isCurrentPlan && styles.ctaButtonCurrentPlan,
-                isLandscape && { marginTop: 16 }
-              ]}
-              onPress={handlePurchase}
-              disabled={!!pendingPurchase || (isCurrentPlan && selectedProduct.offers.length === 1)}
+              style={styles.cancelButton}
+              onPress={() => {
+                dismissSubscriptionView();
+                setPendingPurchase(null);
+              }}
             >
-              <Text style={styles.ctaButtonText}>
-                {isCurrentPlan ? 
-                  (selectedProduct.offers.length > 1 
-                    ? Locales.get('SubscriptionView_UpdatePlan') 
-                    : Locales.get('SubscriptionView_CurrentPlan')) :
-                  (pendingPurchase ? Locales.get('SubscriptionView_Processing') : Locales.get('SubscriptionView_Continue'))
-                }
+              <Text style={styles.cancelButtonText}>
+                {Locales.get('SubscriptionView_Cancel')}
               </Text>
             </TouchableOpacity>
-          </ScrollView>
-        </View>
+          </View>
+        )}
       </View>
     </Modal>
   );

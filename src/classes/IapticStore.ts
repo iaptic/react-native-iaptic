@@ -224,6 +224,7 @@ export class IapticStore {
     logger.info(`order(${JSON.stringify(offer)}) applicationUsername:${this.applicationUsername}`);
     try {
       this.pendingPurchases.add(offer);
+      await (new Promise(resolve => setTimeout(resolve, 10)));
       switch (this.products.getType(offer.productId)) {
         case 'non consumable':
         case 'consumable':

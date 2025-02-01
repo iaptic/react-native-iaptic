@@ -100,7 +100,15 @@ const EN: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "Current Plan",
-  SubscriptionView_UpdatePlan: "Update Plan"
+  SubscriptionView_UpdatePlan: "Update Plan",
+  SubscriptionView_ProcessingTitle: "Processing Purchase",
+  SubscriptionView_PleaseWait: "Please wait...",
+  SubscriptionView_Cancel: "Cancel",
+  SubscriptionView_ProcessingStatus_purchasing: "purchasing...",
+  SubscriptionView_ProcessingStatus_processing: "processing...",
+  SubscriptionView_ProcessingStatus_validating: "validating...",
+  SubscriptionView_ProcessingStatus_finishing: "finalizing...",
+  SubscriptionView_ProcessingStatus_completed: "completed...",
 };
 
 /**
@@ -108,6 +116,7 @@ const EN: IapticLocale = {
  */
 const EN_UK: IapticLocale = {
   ...EN,
+  SubscriptionView_ProcessingStatus_finishing: "finalising...",
 };
 
 /**
@@ -117,6 +126,7 @@ const EN_AU: IapticLocale = {
   ...EN,
   // Australian English adjustments:
   PurchaseError_E_ITEM_UNAVAILABLE: "The requested product is unavailable",
+  SubscriptionView_ProcessingStatus_finishing: "finalising...",
 };
 
 const ES: IapticLocale = {
@@ -210,7 +220,15 @@ const ES: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "Plan Actual",
-  SubscriptionView_UpdatePlan: "Actualizar Plan"
+  SubscriptionView_UpdatePlan: "Actualizar Plan",
+  SubscriptionView_ProcessingTitle: "Procesando Compra",
+  SubscriptionView_PleaseWait: "Por favor espera...",
+  SubscriptionView_Cancel: "Cancelar",
+  SubscriptionView_ProcessingStatus_purchasing: "comprando...",
+  SubscriptionView_ProcessingStatus_processing: "procesando...",
+  SubscriptionView_ProcessingStatus_validating: "validando...",
+  SubscriptionView_ProcessingStatus_finishing: "finalizando...",
+  SubscriptionView_ProcessingStatus_completed: "completado...",
 };
 
 /**
@@ -306,7 +324,15 @@ const FR: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "Plan Actuel",
-  SubscriptionView_UpdatePlan: "Modifier le Plan"
+  SubscriptionView_UpdatePlan: "Modifier le Plan",
+  SubscriptionView_ProcessingTitle: "Traitement de l'Achat",
+  SubscriptionView_PleaseWait: "Veuillez patienter...",
+  SubscriptionView_Cancel: "Annuler",
+  SubscriptionView_ProcessingStatus_purchasing: "achat en cours...",
+  SubscriptionView_ProcessingStatus_processing: "traitement...",
+  SubscriptionView_ProcessingStatus_validating: "validation...",
+  SubscriptionView_ProcessingStatus_finishing: "finalisation...",
+  SubscriptionView_ProcessingStatus_completed: "terminé...",
 };
 
 /**
@@ -402,7 +428,15 @@ const DE: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "Aktueller Plan",
-  SubscriptionView_UpdatePlan: "Plan aktualisieren"
+  SubscriptionView_UpdatePlan: "Plan aktualisieren",
+  SubscriptionView_ProcessingTitle: "Verarbeitung",
+  SubscriptionView_PleaseWait: "Bitte warten...",
+  SubscriptionView_Cancel: "Abbrechen",
+  SubscriptionView_ProcessingStatus_purchasing: "in Bearbeitung...",
+  SubscriptionView_ProcessingStatus_processing: "Verarbeitung...",
+  SubscriptionView_ProcessingStatus_validating: "Validierung...",
+  SubscriptionView_ProcessingStatus_finishing: "Abschluss...",
+  SubscriptionView_ProcessingStatus_completed: "Abgeschlossen...",
 };
 
 /**
@@ -498,7 +532,15 @@ const JA: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "現在のプラン",
-  SubscriptionView_UpdatePlan: "プランを更新"
+  SubscriptionView_UpdatePlan: "更新计划",
+  SubscriptionView_ProcessingTitle: "処理中",
+  SubscriptionView_PleaseWait: "お待ちください...",
+  SubscriptionView_Cancel: "キャンセル",
+  SubscriptionView_ProcessingStatus_purchasing: "処理中...",
+  SubscriptionView_ProcessingStatus_processing: "処理中...",
+  SubscriptionView_ProcessingStatus_validating: "検証中...",
+  SubscriptionView_ProcessingStatus_finishing: "最終処理中...",
+  SubscriptionView_ProcessingStatus_completed: "完了...",
 };
 
 /**
@@ -594,7 +636,15 @@ const ZH: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "当前计划",
-  SubscriptionView_UpdatePlan: "更新计划"
+  SubscriptionView_UpdatePlan: "更新计划",
+  SubscriptionView_ProcessingTitle: "处理购买中",
+  SubscriptionView_PleaseWait: "请稍候...",
+  SubscriptionView_Cancel: "取消",
+  SubscriptionView_ProcessingStatus_purchasing: "处理中...",
+  SubscriptionView_ProcessingStatus_processing: "处理中...",
+  SubscriptionView_ProcessingStatus_validating: "验证中...",
+  SubscriptionView_ProcessingStatus_finishing: "完成中...",
+  SubscriptionView_ProcessingStatus_completed: "完成...",
 };
 
 /**
@@ -690,7 +740,15 @@ const PT: IapticLocale = {
   DateFormatter_Date: "{0}",
   DateFormatter_Time: "{0}",
   SubscriptionView_CurrentPlan: "Plano Atual",
-  SubscriptionView_UpdatePlan: "Atualizar Plano"
+  SubscriptionView_UpdatePlan: "Atualizar Plano",
+  SubscriptionView_ProcessingTitle: "Processando Compra",
+  SubscriptionView_PleaseWait: "Por favor aguarde...",
+  SubscriptionView_Cancel: "Cancelar",
+  SubscriptionView_ProcessingStatus_purchasing: "processando...",
+  SubscriptionView_ProcessingStatus_processing: "processando...",
+  SubscriptionView_ProcessingStatus_validating: "validando...",
+  SubscriptionView_ProcessingStatus_finishing: "finalizando...",
+  SubscriptionView_ProcessingStatus_completed: "completo...",
 };
 
 /**
@@ -767,21 +825,6 @@ export class Locales {
         return count === 1 ? 'singular' : 'plural';
     }
   }
-
-  // static get(key: keyof IapticLocale, args: string[] = [], fallbackMessage: string = '', customArgs: string[] = []): string {
-  //   if (!customArgs?.length) {
-  //     customArgs = ['{0}', '{1}', '{2}', '{3}'];
-  //   }
-  //   let value = LANGUAGES[this.currentLanguage][key] || LANGUAGES[this.fallbackLanguage][key];
-  //   if (!value) {
-  //     logger.warn(`Locale key ${key} not found for language ${this.currentLanguage}`);
-  //     value = fallbackMessage;
-  //   }
-  //   if (args.length > 0) {
-  //     return value.replace(/{(\d+)}/g, (match, index) => args[index]);
-  //   }
-  //   return value;
-  // }
 
   static get(key: keyof IapticLocale, args: string[] = [], fallbackMessage: string = '', placeholders: string[] = []): string {
     if (!placeholders?.length) {
