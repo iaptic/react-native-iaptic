@@ -177,6 +177,8 @@ export interface IapticLocale {
   SubscriptionView_Close: string;
   /** "Includes:" */
   SubscriptionView_Includes: string;
+  /** "Billing Options" */
+  SubscriptionView_BillingOptions: string;
   /** "Continue" */
   SubscriptionView_Continue: string;
   /** "Processing..." */

@@ -129,7 +129,7 @@ const defaultStyles = StyleSheet.create({
     elevation: 4,
   },
   productCardSelected: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: '#007AFF',
   },
   productTitle: {
@@ -185,6 +185,12 @@ const defaultStyles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+  },
+  offersTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginTop: 16,
   },
   featuresTitle: {
     fontSize: 16,
@@ -258,8 +264,8 @@ const defaultStyles = StyleSheet.create({
     fontWeight: '600',
   },
   termsContainer: {
-    marginTop: 16,
-    marginBottom: 24,
+    marginTop: 0,
+    marginBottom: 0,
   },
   termsText: {
     fontSize: 12,
@@ -345,8 +351,7 @@ export const SubscriptionView = ({
     if (sortProducts) {
       subsProducts.sort((a, b) => (a.entitlements?.length || 0) - (b.entitlements?.length || 0));
     }
-
-    setProducts(subsProducts.concat([{
+    setProducts(subsProducts /* .concat([{
       id: 'test',
       title: 'Test',
       description: 'Test Description',
@@ -365,7 +370,7 @@ export const SubscriptionView = ({
       }],
       type: 'paid subscription',
       platform: IapticPurchasePlatform.APPLE_APPSTORE
-    }]));
+    }]) */);
     if (subsProducts.length > 0) {
       setSelectedProduct(subsProducts[0]);
       setSelectedOffer(subsProducts[0].offers[0]);
@@ -580,17 +585,20 @@ export const SubscriptionView = ({
             >
               {/* Header */}
               <View style={styles.header}>
+                {!isLandscape && (
+                  <>
                 <Text style={[
                   styles.title,
                   isLandscape ? { maxWidth: '85%' } : { maxWidth: windowWidth * 0.6 }
                 ]}>
                   {Locales.get('SubscriptionView_Title')}
                 </Text>
-                <TouchableOpacity style={styles.closeButton} onPress={dismissSubscriptionView}>
-                  <Text style={styles.closeButtonText}>
-                    {Locales.get('SubscriptionView_Close')}
+                  <TouchableOpacity style={styles.closeButton} onPress={dismissSubscriptionView}>
+                    <Text style={styles.closeButtonText}>
+                      {Locales.get('SubscriptionView_Close')}
                   </Text>
                 </TouchableOpacity>
+                </>)}
               </View>
 
               {/* Portrait product carousel */}
@@ -640,13 +648,27 @@ export const SubscriptionView = ({
                 </ScrollView>
               )}
 
-              {/* Billing Options */}
+              {/* Features and CTA */}
+              <Text style={styles.featuresTitle}>
+                {Locales.get('SubscriptionView_Includes')}
+              </Text>
+              <EntitlementGrid
+                entitlements={selectedProduct.entitlements || []}
+                labels={entitlementLabels ?? {}}
+              />
+
+              {/* Billing Options */
+                selectedProduct.offers.length > 1 && (
+                  <Text style={styles.offersTitle}>
+                    {Locales.get('SubscriptionView_BillingOptions')}
+                  </Text>
+                )
+              }
               <ScrollView
                 horizontal={!isLandscape}
                 showsHorizontalScrollIndicator={false}
                 style={styles.billingSelector}
                 contentContainerStyle={{
-                  paddingHorizontal: isLandscape ? 0 : 16,
                   flexDirection: isLandscape ? 'column' : 'row',
                   gap: 8
                 }}
@@ -681,22 +703,42 @@ export const SubscriptionView = ({
                   </TouchableOpacity>
                 ))}
               </ScrollView>
+            </ScrollView>
 
-              {/* Features and CTA */}
-              <Text style={styles.featuresTitle}>
-                {Locales.get('SubscriptionView_Includes')}
-              </Text>
-              <EntitlementGrid
-                entitlements={selectedProduct.entitlements || []}
-                labels={entitlementLabels ?? {}}
-              />
+            {/* Fixed footer outside scroll */}
+            <View style={isLandscape ? {} : styles.fixedFooter}>
+              {isLandscape && (
+                <TouchableOpacity style={styles.closeButton} onPress={dismissSubscriptionView}>
+                  <Text style={[
+                    styles.closeButtonText,
+                    {
+                      marginBottom: 16,
+                      alignSelf: 'flex-end'
+                    }
+                  ]}>
+                    {Locales.get('SubscriptionView_Close')}
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-              {/* After EntitlementGrid */}
-              {termsUrl && (
+              {termsUrl && isLandscape && (
                 <View style={styles.termsContainer}>
                   <Text style={styles.termsText}>
                     {Locales.get('SubscriptionView_TermsPrefix') + ' '}
-                    <Text 
+                  </Text>
+                  <Text
+                    style={styles.termsLink}
+                    onPress={() => Linking.openURL(termsUrl)}
+                  >
+                    {Locales.get('SubscriptionView_TermsLink')}
+                  </Text>
+                </View>
+              )}
+              {termsUrl && !isLandscape && (
+                <View style={styles.termsContainer}>
+                  <Text style={styles.termsText}>
+                    {Locales.get('SubscriptionView_TermsPrefix') + ' '}
+                    <Text
                       style={styles.termsLink}
                       onPress={() => Linking.openURL(termsUrl)}
                     >
@@ -705,10 +747,6 @@ export const SubscriptionView = ({
                   </Text>
                 </View>
               )}
-            </ScrollView>
-
-            {/* Fixed footer outside scroll */}
-            <View style={styles.fixedFooter}>
               <TouchableOpacity
                 style={[
                   styles.ctaButton,
@@ -735,8 +773,8 @@ export const SubscriptionView = ({
                   disabled={isRestoring}
                 >
                   <Text style={styles.restoreButtonText}>
-                    {isRestoring ? 
-                      Locales.get('SubscriptionView_Processing') : 
+                    {isRestoring ?
+                      Locales.get('SubscriptionView_Processing') :
                       Locales.get('SubscriptionView_RestorePurchase')}
                   </Text>
                 </TouchableOpacity>
