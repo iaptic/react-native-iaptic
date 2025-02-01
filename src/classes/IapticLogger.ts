@@ -19,7 +19,7 @@ export class IapticLogger {
   }
 
   _message(message: string, severity: IapticVerbosity) {
-    const SEVERITY_EMOJIS = [':❌', ':⚠️', '', ':🐛']; // Error, Warn, Info, Debug
+    const SEVERITY_EMOJIS = [':❌', ':🔔', '', ':🐛']; // Error, Warn, Info, Debug
     return `${new Date().toISOString()} [IapticRN${SEVERITY_EMOJIS[severity]}] ${message}`;
   }
 
