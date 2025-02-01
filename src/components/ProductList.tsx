@@ -97,7 +97,7 @@ export const ProductList = ({
   useEffect(() => {
     const listeners = [
       IapticRN.addEventListener('pendingPurchase.updated', purchase => {
-        if (purchase.status === 'completed') {
+        if (purchase.status === 'completed' || purchase.status === 'cancelled') {
           setPendingPurchase(null);
         } else {
           setPendingPurchase(purchase);

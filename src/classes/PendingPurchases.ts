@@ -33,10 +33,10 @@ export class PendingPurchases {
     this.events.emit('pendingPurchase.updated', {productId: offer.productId, offerId: offer.id, status: 'purchasing'});
   }
 
-  public remove(productId: string, offerId?: string) {
+  public remove(productId: string, offerId?: string, reason: IapticPendingPurchaseState = 'completed') {
     if (this.getStatus(productId, offerId) !== undefined) {
       this.pendingPurchases = this.pendingPurchases.filter(p => p.productId !== productId);
-      this.events.emit('pendingPurchase.updated', {productId, offerId, status: 'completed'});
+      this.events.emit('pendingPurchase.updated', {productId, offerId, status: reason});
     }
   }
 
@@ -45,7 +45,7 @@ export class PendingPurchases {
     if (purchase && purchase.status !== status) {
       purchase.status = status;
       if (offerId) purchase.offerId = offerId;
-      if (status === 'completed') {
+      if (status === 'completed' || status === 'cancelled') {
         this.remove(productId, offerId);
       }
       else {

@@ -108,7 +108,13 @@ const EN: IapticLocale = {
   SubscriptionView_ProcessingStatus_processing: "processing...",
   SubscriptionView_ProcessingStatus_validating: "validating...",
   SubscriptionView_ProcessingStatus_finishing: "finalizing...",
+  SubscriptionView_ProcessingStatus_cancelled: "cancelled...",
   SubscriptionView_ProcessingStatus_completed: "completed...",
+  SubscriptionView_TermsPrefix: "By subscribing, you agree to our",
+  SubscriptionView_TermsLink: "Terms and Conditions",
+  SubscriptionView_RestorePurchase: "Restore Purchases",
+  SubscriptionView_RestoringTitle: "Restoring Purchases...",
+  SubscriptionView_RestoreProgress: "Processed {0} of {1} purchases",
 };
 
 /**
@@ -127,6 +133,7 @@ const EN_AU: IapticLocale = {
   // Australian English adjustments:
   PurchaseError_E_ITEM_UNAVAILABLE: "The requested product is unavailable",
   SubscriptionView_ProcessingStatus_finishing: "finalising...",
+  SubscriptionView_TermsLink: "Terms and Conditions",
 };
 
 const ES: IapticLocale = {
@@ -229,6 +236,12 @@ const ES: IapticLocale = {
   SubscriptionView_ProcessingStatus_validating: "validando...",
   SubscriptionView_ProcessingStatus_finishing: "finalizando...",
   SubscriptionView_ProcessingStatus_completed: "completado...",
+  SubscriptionView_ProcessingStatus_cancelled: "cancelado...",
+  SubscriptionView_TermsPrefix: "Al suscribirte, aceptas nuestros",
+  SubscriptionView_TermsLink: "Términos y Condiciones",
+  SubscriptionView_RestorePurchase: "Restaurar Compras",
+  SubscriptionView_RestoringTitle: "Restaurando Compras...",
+  SubscriptionView_RestoreProgress: "Procesado {0} de {1} compras",
 };
 
 /**
@@ -333,6 +346,12 @@ const FR: IapticLocale = {
   SubscriptionView_ProcessingStatus_validating: "validation...",
   SubscriptionView_ProcessingStatus_finishing: "finalisation...",
   SubscriptionView_ProcessingStatus_completed: "terminé...",
+  SubscriptionView_ProcessingStatus_cancelled: "annulé...",
+  SubscriptionView_TermsPrefix: "En vous abonnant, vous acceptez nos",
+  SubscriptionView_TermsLink: "Conditions Générales",
+  SubscriptionView_RestorePurchase: "Restaurer les achats",
+  SubscriptionView_RestoringTitle: "Restauration des achats...",
+  SubscriptionView_RestoreProgress: "Traitement {0} sur {1} achats",
 };
 
 /**
@@ -437,6 +456,12 @@ const DE: IapticLocale = {
   SubscriptionView_ProcessingStatus_validating: "Validierung...",
   SubscriptionView_ProcessingStatus_finishing: "Abschluss...",
   SubscriptionView_ProcessingStatus_completed: "Abgeschlossen...",
+  SubscriptionView_ProcessingStatus_cancelled: "Abgebrochen...",
+  SubscriptionView_TermsPrefix: "Mit dem Abonnieren stimmen Sie unseren",
+  SubscriptionView_TermsLink: "Nutzungsbedingungen",
+  SubscriptionView_RestorePurchase: "Käufe wiederherstellen",
+  SubscriptionView_RestoringTitle: "Wiederherstellen...",
+  SubscriptionView_RestoreProgress: "Verarbeitet {0} von {1} Käufen",
 };
 
 /**
@@ -541,6 +566,12 @@ const JA: IapticLocale = {
   SubscriptionView_ProcessingStatus_validating: "検証中...",
   SubscriptionView_ProcessingStatus_finishing: "最終処理中...",
   SubscriptionView_ProcessingStatus_completed: "完了...",
+  SubscriptionView_ProcessingStatus_cancelled: "キャンセル中...",
+  SubscriptionView_TermsPrefix: "購読することで、当社の",
+  SubscriptionView_TermsLink: "利用規約",
+  SubscriptionView_RestorePurchase: "購入を復元する",
+  SubscriptionView_RestoringTitle: "復元中...",
+  SubscriptionView_RestoreProgress: "処理中 {0} 件 / 合計 {1} 件",
 };
 
 /**
@@ -645,6 +676,12 @@ const ZH: IapticLocale = {
   SubscriptionView_ProcessingStatus_validating: "验证中...",
   SubscriptionView_ProcessingStatus_finishing: "完成中...",
   SubscriptionView_ProcessingStatus_completed: "完成...",
+  SubscriptionView_ProcessingStatus_cancelled: "取消中...",
+  SubscriptionView_TermsPrefix: "订阅即表示您同意我们的",
+  SubscriptionView_TermsLink: "条款和条件",
+  SubscriptionView_RestorePurchase: "恢复购买",
+  SubscriptionView_RestoringTitle: "恢复中...",
+  SubscriptionView_RestoreProgress: "处理中 {0} 件 / 合計 {1} 件",
 };
 
 /**
@@ -749,6 +786,12 @@ const PT: IapticLocale = {
   SubscriptionView_ProcessingStatus_validating: "validando...",
   SubscriptionView_ProcessingStatus_finishing: "finalizando...",
   SubscriptionView_ProcessingStatus_completed: "completo...",
+  SubscriptionView_ProcessingStatus_cancelled: "cancelado...",
+  SubscriptionView_TermsPrefix: "Ao assinar, você concorda com nossos",
+  SubscriptionView_TermsLink: "Termos e Condições",
+  SubscriptionView_RestorePurchase: "Restaurar Compras",
+  SubscriptionView_RestoringTitle: "Restaurando...",
+  SubscriptionView_RestoreProgress: "Processado {0} de {1} compras",
 };
 
 /**

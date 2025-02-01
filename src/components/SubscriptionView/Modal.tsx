@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
-import { IapticProduct, IapticOffer, IapticPendingPurchase, IapticProductDefinition } from '../../types';
+import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, useWindowDimensions, Linking, ActivityIndicator, GestureResponderEvent, findNodeHandle, UIManager, Alert } from 'react-native';
+import { IapticProduct, IapticOffer, IapticPendingPurchase, IapticProductDefinition, IapticPurchasePlatform } from '../../types';
 import { EntitlementGrid } from './EntitlementGrid';
 import { IapticRN } from '../../IapticRN';
 import EventEmitter from 'react-native/Libraries/vendor/emitter/EventEmitter';
@@ -8,6 +8,7 @@ import { logger } from '../../classes/IapticLogger';
 import { SubscriptionViewStyles } from './Styles';
 import { ProductPrice } from './ProductPrice';
 import { Locales } from '../../classes/Locales';
+import { IapticError, IapticSeverity } from '../../classes/IapticError';
 
 /**
  * Component props for SubscriptionView
@@ -69,6 +70,18 @@ export interface SubscriptionViewProps {
    * @example sortProducts={false} // Disable automatic sorting
    */
   sortProducts?: boolean;
+
+  /** 
+   * URL to Terms & Conditions (optional)
+   * @example termsUrl="https://example.com/terms"
+   */
+  termsUrl?: string;
+
+  /** 
+   * Show restore purchases button when there's no active subscription
+   * @default true
+   */
+  showRestorePurchase?: boolean;
 }
 
 const defaultStyles = StyleSheet.create({
@@ -116,7 +129,7 @@ const defaultStyles = StyleSheet.create({
     elevation: 4,
   },
   productCardSelected: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#007AFF',
   },
   productTitle: {
@@ -244,6 +257,52 @@ const defaultStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  termsContainer: {
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  termsText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  termsLink: {
+    textDecorationLine: 'underline',
+    color: '#007AFF',
+  },
+  fixedFooter: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  restoreButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  restoreButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  restoringContainer: {
+    backgroundColor: '#FFFFFF',
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    maxHeight: 200,
+  },
+  restoringTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: '#1a1a1a',
+  },
+  restoringProgress: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+  },
 });
 
 
@@ -259,19 +318,24 @@ export const SubscriptionView = ({
   entitlementLabels = {},
   styles: customStyles = {},
   sortProducts = true,
+  termsUrl,
+  showRestorePurchase = true,
 }: SubscriptionViewProps) => {
+
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscape = windowWidth > windowHeight;
   const [visible, setVisible] = useState(false);
   const styles = { ...defaultStyles, ...StyleSheet.create(customStyles) };
   const portraitScrollRef = useRef<ScrollView>(null);
   const landscapeScrollRef = useRef<ScrollView>(null);
+  const productRefs = useRef<Array<React.RefObject<TouchableOpacity>>>([]);
 
-  // Expose show/hide methods via ref
-  // useImperativeHandle(ref, () => ({
-  //   show: () => setVisible(true),
-  //   hide: () => setVisible(false)
-  // }));
+  const [products, setProducts] = useState<IapticProduct[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<IapticProduct>();
+  const [selectedOffer, setSelectedOffer] = useState<IapticOffer>();
+  const [pendingPurchase, setPendingPurchase] = useState<IapticPendingPurchase | null>(null);
+  const [restoreProgress, setRestoreProgress] = useState<{ processed: number; total: number } | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   function updateProducts() {
     const subsProducts = IapticRN.getProducts().filter(p =>
@@ -282,12 +346,35 @@ export const SubscriptionView = ({
       subsProducts.sort((a, b) => (a.entitlements?.length || 0) - (b.entitlements?.length || 0));
     }
 
-    setProducts(subsProducts);
+    setProducts(subsProducts.concat([{
+      id: 'test',
+      title: 'Test',
+      description: 'Test Description',
+      entitlements: ['pro'],
+      offers: [{
+        id: 'test',
+        pricingPhases: [{
+          price: '$1.99',
+          priceMicros: 1990000,
+          currency: 'USD',
+          billingPeriod: 'P1M',
+        }],
+        offerType: "Subscription",
+        platform: IapticPurchasePlatform.APPLE_APPSTORE,
+        productId: 'test',
+      }],
+      type: 'paid subscription',
+      platform: IapticPurchasePlatform.APPLE_APPSTORE
+    }]));
     if (subsProducts.length > 0) {
       setSelectedProduct(subsProducts[0]);
       setSelectedOffer(subsProducts[0].offers[0]);
     }
   }
+
+  //
+  // Effects
+  //
 
   // Keep the existing useEffect for event listeners
   useEffect(() => {
@@ -309,11 +396,6 @@ export const SubscriptionView = ({
     };
   }, []);
 
-  const [products, setProducts] = useState<IapticProduct[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<IapticProduct>();
-  const [selectedOffer, setSelectedOffer] = useState<IapticOffer>();
-  const [pendingPurchase, setPendingPurchase] = useState<IapticPendingPurchase | null>(null);
-
   // Load subscription products
   useEffect(() => {
     updateProducts();
@@ -324,9 +406,10 @@ export const SubscriptionView = ({
   useEffect(() => {
     const listeners = [
       IapticRN.addEventListener('pendingPurchase.updated', purchase => {
-        setPendingPurchase(purchase.status === 'completed' ? null : purchase);
+        setPendingPurchase(purchase.status === 'completed' || purchase.status === 'cancelled' ? null : purchase);
         if (purchase.status === 'completed') {
           if (onPurchaseComplete) onPurchaseComplete();
+          dismissSubscriptionView();
         }
       }),
       IapticRN.addEventListener('products.updated', () => {
@@ -336,12 +419,28 @@ export const SubscriptionView = ({
     return () => listeners.forEach(listener => listener.remove());
   }, []);
 
+  // Update when products change
+  useEffect(() => {
+    productRefs.current = products.map((_, i) => productRefs.current[i] ?? React.createRef());
+  }, [products]);
+
+  //
+  // Button handlers
+  //
+
   const handlePurchase = async () => {
     if (!selectedOffer) return;
     try {
       await IapticRN.order(selectedOffer);
     } catch (error) {
-      console.error('Purchase failed:', error);
+      if (error instanceof IapticError) {
+        if (error.severity === IapticSeverity.INFO) return;
+        Alert.alert(error.localizedTitle, error.localizedMessage);
+        console.error('Purchase failed:', error);
+      }
+      else {
+        Alert.alert('ERROR', (error as any).message ?? 'Unknown error');
+      }
     }
   };
 
@@ -349,12 +448,6 @@ export const SubscriptionView = ({
     setVisible(false);
     subscriptionViewEvents.emit('subscription.dismiss');
   };
-
-  const activeSubscription = IapticRN.getActiveSubscription();
-
-  if (!selectedProduct || !selectedOffer) return null;
-
-  const isCurrentPlan = activeSubscription?.productId === selectedProduct?.id;
 
   // New helper function to handle product selection
   const handleProductSelect = (product: IapticProduct) => {
@@ -365,29 +458,63 @@ export const SubscriptionView = ({
     if (index === -1) return;
 
     // Calculate scroll positions
-    if (!isLandscape) {
-      // Portrait mode (horizontal scroll)
-      const itemWidth = windowWidth * 0.7;
-      const scrollViewWidth = windowWidth - 48; // Account for parent padding
-      const x = (itemWidth + 16) * index - (scrollViewWidth - itemWidth) / 2;
-      portraitScrollRef.current?.scrollTo({ x, animated: true });
-    } else {
-      // Landscape mode (vertical scroll)
-      const itemHeight = 200; // Approximate card height
-      const y = itemHeight * index - (windowHeight * 0.4 - itemHeight / 2);
-      landscapeScrollRef.current?.scrollTo({ y, animated: true });
+    setTimeout(() => {
+      const productRef = productRefs.current[index];
+      productRef?.current?.measure((x, y, width, height, pageX, pageY) => {
+        if (isLandscape) {
+          landscapeScrollRef.current?.scrollTo({
+            y: Math.max(0, y - 20),
+            animated: true
+          });
+        }
+        else {
+          portraitScrollRef.current?.scrollTo({
+            x: Math.max(0, x - 20),
+            animated: true
+          });
+        }
+      });
+    }, 100);
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setIsRestoring(true);
+      setRestoreProgress(null);
+      
+      const result = await IapticRN.restorePurchases((processed, total) => {
+        setRestoreProgress({ processed, total });
+      });
+
+      if (result > 0) {
+        // Refresh products after restore
+        updateProducts();
+      }
+    } finally {
+      setTimeout(() => {
+        setIsRestoring(false);
+        setRestoreProgress(null);
+      }, 1000);
     }
   };
+
+  //
+  // Render
+  //
+
+  const activeSubscription = IapticRN.getActiveSubscription();
+  if (!selectedProduct || !selectedOffer) return null;
+  const isCurrentPlan = activeSubscription?.productId === selectedProduct?.id;
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalContainer}>
-        {!pendingPurchase && (
+        {!isRestoring && !pendingPurchase && (
           <View style={[
             styles.contentContainer,
             isLandscape ? {
               flexDirection: 'row',
-              maxHeight: Math.min(windowHeight * 0.8, 600),
+              maxHeight: '100%',
               paddingHorizontal: 16,
               minHeight: 400
             } : {
@@ -402,11 +529,12 @@ export const SubscriptionView = ({
                 style={{ width: '50%', marginRight: 16 }}
                 contentContainerStyle={{ paddingVertical: 16 }}
               >
-                {products.map(product => {
+                {products.map((product, index) => {
                   const isCurrentPlan = activeSubscription?.productId === product.id;
                   return (
                     <TouchableOpacity
                       key={product.id}
+                      ref={productRefs.current[index]}
                       style={[
                         styles.productCard,
                         {
@@ -471,13 +599,14 @@ export const SubscriptionView = ({
                   ref={portraitScrollRef}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                  contentContainerStyle={{ paddingLeft: 16, paddingRight: 32 }}
                 >
-                  {products.map(product => {
+                  {products.map((product, index) => {
                     const isCurrentPlan = activeSubscription?.productId === product.id;
                     return (
                       <TouchableOpacity
                         key={product.id}
+                        ref={productRefs.current[index]}
                         style={[
                           styles.productCard,
                           {
@@ -562,13 +691,29 @@ export const SubscriptionView = ({
                 labels={entitlementLabels ?? {}}
               />
 
+              {/* After EntitlementGrid */}
+              {termsUrl && (
+                <View style={styles.termsContainer}>
+                  <Text style={styles.termsText}>
+                    {Locales.get('SubscriptionView_TermsPrefix') + ' '}
+                    <Text 
+                      style={styles.termsLink}
+                      onPress={() => Linking.openURL(termsUrl)}
+                    >
+                      {Locales.get('SubscriptionView_TermsLink')}
+                    </Text>
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
 
+            {/* Fixed footer outside scroll */}
+            <View style={styles.fixedFooter}>
               <TouchableOpacity
                 style={[
                   styles.ctaButton,
                   pendingPurchase && styles.ctaButtonDisabled,
                   isCurrentPlan && styles.ctaButtonCurrentPlan,
-                  isLandscape && { marginTop: 16 }
                 ]}
                 onPress={handlePurchase}
                 disabled={!!pendingPurchase || (isCurrentPlan && selectedProduct.offers.length === 1)}
@@ -582,10 +727,24 @@ export const SubscriptionView = ({
                   }
                 </Text>
               </TouchableOpacity>
-            </ScrollView>
+
+              {showRestorePurchase && !activeSubscription && (
+                <TouchableOpacity
+                  style={styles.restoreButton}
+                  onPress={handleRestorePurchases}
+                  disabled={isRestoring}
+                >
+                  <Text style={styles.restoreButtonText}>
+                    {isRestoring ? 
+                      Locales.get('SubscriptionView_Processing') : 
+                      Locales.get('SubscriptionView_RestorePurchase')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         )}
-        {pendingPurchase && (
+        {!isRestoring && pendingPurchase && (
           <View style={[styles.contentContainer, styles.processingContainer]}>
             <Text style={styles.processingTitle}>
               {Locales.get('SubscriptionView_ProcessingTitle')}
@@ -632,6 +791,23 @@ export const SubscriptionView = ({
                 {Locales.get('SubscriptionView_Cancel')}
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+        {isRestoring && (
+          <View style={styles.restoringContainer}>
+            <Text style={styles.restoringTitle}>
+              {Locales.get('SubscriptionView_RestoringTitle')}
+            </Text>
+            
+            <ActivityIndicator size="large" color="#007AFF" />
+            
+            {restoreProgress && restoreProgress.processed >= 0 && restoreProgress.total > 0 && (
+              <Text style={styles.restoringProgress}>
+                {Locales.get('SubscriptionView_RestoreProgress')
+                  .replace('{0}', restoreProgress.processed.toString())
+                  .replace('{1}', restoreProgress.total.toString())}
+              </Text>
+            )}
           </View>
         )}
       </View>

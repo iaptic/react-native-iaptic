@@ -661,7 +661,7 @@ export type IapticPaymentMode =
 /**
  * Status of a purchase being processed.
  */
-export type IapticPendingPurchaseState = 'purchasing' | 'processing' |  'validating' | 'finishing' | 'completed';
+export type IapticPendingPurchaseState = 'purchasing' | 'processing' |  'validating' | 'finishing' | 'completed' | 'cancelled';
 
 /** Keep the state of a potential purchase in progress */
 export interface IapticPendingPurchase {

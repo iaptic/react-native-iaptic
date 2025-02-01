@@ -256,7 +256,7 @@ export class IapticStore {
         (err.code === 'E_USER_CANCELLED') ? IapticSeverity.INFO : IapticSeverity.ERROR,
         IapticErrorCode.PURCHASE,
         'Failed to place a purchase. Offer: ' + JSON.stringify(offer));
-      this.pendingPurchases.remove(offer.productId);
+      this.pendingPurchases.remove(offer.productId, offer.id, 'cancelled');
       throw iapticError;
     }
   }

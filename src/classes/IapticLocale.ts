@@ -207,4 +207,18 @@ export interface IapticLocale {
   SubscriptionView_ProcessingStatus_finishing: string;
   /** Completed */
   SubscriptionView_ProcessingStatus_completed: string;
+
+  /** "By subscribing, you agree to our" */
+  SubscriptionView_TermsPrefix: string;
+  /** "Terms and Conditions" */
+  SubscriptionView_TermsLink: string;
+  /** "Restore Purchases" */
+  SubscriptionView_RestorePurchase: string;
+
+  /** "Restoring..." */
+  SubscriptionView_RestoringTitle: string;
+  /** "Processed {0} of {1} purchases" */
+  SubscriptionView_RestoreProgress: string;
+  /** "Cancelled" */
+  SubscriptionView_ProcessingStatus_cancelled: string;
 }
