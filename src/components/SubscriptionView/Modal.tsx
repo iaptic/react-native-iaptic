@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
 import { IapticProduct, IapticOffer, IapticPendingPurchase, IapticProductDefinition } from '../../types';
 import { EntitlementGrid } from './EntitlementGrid';
 import { IapticRN } from '../../IapticRN';
@@ -65,8 +65,6 @@ export interface SubscriptionViewProps {
   sortProducts?: boolean;
 }
 
-const windowWidth = Dimensions.get('window').width;
-
 const defaultStyles = StyleSheet.create({
   modalContainer: {
     flex: 1,
@@ -104,7 +102,7 @@ const defaultStyles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 8,
     marginBottom: 8,
-    width: windowWidth * 0.75,
+    width: Dimensions.get('window').width * 0.75,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -194,7 +192,8 @@ export const SubscriptionView = ({
   styles: customStyles = {},
   sortProducts = true,
 }: SubscriptionViewProps) => {
-
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscape = windowWidth > windowHeight;
   const [visible, setVisible] = useState(false);
   const styles = { ...defaultStyles, ...StyleSheet.create(customStyles) };
 
@@ -277,97 +276,183 @@ export const SubscriptionView = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalContainer}>
-        <View style={styles.contentContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>
-              {Locales.get('SubscriptionView_Title')}
+        <View style={[
+          styles.contentContainer,
+          isLandscape ? { 
+            flexDirection: 'row',
+            maxHeight: Math.min(windowHeight * 0.8, 600),
+            paddingHorizontal: 16,
+            minHeight: 400
+          } : {
+            maxHeight: '90%',
+            paddingHorizontal: 24
+          }
+        ]}>
+          {/* Landscape mode columns */}
+          {isLandscape && (
+            <ScrollView 
+              style={{ width: '50%', marginRight: 16 }}
+              contentContainerStyle={{ paddingVertical: 16 }}
+            >
+              {products.map(product => (
+                <TouchableOpacity
+                  key={product.id}
+                  style={[
+                    styles.productCard,
+                    { 
+                      width: '100%',
+                      minWidth: 0,
+                      marginHorizontal: 0,
+                      marginBottom: 16
+                    },
+                    product.id === selectedProduct?.id && styles.productCardSelected
+                  ]}
+                  onPress={() => {
+                    setSelectedProduct(product);
+                    setSelectedOffer(product.offers[0]);
+                  }}
+                >
+                  <Text style={styles.productTitle}>{product.title}</Text>
+                  {product.offers[0] && (
+                    <Text style={styles.productPrice}>
+                      <ProductPrice product={product} styles={styles} />
+                    </Text>
+                  )}
+                  <Text style={styles.productDescription}>
+                    {product.description}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Main content */}
+          <ScrollView 
+            style={isLandscape ? { width: '50%' } : { width: '100%' }}
+            contentContainerStyle={{ 
+              paddingBottom: 24,
+              paddingHorizontal: isLandscape ? 8 : 0
+            }}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={[
+                styles.title,
+                isLandscape ? { maxWidth: '85%' } : { maxWidth: windowWidth * 0.6 }
+              ]}>
+                {Locales.get('SubscriptionView_Title')}
+              </Text>
+              <TouchableOpacity style={styles.closeButton} onPress={onClose ?? dismissSubscriptionView}>
+                <Text style={styles.closeButtonText}>
+                  {Locales.get('SubscriptionView_Close')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Portrait product carousel */}
+            {!isLandscape && (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+              >
+                {products.map(product => (
+                  <TouchableOpacity
+                    key={product.id}
+                    style={[
+                      styles.productCard,
+                      { 
+                        width: windowWidth * 0.7,
+                        minWidth: 280
+                      },
+                      product.id === selectedProduct?.id && styles.productCardSelected
+                    ]}
+                    onPress={() => {
+                      setSelectedProduct(product);
+                      setSelectedOffer(product.offers[0]);
+                    }}
+                  >
+                    <Text style={styles.productTitle}>{product.title}</Text>
+                    {product.offers[0] && (
+                      <Text style={styles.productPrice}>
+                        <ProductPrice product={product} styles={styles} />
+                      </Text>
+                    )}
+                    <Text style={styles.productDescription}>
+                      {product.description}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Billing Options */}
+            <ScrollView 
+              horizontal={!isLandscape}
+              showsHorizontalScrollIndicator={false}
+              style={styles.billingSelector}
+              contentContainerStyle={{
+                paddingHorizontal: isLandscape ? 0 : 16,
+                flexDirection: isLandscape ? 'column' : 'row',
+                gap: 8
+              }}
+            >
+              {selectedProduct.offers.map(offer => (
+                <TouchableOpacity
+                  key={offer.id}
+                  style={[
+                    styles.billingOption,
+                    { 
+                      minWidth: isLandscape ? '50%' : 120,
+                      paddingVertical: isLandscape ? 12 : 8 
+                    },
+                    offer.id === selectedOffer?.id && styles.billingOptionSelected
+                  ]}
+                  onPress={() => setSelectedOffer(offer)}
+                >
+                  <Text style={styles.billingOptionText}>
+                    {offer.pricingPhases[0].price} {IapticRN.utils.formatBillingCycle(offer.pricingPhases[0])}
+                    {offer.pricingPhases.length > 1 && (
+                      <>
+                        {'\n'}
+                        <Text style={{fontSize: 12}}>
+                          {offer.pricingPhases
+                            .slice(1)
+                            .map(p => `then ${p.price} ${IapticRN.utils.formatBillingCycle(p)}`)
+                            .join('\n')}
+                        </Text>
+                      </>
+                    )}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Features and CTA */}
+            <Text style={styles.featuresTitle}>
+              {Locales.get('SubscriptionView_Includes')}
             </Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose ?? dismissSubscriptionView}>
-              <Text style={styles.closeButtonText}>
-                {Locales.get('SubscriptionView_Close')}
+            <EntitlementGrid 
+              entitlements={selectedProduct.entitlements || []}
+              labels={entitlementLabels ?? {}}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.ctaButton,
+                pendingPurchase && styles.ctaButtonDisabled,
+                isLandscape && { 
+                  marginTop: 16,
+                }
+              ]}
+              onPress={handlePurchase}
+              disabled={!!pendingPurchase}
+            >
+              <Text style={styles.ctaButtonText}>
+                {pendingPurchase ? Locales.get('SubscriptionView_Processing') : Locales.get('SubscriptionView_Continue')}
               </Text>
             </TouchableOpacity>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {products.map(product => (
-              <TouchableOpacity
-                key={product.id}
-                style={[
-                  styles.productCard,
-                  product.id === selectedProduct?.id && styles.productCardSelected
-                ]}
-                onPress={() => {
-                  setSelectedProduct(product);
-                  setSelectedOffer(product.offers[0]);
-                }}
-              >
-                <Text style={styles.productTitle}>{product.title}</Text>
-                {product.offers[0] && (
-                  <Text style={styles.productPrice}>
-                    <ProductPrice product={product} styles={styles} />
-                  </Text>
-                )}
-                <Text style={styles.productDescription}>
-                  {product.description}
-                </Text>
-              </TouchableOpacity>
-            ))}
           </ScrollView>
-
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.billingSelector}
-            contentContainerStyle={{paddingHorizontal: 16}}
-          >
-            {selectedProduct.offers.map(offer => (
-              <TouchableOpacity
-                key={offer.id}
-                style={[
-                  styles.billingOption,
-                  offer.id === selectedOffer?.id && styles.billingOptionSelected
-                ]}
-                onPress={() => setSelectedOffer(offer)}
-              >
-                <Text style={styles.billingOptionText}>
-                  {offer.pricingPhases[0].price} {IapticRN.utils.formatBillingCycle(offer.pricingPhases[0])}
-                  {offer.pricingPhases.length > 1 && (
-                    <>
-                      {'\n'}
-                      <Text style={{fontSize: 12}}>
-                        {offer.pricingPhases
-                          .slice(1)
-                          .map(p => `then ${p.price} ${IapticRN.utils.formatBillingCycle(p)}`)
-                          .join('\n')}
-                      </Text>
-                    </>
-                  )}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <Text style={styles.featuresTitle}>
-            {Locales.get('SubscriptionView_Includes')}
-          </Text>
-          <EntitlementGrid 
-            entitlements={selectedProduct.entitlements || []}
-            labels={entitlementLabels ?? {}}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.ctaButton,
-              pendingPurchase && styles.ctaButtonDisabled
-            ]}
-            onPress={handlePurchase}
-            disabled={!!pendingPurchase}
-          >
-            <Text style={styles.ctaButtonText}>
-              {pendingPurchase ? Locales.get('SubscriptionView_Processing') : Locales.get('SubscriptionView_Continue')}
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </Modal>
