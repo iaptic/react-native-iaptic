@@ -1,4 +1,4 @@
-import { IapticLoggerVerbosityLevel } from "../types";
+import { IapticVerbosity } from "../types";
 
 /**
  * Iaptic logger
@@ -10,38 +10,38 @@ export class IapticLogger {
   /**
    * Default verbosity level
    */
-  static VERBOSITY = IapticLoggerVerbosityLevel.WARN;
+  static VERBOSITY = IapticVerbosity.WARN;
 
-  verbosity: IapticLoggerVerbosityLevel = IapticLogger.VERBOSITY;
+  verbosity: IapticVerbosity = IapticLogger.VERBOSITY;
 
-  constructor(verbosity: IapticLoggerVerbosityLevel) {
+  constructor(verbosity: IapticVerbosity) {
     this.verbosity = verbosity;
   }
 
-  _message(message: string, severity: IapticLoggerVerbosityLevel) {
+  _message(message: string, severity: IapticVerbosity) {
     const SEVERITY_EMOJIS = [':❌', ':⚠️', '', ':🐛']; // Error, Warn, Info, Debug
     return `${new Date().toISOString()} [IapticRN${SEVERITY_EMOJIS[severity]}] ${message}`;
   }
 
   info(message: string) {
-    if (this.verbosity >= IapticLoggerVerbosityLevel.INFO)
-      console.log(this._message(message, IapticLoggerVerbosityLevel.INFO));
+    if (this.verbosity >= IapticVerbosity.INFO)
+      console.log(this._message(message, IapticVerbosity.INFO));
   }
 
   debug(message: string) {
-    if (this.verbosity >= IapticLoggerVerbosityLevel.DEBUG)
-      console.log(this._message(message, IapticLoggerVerbosityLevel.DEBUG));
+    if (this.verbosity >= IapticVerbosity.DEBUG)
+      console.log(this._message(message, IapticVerbosity.DEBUG));
   }
 
   error(message: string) {
-    if (this.verbosity >= IapticLoggerVerbosityLevel.ERROR)
-      console.error(this._message(message, IapticLoggerVerbosityLevel.ERROR));
+    if (this.verbosity >= IapticVerbosity.ERROR)
+      console.error(this._message(message, IapticVerbosity.ERROR));
   }
 
   warn(message: string) {
-    if (this.verbosity >= IapticLoggerVerbosityLevel.WARN)
-      console.warn(this._message(message, IapticLoggerVerbosityLevel.WARN));
+    if (this.verbosity >= IapticVerbosity.WARN)
+      console.warn(this._message(message, IapticVerbosity.WARN));
   }
 }
 
-export const logger = new IapticLogger(IapticLoggerVerbosityLevel.WARN);
+export const logger = new IapticLogger(IapticVerbosity.WARN);

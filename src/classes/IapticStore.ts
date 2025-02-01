@@ -7,7 +7,7 @@ import {
   IapticProduct,
   IapticVerifiedPurchase,
   IapticOffer,
-  IapticLoggerVerbosityLevel,
+  IapticVerbosity,
   IapticPurchasePlatform,
   IapticProductDefinition
 } from "../types";
@@ -16,7 +16,7 @@ import { StoreProducts } from "./StoreProducts";
 import { Purchases } from "./Purchases";
 import { Subscriptions } from "./Subscriptions";
 import { validateReceipt } from "../functions/validateReceipt";
-import { IapticError, IapticErrorSeverity, toIapticError } from "./IapticError";
+import { IapticError, IapticSeverity, toIapticError } from "./IapticError";
 import { PendingPurchases } from "./PendingPurchases";
 import { IapticLogger, logger } from "./IapticLogger";
 import { isUUID, md5UUID } from "../functions/md5UUID";
@@ -27,7 +27,13 @@ import { Consumables } from "./Consumables";
 import { Locales } from "./Locales";
 import { IapEventsProcessor } from "./IapEventsProcessor";
 
-/** Main class for handling in-app purchases with iaptic */
+/**
+ * Main class for handling in-app purchases with iaptic
+ * 
+ * Most users will never use this class directly.
+ * 
+ * @internal
+ */
 export class IapticStore {
 
   /** Configuration for the iaptic service */
@@ -37,7 +43,7 @@ export class IapticStore {
   private events: IapticEvents = new IapticEvents();
 
   /** Product catalog containing all available products */
-  readonly products: StoreProducts = new StoreProducts([], [], []);
+  readonly products: StoreProducts = new StoreProducts([], [], [], this.events);
   /** Manages all verified purchases */
   readonly purchases: Purchases = new Purchases(this.events);
   /** Manages subscription-specific functionality */
@@ -105,7 +111,7 @@ export class IapticStore {
     } catch (err: any) {
       this.initialized = false;
       logger.error(`Failed to initialize IAP #${err.code}: ${err.message}`);
-      throw toIapticError(err, IapticErrorSeverity.WARNING, IapticErrorCode.SETUP, 'Failed to initialize the in-app purchase library, check your configuration.');
+      throw toIapticError(err, IapticSeverity.WARNING, IapticErrorCode.SETUP, 'Failed to initialize the in-app purchase library, check your configuration.');
     }
   }
 
@@ -135,7 +141,7 @@ export class IapticStore {
    * Set iaptic plugin's verbosity level
    * @param verbosity 
    */
-  setVerbosity(verbosity: IapticLoggerVerbosityLevel) {
+  setVerbosity(verbosity: IapticVerbosity) {
     logger.verbosity = verbosity;
   }
 
@@ -246,7 +252,7 @@ export class IapticStore {
     }
     catch (err: any) {
       const iapticError = toIapticError(err,
-        (err.code === 'E_USER_CANCELLED') ? IapticErrorSeverity.INFO : IapticErrorSeverity.ERROR,
+        (err.code === 'E_USER_CANCELLED') ? IapticSeverity.INFO : IapticSeverity.ERROR,
         IapticErrorCode.PURCHASE,
         'Failed to place a purchase. Offer: ' + JSON.stringify(offer));
       this.pendingPurchases.remove(offer.productId);
@@ -268,7 +274,7 @@ export class IapticStore {
     logger.debug('🔄 Validating purchase: ' + JSON.stringify(purchase) + ' productType: ' + productType + ' applicationUsername: ' + this.applicationUsername);
     if (!purchase.transactionId) {
       throw new IapticError('Transaction ID is required', {
-        severity: IapticErrorSeverity.ERROR,
+        severity: IapticSeverity.ERROR,
         code: IapticErrorCode.VERIFICATION_FAILED,
         localizedTitle: Locales.get('ValidationError'),
         localizedMessage: Locales.get('ValidationError_MissingTransactionId'),
@@ -301,7 +307,7 @@ export class IapticStore {
       const code = result.code ?? IapticErrorCode.UNKNOWN;
       const message = result.message ?? 'Failed to validate purchase';
       throw new IapticError(message, {
-        severity: IapticErrorSeverity.WARNING,
+        severity: IapticSeverity.WARNING,
         code,
         localizedTitle: Locales.get('ValidationError'),
         localizedMessage: Locales.get(`IapticError_${code}`),
@@ -395,7 +401,7 @@ export class IapticStore {
     }
     else {
       throw new IapticError(result.message ?? 'Failed to validate purchase', {
-        severity: IapticErrorSeverity.WARNING,
+        severity: IapticSeverity.WARNING,
         code: result.code ?? IapticErrorCode.UNKNOWN,
         status: result.status,
         localizedTitle: Locales.get('ValidationError'),
@@ -525,7 +531,7 @@ export class IapticStore {
         await IAP.flushFailedPurchasesCachedAsPendingAndroid();
       }
       catch (e: any) {
-        throw toIapticError(e, IapticErrorSeverity.ERROR);
+        throw toIapticError(e, IapticSeverity.ERROR);
       }
     }
   }
@@ -583,7 +589,7 @@ export class IapticStore {
       return purchases.length;
     } catch (error: any) {
       progress(0, 0);
-      throw toIapticError(error, IapticErrorSeverity.ERROR);
+      throw toIapticError(error, IapticSeverity.ERROR);
     }
   }
 
@@ -592,10 +598,10 @@ export class IapticStore {
    * 
    * @param purchase - The purchase to consume
    */
-  consume(purchase: IapticVerifiedPurchase) {
+  async consume(purchase: IapticVerifiedPurchase) {
     const nativePurchase = this.iapEventsProcessor.purchases.get(purchase.transactionId ?? purchase.id);
     if (nativePurchase) {
-      IAP.finishTransaction({
+      await IAP.finishTransaction({
         purchase: nativePurchase,
         isConsumable: this.products.getType(purchase.id) === 'consumable'
       });

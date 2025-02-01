@@ -9,6 +9,8 @@ import { StoreProducts } from "./StoreProducts";
  * 
  * Note: This class is currently a placeholder for future implementation
  * of consumable purchase management functionality.
+ * 
+ * @internal
  */
 export class Consumables {
   /**

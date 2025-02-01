@@ -1,7 +1,7 @@
 import * as IAP from 'react-native-iap';
 import { IapticEvents } from './IapticEvents';
 import { DebouncedProcessor } from './DebouncedProcessor';
-import { IapticErrorSeverity, toIapticError } from './IapticError';
+import { IapticSeverity, toIapticError } from './IapticError';
 import { EmitterSubscription } from 'react-native';
 import { logger } from './IapticLogger';
 import { globalsGet, globalsSet } from '../functions/globals';
@@ -88,7 +88,7 @@ export class IapEventsProcessor {
       this.purchaseTimeouts.delete(key);
     }, 60000)); // remove from cache after 1 minute
 
-    const reportError = (err: any, severity: IapticErrorSeverity = IapticErrorSeverity.WARNING) => {
+    const reportError = (err: any, severity: IapticSeverity = IapticSeverity.WARNING) => {
       if (inBackground) {
         this.events.emit('error', toIapticError(err, severity));
       }
@@ -128,7 +128,7 @@ export class IapEventsProcessor {
       }
     }
     catch (error: any) {
-      reportError(error, IapticErrorSeverity.WARNING);
+      reportError(error, IapticSeverity.WARNING);
       return;
     }
 

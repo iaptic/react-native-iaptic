@@ -35,15 +35,11 @@ Here's a complete example to get you started:
 import { IapticRN } from 'react-native-iaptic';
 
 // 1. Initialize with your configuration
-const iaptic = new IapticRN({
+IapticRN.initialize({
   appName: 'app.example.com',
   publicKey: 'YOUR_PUBLIC_KEY',
   iosBundleId: 'com.yourcompany.app',
-});
-
-// 2. Define your products
-iaptic.setProductDefinitions([
-  {
+  products: [{
     id: 'premium_monthly',
     type: 'paid subscription',
     entitlements: ['premium']
@@ -56,17 +52,14 @@ iaptic.setProductDefinitions([
   }
 ]);
 
-// 3. Initialize connection and load products/purchases
-await iaptic.initialize();
-
 // 4. Handle purchases
-const offer = iaptic.products.get('premium_monthly')?.offers[0];
+const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
 if (offer) {
-  await iaptic.order(offer);
+  await IapticRN.order(offer);
 }
 
 // 5. Check access
-if (iaptic.checkEntitlement('premium')) {
+if (IapticRN.checkEntitlement('premium')) {
   // Unlock premium features
 }
 ```
@@ -78,7 +71,7 @@ if (iaptic.checkEntitlement('premium')) {
 Products can be subscriptions, consumables, or non-consumables. Each product can grant one or more entitlements:
 
 ```typescript
-iaptic.setProductDefinitions([
+IapticRN.setProductDefinitions([
   // Subscription that unlocks premium features
   { 
     id: 'premium_monthly',
@@ -107,7 +100,7 @@ Handle purchases with proper error management:
 
 ```typescript
 try {
-  await iaptic.order(productOffer);
+  await IapticRN.order(productOffer);
 } catch (error) {
   showError(error);
 }
@@ -119,7 +112,7 @@ Allow users to restore their previous purchases:
 
 ```typescript
 try {
-  iaptic.restorePurchases((processed, total) => {
+  await IapticRN.restorePurchases((processed, total) => {
     console.log(`Processed ${processed} of ${total} purchases`);
   });
 }
@@ -134,17 +127,17 @@ Listen for purchase and subscription updates:
 
 ```typescript
 // Listen for subscription updates
-iaptic.addEventListener('subscription.updated', (reason, purchase) => {
+IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
   console.log(`Subscription ${purchase.id} ${reason}`);
 });
 
 // Listen for pending purchase updates
-iaptic.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
+IapticRN.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
   console.log(`Purchase ${pendingPurchase.productId} is now ${pendingPurchase.status}`);
 });
 
 // Listen for purchase updates
-iaptic.addEventListener('purchase.updated', (purchase) => {
+IapticRN.addEventListener('purchase.updated', (purchase) => {
   console.log(`Purchase ${purchase.id} ${purchase.status}`);
 });
 ```
@@ -155,14 +148,14 @@ Check if users have access to specific features:
 
 ```typescript
 // Check premium access
-if (iaptic.checkEntitlement('premium')) {
+if (IapticRN.checkEntitlement('premium')) {
   showPremiumContent();
 } else {
   showUpgradePrompt();
 }
 
 // List all active entitlements
-const unlockedFeatures = iaptic.listEntitlements();
+const unlockedFeatures = IapticRN.listEntitlements();
 // ['basic', 'premium', 'cool_feature']
 ```
 
@@ -172,7 +165,7 @@ const unlockedFeatures = iaptic.listEntitlements();
 function showError(error: Error | IapticError) {
   if (error instanceof IapticError) {
     trackAnalyticsEvent(error.code);
-    if (error.severity === IapticErrorSeverity.INFO) {
+    if (error.severity === IapticSeverity.INFO) {
       console.log('Info:', error.localizedMessage);
       return;
     }

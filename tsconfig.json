@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "outDir": "./lib",
-    "module": "commonjs",
-    "target": "es6",
-    "lib": ["es2017"],
+    "module": "ESNext",
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM"],
     "types": ["react-native", "jest", "node"],
     "skipLibCheck": true,
     "sourceMap": true,
@@ -17,7 +17,8 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
-    "declarationDir": "./lib/types"
+    "forceConsistentCasingInFileNames": true,
+    "inlineSources": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]

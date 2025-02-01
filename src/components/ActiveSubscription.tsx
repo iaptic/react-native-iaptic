@@ -140,8 +140,10 @@ export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
 
   const formatDateTime = (date: number | undefined): [string, string] => {
     if (!date) return ['', ''];
-    const dateObj = new Date(date);
-    return [dateObj.toLocaleDateString(), dateObj.toLocaleTimeString()];
+    return [
+      Locales.get('DateFormatter_Date', [new Date(date).toLocaleDateString()]),
+      Locales.get('DateFormatter_Time', [new Date(date).toLocaleTimeString()])
+    ];
   };
 
   return (

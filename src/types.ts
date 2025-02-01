@@ -366,6 +366,7 @@ export enum IapticErrorCode {
  * - `error` - When an error occurs in the background
  */
 export type IapticEventType = 
+  | 'products.updated'
   | 'purchase.updated'
   | 'subscription.updated'
   | 'subscription.renewed'
@@ -385,6 +386,7 @@ export type IapticEventType =
  * Event argument types mapped to their event names
  */
 export interface IapticEventMap {
+  'products.updated': [products: IapticProduct[]];
   'purchase.updated': [purchase: IapticVerifiedPurchase];
   'subscription.updated': [reason: IapticSubscriptionReason, purchase: IapticVerifiedPurchase];
   'subscription.renewed': [purchase: IapticVerifiedPurchase];
@@ -472,6 +474,9 @@ export type IapticValidateRequestTransaction =
   IapticValidateRequestTransactionApple |
   IapticValidateRequestTransactionGoogle;
 
+/**
+ * Product metadata from the store
+ */
 export interface IapticProduct {
 
   /** Type of product (subscription, consumable, etc.) */
@@ -483,14 +488,41 @@ export interface IapticProduct {
   /** List of offers available for this product */
   offers: IapticOffer[];
 
-  /** Title of the product */
+  /** Title of the product provided by the store */
   title?: string;
+
+  /** Description of the product provided by the store */
+  description?: string;
 
   /** Platform of the product */
   platform: IapticPurchasePlatform;
 
   /** Country code of the product */
   countryCode?: string;
+
+  /**
+   * Entitlements this product will give to the user, can be used for subscription and non-consumable products.
+   * 
+   * Use iapticRN.checkEntitlement("my-entitlement") to check if the user owns any product that provides this entitlement.
+   */
+  entitlements?: string[];
+
+  /**
+   * Type of token this product will give to the user for consumable products.
+   * 
+   * For example: "coin", "gem", "silver", etc.
+   */
+  tokenType?: string;
+
+  /**
+   * Amount of tokens this product will give to the user for consumable products.
+   * 
+   * @example
+   * ```typescript
+   * { id: 'coins_100', type: 'consumable', tokenType: 'coin', tokenValue: 100 },
+   * ```
+   */
+  tokenValue?: number;
 }
 
 /** Transaction type from an Apple powered device  */
@@ -615,7 +647,7 @@ export interface IapticPendingPurchase {
   offerId?: string;
 }
 
-export enum IapticLoggerVerbosityLevel {
+export enum IapticVerbosity {
   ERROR = 0,
   WARN = 1,
   INFO = 2,

@@ -9,42 +9,35 @@ Iaptic React Native SDK
 Provides in-app purchase functionality with integrated receipt validation
 through the Iaptic service.
 
+The API entry point is [IapticRN](globals.md#iapticrn).
+
 ## Example
 
 ```typescript
 // 1. Initialize with your configuration
-const iaptic = new IapticRN({
+await IapticRN.initialize({
   appName: 'com.example.app',
   publicKey: 'YOUR_API_KEY',
   iosBundleId: 'com.yourcompany.app',
-});
-
-// 2. Define your products
-iaptic.setProductDefinitions([
-  {
+  products: [{
     id: 'premium_monthly',
     type: 'paid subscription',
     entitlements: ['premium']
-  },
-  {
+  }, {
     id: 'coins_100',
     type: 'consumable',
     tokenType: 'coins',
     tokenValue: 100
-  }
-]);
-
-// 3. Initialize connection and load products/purchases
-await iaptic.initialize();
+  }]);
 
 // 4. Handle purchases
-const offer = iaptic.products.get('premium_monthly')?.offers[0];
+const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
 if (offer) {
-  await iaptic.order(offer); 
+  await IapticRN.order(offer); 
 }
 
 // 5. Check access
-if (iaptic.checkEntitlement('premium')) {
+if (IapticRN.checkEntitlement('premium')) {
   // Unlock premium features
 }
 ```
@@ -402,61 +395,6 @@ Error: Verification of store data failed
 
 ***
 
-### IapticErrorSeverity
-
-
-Error severity
-
-- INFO: The error is not critical and can be ignored, not worth reporting to the user, can be logged to your server or ignored.
-- WARNING: The error is important and can be reported to the user as a toast message.
-- ERROR: The error is critical and should be reported to the user as a pop-up alert.
-
-#### Enumeration Members
-
-##### ERROR
-
-> **ERROR**: `2`
-
-
-##### INFO
-
-> **INFO**: `0`
-
-
-##### WARNING
-
-> **WARNING**: `1`
-
-
-***
-
-### IapticLoggerVerbosityLevel
-
-
-#### Enumeration Members
-
-##### DEBUG
-
-> **DEBUG**: `3`
-
-
-##### ERROR
-
-> **ERROR**: `0`
-
-
-##### INFO
-
-> **INFO**: `2`
-
-
-##### WARN
-
-> **WARN**: `1`
-
-
-***
-
 ### IapticPriceConsentStatus
 
 
@@ -518,10 +456,67 @@ Test platform
 
 Windows Store
 
+***
+
+### IapticSeverity
+
+
+Error severity
+
+- INFO: The error is not critical and can be ignored, not worth reporting to the user, can be logged to your server or ignored.
+- WARNING: The error is important and can be reported to the user as a toast message.
+- ERROR: The error is critical and should be reported to the user as a pop-up alert.
+
+#### Enumeration Members
+
+##### ERROR
+
+> **ERROR**: `2`
+
+
+##### INFO
+
+> **INFO**: `0`
+
+
+##### WARNING
+
+> **WARNING**: `1`
+
+
+***
+
+### IapticVerbosity
+
+
+#### Enumeration Members
+
+##### DEBUG
+
+> **DEBUG**: `3`
+
+
+##### ERROR
+
+> **ERROR**: `0`
+
+
+##### INFO
+
+> **INFO**: `2`
+
+
+##### WARN
+
+> **WARN**: `1`
+
+
 ## Classes
 
 ### IapticConsumables
 
+
+**`Internal`**
 
 Manages consumable purchases
 
@@ -534,6 +529,8 @@ of consumable purchase management functionality.
 
 > **new IapticConsumables**(`purchases`, `products`, `events`): [`IapticConsumables`](globals.md#iapticconsumables)
 
+
+**`Internal`**
 
 Creates a new consumables manager
 
@@ -594,6 +591,8 @@ try {
 > **new IapticError**(`message`, `options`): [`IapticError`](globals.md#iapticerror)
 
 
+**`Internal`**
+
 ###### Parameters
 
 ###### message
@@ -620,7 +619,7 @@ try {
 
 ###### severity
 
-[`IapticErrorSeverity`](globals.md#iapticerrorseverity)
+[`IapticSeverity`](globals.md#iapticseverity)
 
 ###### status
 
@@ -635,6 +634,15 @@ try {
 `Error.constructor`
 
 #### Properties
+
+##### cause?
+
+> `optional` **cause**: `unknown`
+
+
+###### Inherited from
+
+`Error.cause`
 
 ##### code
 
@@ -676,7 +684,7 @@ try {
 
 ##### severity
 
-> `readonly` **severity**: [`IapticErrorSeverity`](globals.md#iapticerrorseverity)
+> `readonly` **severity**: [`IapticSeverity`](globals.md#iapticseverity)
 
 
 ##### stack?
@@ -763,7 +771,20 @@ Create .stack property on a target object
 ### IapticLocales
 
 
+**`Internal`**
+
 Handles localized messages for the iaptic React Native plugin
+
+Supported languages:
+- English (en)
+- English (United Kingdom) (en_uk)
+- English (Australia) (en_au)
+- Spanish (es)
+- French (fr)
+- German (de)
+- Japanese (ja)
+- Chinese (zh)
+- Portuguese (pt)
 
 #### Constructors
 
@@ -794,267 +815,9 @@ The language code to add
 
 ###### messages
 
+[`IapticLocale`](globals.md#iapticlocale)
+
 The messages for the language
-
-###### ActiveSubscription_ManageBilling
-
-`string` = `"Manage Billing"`
-
-###### ActiveSubscription_ManageSubscriptions
-
-`string` = `"Manage Subscriptions"`
-
-###### ActiveSubscription_Status_Active
-
-`string` = `"Active"`
-
-###### ActiveSubscription_Status_Expired
-
-`string` = `"Expired"`
-
-###### ActiveSubscription_Tag_Retry
-
-`string` = `"Payment Retry"`
-
-###### ActiveSubscription_Tag_Trial
-
-`string` = `"Trial Period"`
-
-###### ActiveSubscription_WillCancel
-
-`string` = `"Will be cancelled on {0} at {1}"`
-
-###### ActiveSubscription_WillRenew
-
-`string` = `"Auto-renewing on {0} at {1}"`
-
-###### Error
-
-`string` = `"Error"`
-
-###### IapticError_6777001
-
-`string` = `"Failed to initialize the in-app purchase library"`
-
-###### IapticError_6777002
-
-`string` = `"Failed to load in-app products metadata"`
-
-###### IapticError_6777003
-
-`string` = `"Failed to make a purchase"`
-
-###### IapticError_6777004
-
-`string` = `"Failed to load the purchase receipt"`
-
-###### IapticError_6777005
-
-`string` = `"Client is not allowed to issue the request"`
-
-###### IapticError_6777006
-
-`string` = `"Purchase flow has been cancelled by user"`
-
-###### IapticError_6777007
-
-`string` = `"Something is suspicious about a purchase"`
-
-###### IapticError_6777008
-
-`string` = `"The user is not allowed to make a payment"`
-
-###### IapticError_6777010
-
-`string` = `"Unknown error"`
-
-###### IapticError_6777011
-
-`string` = `"Failed to refresh the purchase receipt"`
-
-###### IapticError_6777012
-
-`string` = `"The product identifier is invalid"`
-
-###### IapticError_6777013
-
-`string` = `"Cannot finalize a transaction or acknowledge a purchase"`
-
-###### IapticError_6777014
-
-`string` = `"Failed to communicate with the server"`
-
-###### IapticError_6777015
-
-`string` = `"Subscriptions are not available"`
-
-###### IapticError_6777016
-
-`string` = `"Purchase information is missing token"`
-
-###### IapticError_6777017
-
-`string` = `"Verification of store data failed"`
-
-###### IapticError_6777018
-
-`string` = `"Bad response from the server"`
-
-###### IapticError_6777019
-
-`string` = `"Failed to refresh the store"`
-
-###### IapticError_6777020
-
-`string` = `"Payment has expired"`
-
-###### IapticError_6777021
-
-`string` = `"Failed to download the content"`
-
-###### IapticError_6777022
-
-`string` = `"Failed to update a subscription"`
-
-###### IapticError_6777023
-
-`string` = `"The requested product is not available in the store"`
-
-###### IapticError_6777024
-
-`string` = `"The user has not allowed access to Cloud service information"`
-
-###### IapticError_6777025
-
-`string` = `"The device could not connect to the network"`
-
-###### IapticError_6777026
-
-`string` = `"The user has revoked permission to use this cloud service"`
-
-###### IapticError_6777027
-
-`string` = `"The user has not yet acknowledged Apple's privacy policy"`
-
-###### IapticError_6777028
-
-`string` = `"The app is attempting to use a property without required entitlement"`
-
-###### IapticError_6777029
-
-`string` = `"The offer identifier is invalid"`
-
-###### IapticError_6777030
-
-`string` = `"The price specified in App Store Connect is no longer valid"`
-
-###### IapticError_6777031
-
-`string` = `"The signature in a payment discount is not valid"`
-
-###### IapticError_6777032
-
-`string` = `"Parameters are missing in a payment discount"`
-
-###### IapticError_6778003
-
-`string` = `"Subscription has expired"`
-
-###### IapticError_UnsupportedPlatform
-
-`string` = `"Unsupported platform"`
-
-###### IapticRN_initialized_called
-
-`string` = `"IapticRN.initialize() can only be called once"`
-
-###### PurchaseError_E_ALREADY_OWNED
-
-`string` = `"This item has already been purchased."`
-
-###### PurchaseError_E_BILLING_RESPONSE_JSON_PARSE_ERROR
-
-`string` = `"Failed to parse the billing response."`
-
-###### PurchaseError_E_DEFERRED_PAYMENT
-
-`string` = `"The payment has been deferred."`
-
-###### PurchaseError_E_DEVELOPER_ERROR
-
-`string` = `"An error occurred in the application."`
-
-###### PurchaseError_E_IAP_NOT_AVAILABLE
-
-`string` = `"In-app purchases are not available."`
-
-###### PurchaseError_E_INTERRUPTED
-
-`string` = `"The operation was interrupted."`
-
-###### PurchaseError_E_ITEM_UNAVAILABLE
-
-`string` = `"The requested product is not available."`
-
-###### PurchaseError_E_NETWORK_ERROR
-
-`string` = `"A network error occurred."`
-
-###### PurchaseError_E_NOT_ENDED
-
-`string` = `"The transaction has not been ended."`
-
-###### PurchaseError_E_NOT_PREPARED
-
-`string` = `"The purchase cannot be completed because it has not been prepared."`
-
-###### PurchaseError_E_RECEIPT_FAILED
-
-`string` = `"Failed to validate receipt."`
-
-###### PurchaseError_E_RECEIPT_FINISHED_FAILED
-
-`string` = `"Failed to finish the transaction."`
-
-###### PurchaseError_E_REMOTE_ERROR
-
-`string` = `"A remote error occurred."`
-
-###### PurchaseError_E_SERVICE_ERROR
-
-`string` = `"The service returned an error."`
-
-###### PurchaseError_E_UNKNOWN
-
-`string` = `"An unknown error occurred."`
-
-###### PurchaseError_E_USER_CANCELLED
-
-`string` = `"The user cancelled the purchase."`
-
-###### PurchaseError_E_USER_ERROR
-
-`string` = `"An error occurred in the application."`
-
-###### PurchaseError_title
-
-`string` = `"Purchase Error #{0}"`
-
-###### UnknownError
-
-`string` = `"An unknown error occurred."`
-
-###### UnknownError_title
-
-`string` = `"Unknown Error"`
-
-###### ValidationError
-
-`string` = `"Receipt Validation Error"`
-
-###### ValidationError_MissingTransactionId
-
-`string` = `"Transaction ID is missing"`
 
 ###### Returns
 
@@ -1069,7 +832,7 @@ The messages for the language
 
 ###### key
 
-`"Error"` | `"ValidationError"` | `"PurchaseError_title"` | `"PurchaseError_E_UNKNOWN"` | `"PurchaseError_E_USER_CANCELLED"` | `"PurchaseError_E_ITEM_UNAVAILABLE"` | `"PurchaseError_E_NETWORK_ERROR"` | `"PurchaseError_E_SERVICE_ERROR"` | `"PurchaseError_E_RECEIPT_FAILED"` | `"PurchaseError_E_NOT_PREPARED"` | `"PurchaseError_E_DEVELOPER_ERROR"` | `"PurchaseError_E_ALREADY_OWNED"` | `"PurchaseError_E_DEFERRED_PAYMENT"` | `"PurchaseError_E_USER_ERROR"` | `"PurchaseError_E_REMOTE_ERROR"` | `"PurchaseError_E_RECEIPT_FINISHED_FAILED"` | `"PurchaseError_E_NOT_ENDED"` | `"PurchaseError_E_BILLING_RESPONSE_JSON_PARSE_ERROR"` | `"PurchaseError_E_INTERRUPTED"` | `"PurchaseError_E_IAP_NOT_AVAILABLE"` | `"UnknownError_title"` | `"UnknownError"` | `"IapticRN_initialized_called"` | `"IapticError_6777001"` | `"IapticError_6777002"` | `"IapticError_6777003"` | `"IapticError_6777004"` | `"IapticError_6777005"` | `"IapticError_6777006"` | `"IapticError_6777007"` | `"IapticError_6777008"` | `"IapticError_6777010"` | `"IapticError_6777011"` | `"IapticError_6777012"` | `"IapticError_6777013"` | `"IapticError_6777014"` | `"IapticError_6777015"` | `"IapticError_6777016"` | `"IapticError_6777017"` | `"IapticError_6777018"` | `"IapticError_6777019"` | `"IapticError_6777020"` | `"IapticError_6777021"` | `"IapticError_6777022"` | `"IapticError_6777023"` | `"IapticError_6777024"` | `"IapticError_6777025"` | `"IapticError_6777026"` | `"IapticError_6777027"` | `"IapticError_6777028"` | `"IapticError_6777029"` | `"IapticError_6777030"` | `"IapticError_6777031"` | `"IapticError_6777032"` | `"IapticError_6778003"` | `"IapticError_UnsupportedPlatform"` | `"ValidationError_MissingTransactionId"` | `"ActiveSubscription_WillCancel"` | `"ActiveSubscription_WillRenew"` | `"ActiveSubscription_Status_Active"` | `"ActiveSubscription_Status_Expired"` | `"ActiveSubscription_Tag_Trial"` | `"ActiveSubscription_Tag_Retry"` | `"ActiveSubscription_ManageSubscriptions"` | `"ActiveSubscription_ManageBilling"`
+keyof [`IapticLocale`](globals.md#iapticlocale)
 
 ###### args
 
@@ -1095,6 +858,29 @@ Defaults to 'en' if the device language is not supported
 
 `string`
 
+##### getForCount()
+
+> `static` **getForCount**(`keyPrefix`, `count`, `args`): `string`
+
+
+###### Parameters
+
+###### keyPrefix
+
+`string`
+
+###### count
+
+`number`
+
+###### args
+
+`string`[] = `[]`
+
+###### Returns
+
+`string`
+
 ##### initialize()
 
 > `static` **initialize**(): `void`
@@ -1108,7 +894,7 @@ Initializes the locales with the device language
 
 ##### setLanguage()
 
-> `static` **setLanguage**(`language`): `void`
+> `static` **setLanguage**(`language`, `fallbackLanguage`): `void`
 
 
 Sets the current language for messages
@@ -1121,6 +907,12 @@ Sets the current language for messages
 
 The language code to use
 
+###### fallbackLanguage
+
+`string` = `'en'`
+
+The fallback language code to use if the current language is not supported
+
 ###### Returns
 
 `void`
@@ -1129,6 +921,10 @@ The language code to use
 
 ### IapticLogger
 
+
+**`Internal`**
+
+Iaptic logger
 
 #### Constructors
 
@@ -1141,7 +937,7 @@ The language code to use
 
 ###### verbosity
 
-[`IapticLoggerVerbosityLevel`](globals.md#iapticloggerverbositylevel)
+[`IapticVerbosity`](globals.md#iapticverbosity)
 
 ###### Returns
 
@@ -1151,13 +947,15 @@ The language code to use
 
 ##### verbosity
 
-> **verbosity**: [`IapticLoggerVerbosityLevel`](globals.md#iapticloggerverbositylevel) = `IapticLogger.VERBOSITY`
+> **verbosity**: [`IapticVerbosity`](globals.md#iapticverbosity) = `IapticLogger.VERBOSITY`
 
 
 ##### VERBOSITY
 
-> `static` **VERBOSITY**: [`IapticLoggerVerbosityLevel`](globals.md#iapticloggerverbositylevel) = `IapticLoggerVerbosityLevel.WARN`
+> `static` **VERBOSITY**: [`IapticVerbosity`](globals.md#iapticverbosity) = `IapticVerbosity.WARN`
 
+
+Default verbosity level
 
 #### Methods
 
@@ -1174,7 +972,7 @@ The language code to use
 
 ###### severity
 
-[`IapticLoggerVerbosityLevel`](globals.md#iapticloggerverbositylevel)
+[`IapticVerbosity`](globals.md#iapticverbosity)
 
 ###### Returns
 
@@ -1536,93 +1334,30 @@ Array of verified purchases
 ### IapticRN
 
 
-Main class for handling in-app purchases with iaptic
+Iaptic React Native SDK
 
 #### Constructors
 
 ##### new IapticRN()
 
-> **new IapticRN**(`config`): [`IapticRN`](globals.md#iapticrn)
-
-
-Creates a new instance of IapticRN
-
-###### Parameters
-
-###### config
-
-[`IapticConfig`](globals.md#iapticconfig)
-
-Configuration for the iaptic service
+> **new IapticRN**(): [`IapticRN`](globals.md#iapticrn)
 
 ###### Returns
 
 [`IapticRN`](globals.md#iapticrn)
 
-###### Example
-
-```typescript
-const iaptic = new IapticRN({
-  apiKey: 'prod_123456789',
-  iosBundleId: 'com.yourcompany.app',
-  androidPackageName: 'com.yourcompany.app',
-});
-```
-
 #### Properties
 
-##### config
+##### store
 
-> `readonly` **config**: [`IapticConfig`](globals.md#iapticconfig)
-
-
-Configuration for the iaptic service
-
-##### consumables
-
-> `readonly` **consumables**: [`IapticConsumables`](globals.md#iapticconsumables)
+> `static` **store**: `undefined` \| `IapticStore`
 
 
-Manages consumable purchases
-
-##### nonConsumables
-
-> `readonly` **nonConsumables**: [`IapticNonConsumables`](globals.md#iapticnonconsumables)
-
-
-Manages non-consumable purchases
-
-##### pendingPurchases
-
-> `readonly` **pendingPurchases**: [`IapticPendingPurchases`](globals.md#iapticpendingpurchases)
-
-
-Manages pending purchases
-
-##### products
-
-> `readonly` **products**: [`IapticStoreProducts`](globals.md#iapticstoreproducts)
-
-
-Product catalog containing all available products
-
-##### purchases
-
-> `readonly` **purchases**: [`IapticPurchases`](globals.md#iapticpurchases)
-
-
-Manages all verified purchases
-
-##### subscriptions
-
-> `readonly` **subscriptions**: [`IapticSubscriptions`](globals.md#iapticsubscriptions)
-
-
-Manages subscription-specific functionality
+Singleton instance of IapticStore
 
 ##### utils
 
-> `readonly` **utils**: [`IapticUtils`](globals.md#iapticutils)
+> `readonly` `static` **utils**: [`IapticUtils`](globals.md#iapticutils)
 
 
 Utility functions
@@ -1631,10 +1366,12 @@ Utility functions
 
 ##### addEventListener()
 
-> **addEventListener**\<`T`\>(`eventType`, `listener`, `context`): `IapticRegisteredEventListener`
+> `static` **addEventListener**\<`T`\>(`eventType`, `listener`): `object`
 
 
 Add an event listener for iaptic events
+
+To remove a listener, call the returned object's `remove()` method.
 
 ###### Type Parameters
 
@@ -1654,64 +1391,87 @@ Type of event to listen for
 
 Callback function that will be called when the event occurs
 
-###### context
+###### Returns
 
-`string` = `'User'`
+`object`
 
-Optional context to identify the listener (helpful for debugging)
+###### remove()
+
+> **remove**: () => `void`
 
 ###### Returns
 
-`IapticRegisteredEventListener`
+`void`
 
-###### Example
+###### Examples
 
 ```typescript
 // Listen for subscription updates
-iaptic.addEventListener('subscription.updated', (reason, purchase) => {
+IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
   console.log(`Subscription ${purchase.id} ${reason}`);
 });
 
 // Listen for pending purchase updates
-iaptic.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
+IapticRN.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
   console.log(`Purchase ${pendingPurchase.productId} is now ${pendingPurchase.status}`);
 });
 
 // Listen for purchase updates
-iaptic.addEventListener('purchase.updated', (purchase) => {
+IapticRN.addEventListener('purchase.updated', (purchase) => {
   console.log(`Purchase ${purchase.id} ${purchase.status}`);
 });
 
 // Listen for non-consumable purchases
-iaptic.addEventListener('nonConsumable.owned', (purchase) => {
+IapticRN.addEventListener('nonConsumable.owned', (purchase) => {
   console.log(`Non-consumable purchase ${purchase.id} is now owned`);
 });
 ```
 
-##### canPurchase()
+```typescript
+const listener = IapticRN.addEventListener('purchase.updated', (purchase) => {
+  console.log(`Purchase ${purchase.id} ${purchase.status}`);
+});
+listener.remove();
+```
 
-> **canPurchase**(`product`): `boolean`
+###### See
+
+[IapticEventType](globals.md#iapticeventtype) for all possible event types
+
+##### addLocale()
+
+> `static` **addLocale**(`code`, `messages`): `void`
 
 
-Check if a product can be purchased.
+Add a locale for Iaptic provided components and error messages.
 
 ###### Parameters
 
-###### product
+###### code
 
-[`IapticProduct`](globals.md#iapticproduct)
+`string`
 
-The product to check
+The language code
+
+###### messages
+
+[`IapticLocale`](globals.md#iapticlocale)
+
+The locale messages
 
 ###### Returns
 
-`boolean`
+`void`
 
-True if the product can be purchased, false otherwise
+###### Example
+
+```typescript
+IapticRN.addLocale('fr', {...});
+```
 
 ##### checkEntitlement()
 
-> **checkEntitlement**(`featureId`): `boolean`
+> `static` **checkEntitlement**(`featureId`): `boolean`
 
 
 Check if the user has active access to a specific feature or content.
@@ -1741,19 +1501,19 @@ True if the user has active access to the specified feature
 
 ```typescript
 // Check premium access
-if (iaptic.checkEntitlement('premium')) {
+if (IapticRN.checkEntitlement('premium')) {
   showPremiumContent();
 } else {
   showUpgradePrompt();
 }
 
 // Check specific feature access
-const hasCoolFeature = iaptic.checkEntitlement('cool_feature');
+const hasCoolFeature = IapticRN.checkEntitlement('cool_feature');
 ```
 
 ##### consume()
 
-> **consume**(`purchase`): `void`
+> `static` **consume**(`purchase`): `Promise`\<`void`\>
 
 
 Consume a purchase. Only for consumable products.
@@ -1768,49 +1528,200 @@ The purchase to consume
 
 ###### Returns
 
-`void`
+`Promise`\<`void`\>
+
+###### Example
+
+```typescript
+IapticRN.consume(purchase);
+```
+
+###### See
+
+TokensManager for a convenient way to handle your consumable products.
+
+##### createStore()
+
+> `static` **createStore**(`config`): `IapticStore`
+
+
+Instanciate the singleton instance of IapticStore
+
+For advanced use-cases only.
+
+###### Parameters
+
+###### config
+
+`IapticConfig`
+
+###### Returns
+
+`IapticStore`
 
 ##### destroy()
 
-> **destroy**(): `void`
+> `static` **destroy**(): `void`
 
 
-Destroys the iaptic service
+Destroy the IapticRN singleton, cleanup everything.
 
 ###### Returns
 
 `void`
 
-##### flushTransactions()
+##### getActiveSubscription()
 
-> **flushTransactions**(): `Promise`\<`void`\>
+> `static` **getActiveSubscription**(): `undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
 
 
-Function used in developement to cleanup the cache of pending transactions.
+Get the active subscription (if any)
 
-###### Returns
-
-`Promise`\<`void`\>
-
-##### initConnection()
-
-> **initConnection**(): `Promise`\<`undefined` \| `null`\>
-
+For **apps that sell multiple subscriptions** that can be active at the same time,
+this returns the first one. To check if there is any active subscription:
+- [getPurchases](globals.md#getpurchases) to manually parse and find all active subscriptions.
+- [isOwned](globals.md#isowned) with all your product ids to check if there is any active subscription.
 
 ###### Returns
 
-`Promise`\<`undefined` \| `null`\>
+`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
+
+The active subscription or undefined if there is no active subscription
+
+###### See
+
+[IapticVerifiedPurchase](globals.md#iapticverifiedpurchase) for more information on the purchase object
+
+###### Example
+
+```typescript
+const activeSubscription = IapticRN.getActiveSubscription();
+if (activeSubscription) {
+  console.log(`Active subscription: ${activeSubscription.productId}`);
+  if (activeSubscription.renewalIntent === 'Renew') {
+    console.log('Will renew on: ' + new Date(activeSubscription.expiryDate).toLocaleDateString());
+  }
+  else {
+    console.log('Will expire on: ' + new Date(activeSubscription.expiryDate).toLocaleDateString());
+  }
+}
+```
+
+##### getProduct()
+
+> `static` **getProduct**(`productId`): `undefined` \| [`IapticProduct`](globals.md#iapticproduct)
+
+
+Get a product from the product catalog
+
+###### Parameters
+
+###### productId
+
+`string`
+
+The product identifier
+
+###### Returns
+
+`undefined` \| [`IapticProduct`](globals.md#iapticproduct)
+
+The product or undefined if not found
+
+###### Example
+
+```typescript
+const product = IapticRN.getProduct('premium_monthly');
+```
+
+###### See
+
+[IapticProduct](globals.md#iapticproduct) for more information on the product object
+
+##### getProducts()
+
+> `static` **getProducts**(): [`IapticProduct`](globals.md#iapticproduct)[]
+
+
+Get all products from the product catalog
+
+###### Returns
+
+[`IapticProduct`](globals.md#iapticproduct)[]
+
+List of products
+
+###### Example
+
+```typescript
+const products = IapticRN.getProducts();
+```
+
+###### See
+
+[IapticProduct](globals.md#iapticproduct) for more information on the product object
+
+##### getPurchases()
+
+> `static` **getPurchases**(): [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
+
+
+Get all verified purchases.
+
+###### Returns
+
+[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
+
+List of purchases, most recent first
+
+###### Example
+
+```typescript
+const purchases = IapticRN.getPurchases();
+```
+
+###### See
+
+[IapticVerifiedPurchase](globals.md#iapticverifiedpurchase) for more information on the purchase object
+
+##### getStore()
+
+> `static` **getStore**(): `IapticStore`
+
+
+Get the singleton instance of IapticStore
+
+###### Returns
+
+`IapticStore`
+
+###### Throws
+
+If the store is not initialized
+
+##### getStoreSync()
+
+> `static` **getStoreSync**(): `Promise`\<`IapticStore`\>
+
+
+###### Returns
+
+`Promise`\<`IapticStore`\>
 
 ##### initialize()
 
-> **initialize**(): `Promise`\<`void`\>
+> `static` **initialize**(`config`): `Promise`\<`void`\>
 
 
-Initializes the In-App Purchase component.
+Initialize the IapticRN singleton
 
-- prepare the connection with the store.
-- load products defined with setProductDefinitions()
-- load available purchases
+###### Parameters
+
+###### config
+
+`IapticConfig`
+
+The configuration for the IapticRN singleton
 
 ###### Returns
 
@@ -1819,17 +1730,49 @@ Initializes the In-App Purchase component.
 ###### Example
 
 ```typescript
-try {
-  await iaptic.initialize();
-  console.log('Products loaded:', iaptic.products.all());
-  console.log('Active purchases:', iaptic.purchases.list());
-} catch (error) {
-  console.error('Initialization failed:', error);
+IapticRN.initialize({
+  appName: 'com.example.app',
+  publicKey: '1234567890',
+  iosBundleId: 'com.example.app',
+});
+```
+
+##### isOwned()
+
+> `static` **isOwned**(`productId`): `boolean`
+
+
+Check if a product is owned.
+
+- For non-consumable products, this checks if the product is owned.
+- For paid subscriptions, this checks if there is an active subscription.
+- For consumables, this always returns false.
+
+###### Parameters
+
+###### productId
+
+`string`
+
+The product identifier
+
+###### Returns
+
+`boolean`
+
+True if the product is owned
+
+###### Example
+
+```typescript
+if (IapticRN.isOwned('premium_subscription')) {
+  console.log('User has an active subscription');
 }
+```
 
 ##### listEntitlements()
 
-> **listEntitlements**(): `string`[]
+> `static` **listEntitlements**(): `string`[]
 
 
 Get all currently active entitlements for the user.
@@ -1855,13 +1798,13 @@ Array of entitlement IDs the user currently has access to
 
 ```typescript
 // Get all unlocked features
-const unlockedFeatures = iaptic.listEntitlements();
+const unlockedFeatures = IapticRN.listEntitlements();
 // ['basic', 'premium', 'dark_theme']
 ```
 
 ##### loadProducts()
 
-> **loadProducts**(`definitions`?): `Promise`\<[`IapticProduct`](globals.md#iapticproduct)[]\>
+> `static` **loadProducts**(`definitions`?): `Promise`\<[`IapticProduct`](globals.md#iapticproduct)[]\>
 
 
 Load products from the Store.
@@ -1881,7 +1824,7 @@ The products to load
 ###### Example
 
 ```typescript
-await iaptic.loadProducts([
+await IapticRN.loadProducts([
   { id: 'basic_subscription', type: 'paid subscription', entitlements: [ 'basic' ] },
   { id: 'premium_subscription', type: 'paid subscription', entitlements: [ 'basic', 'premium' ] },
   { id: 'premium_lifetime', type: 'non consumable', entitlements: [ 'basic', 'premium' ] },
@@ -1891,10 +1834,12 @@ await iaptic.loadProducts([
 
 ##### loadPurchases()
 
-> **loadPurchases**(): `Promise`\<[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]\>
+> `static` **loadPurchases**(): `Promise`\<[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]\>
 
 
 Load and validate active purchases details from the Store and Iaptic using their receipts
+
+Notice that this is done when initialize the Store already.
 
 ###### Returns
 
@@ -1905,15 +1850,15 @@ List of verified purchases.
 ###### Example
 
 ```typescript
-const purchases = await iaptic.loadPurchases();
+const purchases = await IapticRN.loadPurchases();
 ```
 
 ##### manageBilling()
 
-> **manageBilling**(): `Promise`\<`void`\>
+> `static` **manageBilling**(): `Promise`\<`void`\>
 
 
-Opens the platform-specific billing management page in the default browser
+Opens the platform-specific billing management page.
 
 ###### Returns
 
@@ -1921,10 +1866,10 @@ Opens the platform-specific billing management page in the default browser
 
 ##### manageSubscriptions()
 
-> **manageSubscriptions**(): `Promise`\<`void`\>
+> `static` **manageSubscriptions**(): `Promise`\<`void`\>
 
 
-Opens the platform-specific subscription management page in the default browser
+Opens the platform-specific subscription management page.
 
 ###### Returns
 
@@ -1932,7 +1877,7 @@ Opens the platform-specific subscription management page in the default browser
 
 ##### order()
 
-> **order**(`offer`): `Promise`\<`void`\>
+> `static` **order**(`offer`): `Promise`\<`void`\>
 
 
 Order a product with an offer.
@@ -1952,41 +1897,84 @@ The offer to order
 ###### Example
 
 ```typescript
-// Order a subscription offer
-const subscriptionOffer = iaptic.products.get('premium_monthly')?.offers[0];
-if (subscriptionOffer) {
+const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
+if (offer) {
   try {
-    await iaptic.order(subscriptionOffer);
+    await IapticRN.order(offer);
     console.log('Purchase started successfully');
   } catch (error) {
     console.error('Purchase failed:', error);
   }
 }
+```
 
-##### owned()
+##### presentSubscriptionView()
 
-> **owned**(`productId`): `boolean`
+> `static` **presentSubscriptionView**(`options`): `void`
 
 
-Check if a product is owned.
+Present a subscription comparison view with product cards and feature grid
 
 ###### Parameters
 
-###### productId
+###### options
 
-`string`
+`Omit`\<[`IapticSubscriptionViewProps`](globals.md#iapticsubscriptionviewprops), `"visible"` \| `"onClose"`\>
 
-The product identifier
+Configuration for the subscription view
 
 ###### Returns
 
-`boolean`
+`void`
 
-True if the product is owned, false otherwise
+###### Examples
+
+```typescript
+// Show subscription view with feature labels
+IapticRN.presentSubscriptionView({
+  entitlementLabels: {
+    premium: 'Premium Content',
+    adfree: 'Ad-Free Experience',
+    downloads: 'Unlimited Downloads'
+  }
+});
+```
+
+```typescript
+// Customize the appearance
+IapticRN.presentSubscriptionView({
+  entitlementLabels: {...},
+  styles: {
+    productCard: {
+      backgroundColor: '#f8f9fa',
+      borderWidth: 1,
+      borderColor: '#dee2e6'
+    },
+    ctaButton: {
+      backgroundColor: '#4CAF50'
+    }
+  }
+});
+```
+
+###### Note
+
+This is a singleton component - render it once at your root component:
+```tsx
+// In your App.tsx
+export default function App() {
+  return (
+    <>
+      <MainComponent />
+      <IapticSubscriptionView />
+    </>
+  );
+}
+```
 
 ##### removeAllEventListeners()
 
-> **removeAllEventListeners**(`eventType`?): `void`
+> `static` **removeAllEventListeners**(`eventType`?): `void`
 
 
 Remove all event listeners for a specific event type
@@ -2006,7 +1994,7 @@ Optional event type to remove listeners for
 
 ##### restorePurchases()
 
-> **restorePurchases**(`progressCallback`): `Promise`\<`number`\>
+> `static` **restorePurchases**(`progressCallback`): `Promise`\<`number`\>
 
 
 Restore purchases from the Store.
@@ -2018,9 +2006,9 @@ Restore purchases from the Store.
 (`processed`, `total`) => `void`
 
 Callback function that will be called with the progress of the restore operation
-                          - The initial call is with -1, 0
-                          - Subsequent calls are with the current progress
-                          - The final call will have processed === total
+                          - An initial call with -1, 0 when the operation starts.
+                          - Subsequent calls are with the current progress (processed, total).
+                          - The final call will have processed === total, you know the operation is complete.
 
 ###### Returns
 
@@ -2032,36 +2020,79 @@ The number of purchases restored
 
 ```typescript
 // Restore purchases with progress updates
-iaptic.restorePurchases((processed, total) => {
+const numRestored = await IapticRN.restorePurchases((processed, total) => {
   console.log(`Processed ${processed} of ${total} purchases`);
-})
-.then(numRestored => {
-  console.log(`Restored ${numRestored} purchases`);
-})
-.catch(error => {
-  console.error('Restore failed:', error);
 });
+```
 
 ##### setApplicationUsername()
 
-> **setApplicationUsername**(`value`): `void`
+> `static` **setApplicationUsername**(`username`): `Promise`\<`void`\>
 
 
-Set the application username
+Set the application username for the iaptic service.
+
+This is used to track which user is making the purchase and associate it with the user's account.
+
+- On iOS, the application username is also added as an appAccountToken in the form of a UUID formatted MD5 (md5UUID).
+- On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string (md5).
+
+Don't forget to update the username in the app service if the user changes (login/logout).
 
 ###### Parameters
 
-###### value
+###### username
+
+`undefined` | `string`
+
+###### Returns
+
+`Promise`\<`void`\>
+
+###### Examples
+
+```typescript
+IapticRN.setApplicationUsername('user_123');
+```
+
+```typescript
+IapticRN.setApplicationUsername(undefined);
+```
+
+##### setLocale()
+
+> `static` **setLocale**(`code`, `fallbackCode`): `void`
+
+
+Set the current locale for Iaptic provided components and error messages.
+
+It's automatically set to the device's language, but you can override it.
+
+###### Parameters
+
+###### code
 
 `string`
+
+The language code
+
+###### fallbackCode
+
+`string` = `'en'`
 
 ###### Returns
 
 `void`
 
+###### Example
+
+```typescript
+IapticRN.setLocale('fr');
+```
+
 ##### setProductDefinitions()
 
-> **setProductDefinitions**(`definitions`): `void`
+> `static` **setProductDefinitions**(`productDefinitions`): `void`
 
 
 Add product definitions to the product catalog.
@@ -2071,7 +2102,7 @@ across multiple products (e.g. a subscription and lifetime purchase both grantin
 
 ###### Parameters
 
-###### definitions
+###### productDefinitions
 
 [`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
 
@@ -2082,7 +2113,7 @@ across multiple products (e.g. a subscription and lifetime purchase both grantin
 ###### Examples
 
 ```typescript
-iaptic.setProductDefinitions([
+IapticRN.setProductDefinitions([
   { 
     id: 'premium_monthly',
     type: 'paid subscription',
@@ -2097,7 +2128,7 @@ iaptic.setProductDefinitions([
 ```
 
 ```typescript
-iaptic.setProductDefinitions([
+IapticRN.setProductDefinitions([
   { id: 'coins_100', type: 'consumable', tokenType: 'coins', tokenValue: 100 },
   { id: 'coins_500', type: 'consumable', tokenType: 'coins', tokenValue: 500 },
 ]);
@@ -2105,7 +2136,7 @@ iaptic.setProductDefinitions([
 
 ```typescript
 // Define a subscription and consumable product
-iaptic.setProductDefinitions([
+IapticRN.setProductDefinitions([
   {
     id: 'premium_monthly',
     type: 'paid subscription',
@@ -2119,43 +2150,54 @@ iaptic.setProductDefinitions([
   }
 ]);
 
-##### setVerbosity()
+##### setSubscriptionViewRef()
 
-> **setVerbosity**(`verbosity`): `void`
+> `static` **setSubscriptionViewRef**(`ref`): `void`
 
-
-Set iaptic plugin's verbosity level
 
 ###### Parameters
 
-###### verbosity
+###### ref
 
-[`IapticLoggerVerbosityLevel`](globals.md#iapticloggerverbositylevel)
+`RefObject`\<[`IapticSubscriptionViewHandle`](globals.md#iapticsubscriptionviewhandle)\>
 
 ###### Returns
 
 `void`
 
-##### validate()
+##### setVerbosity()
 
-> **validate**(`purchase`): `Promise`\<`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\>
+> `static` **setVerbosity**(`verbosity`): `void`
 
 
-Validate and register a purchase with iaptic receipt validator.
+Set the verbosity level for the iaptic service.
 
 ###### Parameters
 
-###### purchase
+###### verbosity
 
-`ProductPurchase`
-
-The purchase to validate
+[`IapticVerbosity`](globals.md#iapticverbosity)
 
 ###### Returns
 
-`Promise`\<`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\>
+`void`
 
-The validated purchase or undefined if the purchase is not valid
+###### Example
+
+```typescript
+IapticRN.setVerbosity(IapticLoggerVerbosityLevel.DEBUG);
+```
+
+##### waitForStore()
+
+> `static` **waitForStore**(): `Promise`\<`void`\>
+
+
+**`Internal`**
+
+###### Returns
+
+`Promise`\<`void`\>
 
 ***
 
@@ -2168,7 +2210,7 @@ Manages the catalog of available in-app purchase products
 
 ##### new IapticStoreProducts()
 
-> **new IapticStoreProducts**(`definitions`, `subscriptions`, `products`): [`IapticStoreProducts`](globals.md#iapticstoreproducts)
+> **new IapticStoreProducts**(`definitions`, `subscriptions`, `products`, `events`): [`IapticStoreProducts`](globals.md#iapticstoreproducts)
 
 
 Creates a new product catalog
@@ -2192,6 +2234,10 @@ Initial subscription products
 `Product`[]
 
 Initial non-subscription products
+
+###### events
+
+`IapticEvents`
 
 ###### Returns
 
@@ -2481,14 +2527,10 @@ const balance = tokensManager.getBalance('coin');
 
 ##### new IapticTokensManager()
 
-> **new IapticTokensManager**(`iaptic`, `consumePurchases`): [`IapticTokensManager`](globals.md#iaptictokensmanager)
+> **new IapticTokensManager**(`consumePurchases`): [`IapticTokensManager`](globals.md#iaptictokensmanager)
 
 
 ###### Parameters
-
-###### iaptic
-
-[`IapticRN`](globals.md#iapticrn)
 
 ###### consumePurchases
 
@@ -2616,6 +2658,8 @@ Remove a transaction and update storage
 ### IapticUtils
 
 
+Utility methods for users of the iaptic library.
+
 #### Constructors
 
 ##### new IapticUtils()
@@ -2646,12 +2690,14 @@ FINITE_RECURRING with billingCycles=0 is like INFINITE_RECURRING
 
 `undefined` \| [`IapticRecurrenceMode`](globals.md#iapticrecurrencemode)
 
-##### formatBillingCycleEN()
+##### formatBillingCycle()
 
-> **formatBillingCycleEN**(`pricingPhase`): `string`
+> **formatBillingCycle**(`pricingPhase`): `string`
 
 
-Generate a plain english version of the billing cycle in a pricing phase.
+Generate a localized version of the billing cycle in a pricing phase.
+
+For supported languages, check [Locales](globals.md#iapticlocales).
 
 Example outputs:
 
@@ -2671,8 +2717,8 @@ Example outputs:
 
 ###### Example
 
-```ts
-Utils.formatBillingCycleEN(offer.pricingPhases[0])
+```typescript
+IapticRN.utils.formatBillingCycle(offer.pricingPhases[0])
 ```
 
 ##### formatDurationEN()
@@ -2709,49 +2755,75 @@ Duration formatted in IS0 8601
 
 The duration in plain english. Example: "1 year" or "3 weeks".
 
+##### getBillingCycleTemplate()
+
+> **getBillingCycleTemplate**(`cycles`, `duration`): `string`
+
+
+###### Parameters
+
+###### cycles
+
+`number`
+
+###### duration
+
+`string`
+
+###### Returns
+
+`string`
+
+##### getBillingCycleTemplateInfinite()
+
+> **getBillingCycleTemplateInfinite**(`duration`): `string`
+
+
+###### Parameters
+
+###### duration
+
+`string`
+
+###### Returns
+
+`string`
+
+##### getBillingCycleTemplateNonRecurring()
+
+> **getBillingCycleTemplateNonRecurring**(`duration`): `string`
+
+
+###### Parameters
+
+###### duration
+
+`string`
+
+###### Returns
+
+`string`
+
+##### getDurationUnit()
+
+> **getDurationUnit**(`iso`, `count`): `string`
+
+
+###### Parameters
+
+###### iso
+
+`` `P${number}D` `` | `` `P${number}W` `` | `` `P${number}M` `` | `` `P${number}Y` ``
+
+###### count
+
+`number`
+
+###### Returns
+
+`string`
+
 ## Interfaces
-
-### IapticConfig
-
-
-Configuration for the iaptic validator
-
-#### Properties
-
-##### appName
-
-> **appName**: `string`
-
-
-##### baseUrl?
-
-> `optional` **baseUrl**: `string`
-
-
-The base URL of the iaptic validator
-
-##### iosBundleId?
-
-> `optional` **iosBundleId**: `string`
-
-
-##### publicKey
-
-> **publicKey**: `string`
-
-
-##### showAlerts?
-
-> `optional` **showAlerts**: `boolean`
-
-
-Disable alert by setting this to false.
-
-By default, IapticRN will display relevant alerts to the user when something goes wrong.
-
-Default is true.
-
-***
 
 ### IapticEventMap
 
@@ -2795,6 +2867,11 @@ Event argument types mapped to their event names
 > **updated**: \[[`IapticPendingPurchase`](globals.md#iapticpendingpurchase)\]
 
 
+##### products.updated
+
+> **updated**: \[[`IapticProduct`](globals.md#iapticproduct)[]\]
+
+
 ##### purchase.updated
 
 > **updated**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
@@ -2824,6 +2901,572 @@ Event argument types mapped to their event names
 
 > **updated**: \[[`IapticSubscriptionReason`](globals.md#iapticsubscriptionreason), [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
 
+
+***
+
+### IapticLocale
+
+
+List of keys a locale must provide.
+
+#### External
+
+IapticLocale
+
+#### Properties
+
+##### ActiveSubscription\_ManageBilling
+
+> **ActiveSubscription\_ManageBilling**: `string`
+
+
+Manage Billing
+
+##### ActiveSubscription\_ManageSubscriptions
+
+> **ActiveSubscription\_ManageSubscriptions**: `string`
+
+
+Manage Subscriptions
+
+##### ActiveSubscription\_Status\_Active
+
+> **ActiveSubscription\_Status\_Active**: `string`
+
+
+Active
+
+##### ActiveSubscription\_Status\_Expired
+
+> **ActiveSubscription\_Status\_Expired**: `string`
+
+
+Expired
+
+##### ActiveSubscription\_Tag\_Retry
+
+> **ActiveSubscription\_Tag\_Retry**: `string`
+
+
+Payment Retry
+
+##### ActiveSubscription\_Tag\_Trial
+
+> **ActiveSubscription\_Tag\_Trial**: `string`
+
+
+Trial Period
+
+##### ActiveSubscription\_WillCancel
+
+> **ActiveSubscription\_WillCancel**: `string`
+
+
+Will be cancelled on {0} at {1}
+
+##### ActiveSubscription\_WillRenew
+
+> **ActiveSubscription\_WillRenew**: `string`
+
+
+Auto-renewing on {0} at {1}
+
+##### BillingCycle\_Finite
+
+> **BillingCycle\_Finite**: `string`
+
+
+{cycles}x {duration}
+
+##### BillingCycle\_Infinite
+
+> **BillingCycle\_Infinite**: `string`
+
+
+every {duration}
+
+##### BillingCycle\_NonRecurring
+
+> **BillingCycle\_NonRecurring**: `string`
+
+
+for {duration}
+
+##### Duration\_D\_plural
+
+> **Duration\_D\_plural**: `string`
+
+
+days
+
+##### Duration\_D\_singular
+
+> **Duration\_D\_singular**: `string`
+
+
+day
+
+##### Duration\_M\_plural
+
+> **Duration\_M\_plural**: `string`
+
+
+months
+
+##### Duration\_M\_singular
+
+> **Duration\_M\_singular**: `string`
+
+
+month
+
+##### Duration\_W\_plural
+
+> **Duration\_W\_plural**: `string`
+
+
+weeks
+
+##### Duration\_W\_singular
+
+> **Duration\_W\_singular**: `string`
+
+
+week
+
+##### Duration\_Y\_plural
+
+> **Duration\_Y\_plural**: `string`
+
+
+years
+
+##### Duration\_Y\_singular
+
+> **Duration\_Y\_singular**: `string`
+
+
+year
+
+##### Error
+
+> **Error**: `string`
+
+
+Error
+
+##### IapticError\_6777001
+
+> **IapticError\_6777001**: `string`
+
+
+Failed to initialize the in-app purchase library
+
+##### IapticError\_6777002
+
+> **IapticError\_6777002**: `string`
+
+
+Failed to load in-app products metadata
+
+##### IapticError\_6777003
+
+> **IapticError\_6777003**: `string`
+
+
+Failed to make a purchase
+
+##### IapticError\_6777004
+
+> **IapticError\_6777004**: `string`
+
+
+Failed to load the purchase receipt
+
+##### IapticError\_6777005
+
+> **IapticError\_6777005**: `string`
+
+
+Client is not allowed to issue the request
+
+##### IapticError\_6777006
+
+> **IapticError\_6777006**: `string`
+
+
+Purchase flow has been cancelled by user
+
+##### IapticError\_6777007
+
+> **IapticError\_6777007**: `string`
+
+
+Something is suspicious about a purchase
+
+##### IapticError\_6777008
+
+> **IapticError\_6777008**: `string`
+
+
+The user is not allowed to make a payment
+
+##### IapticError\_6777010
+
+> **IapticError\_6777010**: `string`
+
+
+Unknown error
+
+##### IapticError\_6777011
+
+> **IapticError\_6777011**: `string`
+
+
+Failed to refresh the purchase receipt
+
+##### IapticError\_6777012
+
+> **IapticError\_6777012**: `string`
+
+
+The product identifier is invalid
+
+##### IapticError\_6777013
+
+> **IapticError\_6777013**: `string`
+
+
+Cannot finalize a transaction or acknowledge a purchase
+
+##### IapticError\_6777014
+
+> **IapticError\_6777014**: `string`
+
+
+Failed to communicate with the server
+
+##### IapticError\_6777015
+
+> **IapticError\_6777015**: `string`
+
+
+Subscriptions are not available
+
+##### IapticError\_6777016
+
+> **IapticError\_6777016**: `string`
+
+
+Purchase information is missing token
+
+##### IapticError\_6777017
+
+> **IapticError\_6777017**: `string`
+
+
+Verification of store data failed
+
+##### IapticError\_6777018
+
+> **IapticError\_6777018**: `string`
+
+
+Bad response from the server
+
+##### IapticError\_6777019
+
+> **IapticError\_6777019**: `string`
+
+
+Failed to refresh the store
+
+##### IapticError\_6777020
+
+> **IapticError\_6777020**: `string`
+
+
+Payment has expired
+
+##### IapticError\_6777021
+
+> **IapticError\_6777021**: `string`
+
+
+Failed to download the content
+
+##### IapticError\_6777022
+
+> **IapticError\_6777022**: `string`
+
+
+Failed to update a subscription
+
+##### IapticError\_6777023
+
+> **IapticError\_6777023**: `string`
+
+
+The requested product is not available in the store
+
+##### IapticError\_6777024
+
+> **IapticError\_6777024**: `string`
+
+
+The user has not allowed access to Cloud service information
+
+##### IapticError\_6777025
+
+> **IapticError\_6777025**: `string`
+
+
+The device could not connect to the network
+
+##### IapticError\_6777026
+
+> **IapticError\_6777026**: `string`
+
+
+The user has revoked permission to use this cloud service
+
+##### IapticError\_6777027
+
+> **IapticError\_6777027**: `string`
+
+
+The user has not yet acknowledged Apple's privacy policy
+
+##### IapticError\_6777028
+
+> **IapticError\_6777028**: `string`
+
+
+The app is attempting to use a property without required entitlement
+
+##### IapticError\_6777029
+
+> **IapticError\_6777029**: `string`
+
+
+The offer identifier is invalid
+
+##### IapticError\_6777030
+
+> **IapticError\_6777030**: `string`
+
+
+The price specified in App Store Connect is no longer valid
+
+##### IapticError\_6777031
+
+> **IapticError\_6777031**: `string`
+
+
+The signature in a payment discount is not valid
+
+##### IapticError\_6777032
+
+> **IapticError\_6777032**: `string`
+
+
+Parameters are missing in a payment discount
+
+##### IapticError\_6778003
+
+> **IapticError\_6778003**: `string`
+
+
+Subscription has expired
+
+##### IapticError\_StoreAlreadyInitialized
+
+> **IapticError\_StoreAlreadyInitialized**: `string`
+
+
+IapticRN.store is already initialized, call IapticRN.destroy() first
+
+##### IapticError\_StoreNotInitialized
+
+> **IapticError\_StoreNotInitialized**: `string`
+
+
+IapticRN.store is not initialized, call IapticRN.initialize() first
+
+##### IapticError\_UnsupportedPlatform
+
+> **IapticError\_UnsupportedPlatform**: `string`
+
+
+Unsupported platform
+
+##### IapticRN\_initialized\_called
+
+> **IapticRN\_initialized\_called**: `string`
+
+
+IapticRN.initialize() can only be called once
+
+##### ProgrammingError
+
+> **ProgrammingError**: `string`
+
+
+Programming Error
+
+##### PurchaseError\_E\_ALREADY\_OWNED
+
+> **PurchaseError\_E\_ALREADY\_OWNED**: `string`
+
+
+This item has already been purchased.
+
+##### PurchaseError\_E\_BILLING\_RESPONSE\_JSON\_PARSE\_ERROR
+
+> **PurchaseError\_E\_BILLING\_RESPONSE\_JSON\_PARSE\_ERROR**: `string`
+
+
+Failed to parse the billing response.
+
+##### PurchaseError\_E\_DEFERRED\_PAYMENT
+
+> **PurchaseError\_E\_DEFERRED\_PAYMENT**: `string`
+
+
+The payment has been deferred.
+
+##### PurchaseError\_E\_DEVELOPER\_ERROR
+
+> **PurchaseError\_E\_DEVELOPER\_ERROR**: `string`
+
+
+An error occurred in the application.
+
+##### PurchaseError\_E\_IAP\_NOT\_AVAILABLE
+
+> **PurchaseError\_E\_IAP\_NOT\_AVAILABLE**: `string`
+
+
+In-app purchases are not available.
+
+##### PurchaseError\_E\_INTERRUPTED
+
+> **PurchaseError\_E\_INTERRUPTED**: `string`
+
+
+The operation was interrupted.
+
+##### PurchaseError\_E\_ITEM\_UNAVAILABLE
+
+> **PurchaseError\_E\_ITEM\_UNAVAILABLE**: `string`
+
+
+The requested product is not available.
+
+##### PurchaseError\_E\_NETWORK\_ERROR
+
+> **PurchaseError\_E\_NETWORK\_ERROR**: `string`
+
+
+A network error occurred.
+
+##### PurchaseError\_E\_NOT\_ENDED
+
+> **PurchaseError\_E\_NOT\_ENDED**: `string`
+
+
+The transaction has not been ended.
+
+##### PurchaseError\_E\_NOT\_PREPARED
+
+> **PurchaseError\_E\_NOT\_PREPARED**: `string`
+
+
+The purchase cannot be completed because it has not been prepared.
+
+##### PurchaseError\_E\_RECEIPT\_FAILED
+
+> **PurchaseError\_E\_RECEIPT\_FAILED**: `string`
+
+
+Failed to validate receipt.
+
+##### PurchaseError\_E\_RECEIPT\_FINISHED\_FAILED
+
+> **PurchaseError\_E\_RECEIPT\_FINISHED\_FAILED**: `string`
+
+
+Failed to finish the transaction.
+
+##### PurchaseError\_E\_REMOTE\_ERROR
+
+> **PurchaseError\_E\_REMOTE\_ERROR**: `string`
+
+
+A remote error occurred.
+
+##### PurchaseError\_E\_SERVICE\_ERROR
+
+> **PurchaseError\_E\_SERVICE\_ERROR**: `string`
+
+
+The service returned an error.
+
+##### PurchaseError\_E\_UNKNOWN
+
+> **PurchaseError\_E\_UNKNOWN**: `string`
+
+
+An unknown error occurred.
+
+##### PurchaseError\_E\_USER\_CANCELLED
+
+> **PurchaseError\_E\_USER\_CANCELLED**: `string`
+
+
+The user cancelled the purchase.
+
+##### PurchaseError\_E\_USER\_ERROR
+
+> **PurchaseError\_E\_USER\_ERROR**: `string`
+
+
+An error occurred in the application.
+
+##### PurchaseError\_title
+
+> **PurchaseError\_title**: `string`
+
+
+Purchase Error #{0}
+
+##### UnknownError
+
+> **UnknownError**: `string`
+
+
+An unknown error occurred.
+
+##### UnknownError\_title
+
+> **UnknownError\_title**: `string`
+
+
+Unknown Error
+
+##### ValidationError
+
+> **ValidationError**: `string`
+
+
+Receipt Validation Error
+
+##### ValidationError\_MissingTransactionId
+
+> **ValidationError\_MissingTransactionId**: `string`
+
+
+Transaction ID is missing
 
 ***
 
@@ -2985,6 +3628,8 @@ Type of recurring payment
 ### IapticProduct
 
 
+Product metadata from the store
+
 #### Properties
 
 ##### countryCode?
@@ -2993,6 +3638,22 @@ Type of recurring payment
 
 
 Country code of the product
+
+##### description?
+
+> `optional` **description**: `string`
+
+
+Description of the product provided by the store
+
+##### entitlements?
+
+> `optional` **entitlements**: `string`[]
+
+
+Entitlements this product will give to the user, can be used for subscription and non-consumable products.
+
+Use iapticRN.checkEntitlement("my-entitlement") to check if the user owns any product that provides this entitlement.
 
 ##### id
 
@@ -3020,7 +3681,29 @@ Platform of the product
 > `optional` **title**: `string`
 
 
-Title of the product
+Title of the product provided by the store
+
+##### tokenType?
+
+> `optional` **tokenType**: `string`
+
+
+Type of token this product will give to the user for consumable products.
+
+For example: "coin", "gem", "silver", etc.
+
+##### tokenValue?
+
+> `optional` **tokenValue**: `number`
+
+
+Amount of tokens this product will give to the user for consumable products.
+
+###### Example
+
+```typescript
+{ id: 'coins_100', type: 'consumable', tokenType: 'coin', tokenValue: 100 },
+```
 
 ##### type
 
@@ -3082,6 +3765,344 @@ Amount of tokens this product will give to the user for consumable products.
 
 
 Type of the product (subscription, consumable, or non-consumable)
+
+***
+
+### IapticProductListProps
+
+
+ProductList component
+
+#### Properties
+
+##### onOrder()
+
+> **onOrder**: (`offer`) => `void`
+
+
+Handlers when the user request purchasing a given offer
+
+###### Parameters
+
+###### offer
+
+[`IapticOffer`](globals.md#iapticoffer)
+
+###### Returns
+
+`void`
+
+##### productIds?
+
+> `optional` **productIds**: `string`[]
+
+
+Filter the products to display (optional)
+
+##### styles?
+
+> `optional` **styles**: `object`
+
+
+Custom styles
+
+###### button?
+
+> `optional` **button**: `ViewStyle` \| `TextStyle`
+
+###### buttonDisabled?
+
+> `optional` **buttonDisabled**: `ViewStyle` \| `TextStyle`
+
+###### buttonText?
+
+> `optional` **buttonText**: `ViewStyle` \| `TextStyle`
+
+###### container?
+
+> `optional` **container**: `ViewStyle` \| `TextStyle`
+
+###### offerContainer?
+
+> `optional` **offerContainer**: `ViewStyle` \| `TextStyle`
+
+###### offersContainer?
+
+> `optional` **offersContainer**: `ViewStyle` \| `TextStyle`
+
+###### pricingPhasesText?
+
+> `optional` **pricingPhasesText**: `ViewStyle` \| `TextStyle`
+
+###### productContainer?
+
+> `optional` **productContainer**: `ViewStyle` \| `TextStyle`
+
+###### productTitle?
+
+> `optional` **productTitle**: `ViewStyle` \| `TextStyle`
+
+***
+
+### IapticProductListStyles
+
+
+#### Properties
+
+##### button?
+
+> `optional` **button**: `ViewStyle`
+
+
+##### buttonDisabled?
+
+> `optional` **buttonDisabled**: `ViewStyle`
+
+
+##### buttonText?
+
+> `optional` **buttonText**: `TextStyle`
+
+
+##### container?
+
+> `optional` **container**: `ViewStyle`
+
+
+##### offerContainer?
+
+> `optional` **offerContainer**: `ViewStyle`
+
+
+##### offersContainer?
+
+> `optional` **offersContainer**: `ViewStyle`
+
+
+##### pricingPhasesText?
+
+> `optional` **pricingPhasesText**: `TextStyle`
+
+
+##### productContainer?
+
+> `optional` **productContainer**: `ViewStyle`
+
+
+##### productTitle?
+
+> `optional` **productTitle**: `TextStyle`
+
+
+***
+
+### IapticStoreConfig
+
+
+Configuration for the iaptic validator
+
+#### Properties
+
+##### appName
+
+> **appName**: `string`
+
+
+##### baseUrl?
+
+> `optional` **baseUrl**: `string`
+
+
+The base URL of the iaptic validator
+
+##### iosBundleId?
+
+> `optional` **iosBundleId**: `string`
+
+
+##### publicKey
+
+> **publicKey**: `string`
+
+
+##### showAlerts?
+
+> `optional` **showAlerts**: `boolean`
+
+
+Disable alert by setting this to false.
+
+By default, IapticRN will display relevant alerts to the user when something goes wrong.
+
+Default is true.
+
+***
+
+### IapticSubscriptionViewHandle
+
+
+#### Properties
+
+##### hide()
+
+> **hide**: () => `void`
+
+
+###### Returns
+
+`void`
+
+##### show()
+
+> **show**: () => `void`
+
+
+###### Returns
+
+`void`
+
+***
+
+### IapticSubscriptionViewProps
+
+
+#### Properties
+
+##### entitlementLabels?
+
+> `optional` **entitlementLabels**: `Record`\<`string`, `string`\>
+
+
+Localized text for each entitlement/feature
+Example: { premium: 'Premium Features', downloads: 'Unlimited Downloads' }
+
+##### onClose()?
+
+> `optional` **onClose**: () => `void`
+
+
+###### Returns
+
+`void`
+
+##### sortProducts?
+
+> `optional` **sortProducts**: `boolean`
+
+
+Optional: Order products by number of entitlements (default: true)
+
+##### styles?
+
+> `optional` **styles**: `Partial`\<[`IapticSubscriptionViewStyles`](globals.md#iapticsubscriptionviewstyles)\>
+
+
+##### visible?
+
+> `optional` **visible**: `boolean`
+
+
+***
+
+### IapticSubscriptionViewStyles
+
+
+#### Properties
+
+##### billingOption?
+
+> `optional` **billingOption**: `ViewStyle`
+
+
+##### billingOptionSelected?
+
+> `optional` **billingOptionSelected**: `ViewStyle`
+
+
+##### billingOptionText?
+
+> `optional` **billingOptionText**: `TextStyle`
+
+
+##### billingSelector?
+
+> `optional` **billingSelector**: `ViewStyle`
+
+
+##### closeButton?
+
+> `optional` **closeButton**: `ViewStyle`
+
+
+##### closeButtonText?
+
+> `optional` **closeButtonText**: `TextStyle`
+
+
+##### contentContainer?
+
+> `optional` **contentContainer**: `ViewStyle`
+
+
+##### ctaButton?
+
+> `optional` **ctaButton**: `ViewStyle`
+
+
+##### ctaButtonDisabled?
+
+> `optional` **ctaButtonDisabled**: `ViewStyle`
+
+
+##### ctaButtonText?
+
+> `optional` **ctaButtonText**: `TextStyle`
+
+
+##### featuresTitle?
+
+> `optional` **featuresTitle**: `TextStyle`
+
+
+##### header?
+
+> `optional` **header**: `ViewStyle`
+
+
+##### modalContainer?
+
+> `optional` **modalContainer**: `ViewStyle`
+
+
+##### productCard?
+
+> `optional` **productCard**: `ViewStyle`
+
+
+##### productCardSelected?
+
+> `optional` **productCardSelected**: `ViewStyle`
+
+
+##### productDescription?
+
+> `optional` **productDescription**: `TextStyle`
+
+
+##### productPrice?
+
+> `optional` **productPrice**: `TextStyle`
+
+
+##### productTitle?
+
+> `optional` **productTitle**: `TextStyle`
+
+
+##### title?
+
+> `optional` **title**: `TextStyle`
+
 
 ***
 
@@ -3427,7 +4448,7 @@ Data needed to validate a purchase
 ### IapticVerifiedPurchase
 
 
-A purchase object returned by the receipt validator.
+Purchase verified by the receipt validator.
 
 #### Properties
 
@@ -3454,12 +4475,16 @@ Correspond to the product's offerId. When undefined it means there is only one o
 
 Date of expiry for a subscription.
 
-##### id
+##### ~~id~~
 
 > **id**: `string`
 
 
 Product identifier
+
+###### Deprecated
+
+Use `productId` instead
 
 ##### isAcknowledged?
 
@@ -3517,6 +4542,13 @@ Platform this purchase was made on
 
 Whether or not the user agreed or has been notified of a price change.
 
+##### productId
+
+> **productId**: `string`
+
+
+Product identifier
+
 ##### purchaseDate?
 
 > `optional` **purchaseDate**: `number`
@@ -3533,10 +4565,14 @@ Purchase identifier (optional)
 
 ##### renewalIntent?
 
-> `optional` **renewalIntent**: `string`
+> `optional` **renewalIntent**: `"Renew"` \| `"Lapse"`
 
 
-Renewal intent.
+Whether or not the user intends to let the subscription auto-renew.
+
+Possible values:
+- `"Renew"` - The user intends to renew the subscription.
+- `"Lapse"` - The user intends to let the subscription expire without renewing.
 
 ##### renewalIntentChangeDate?
 
@@ -3579,7 +4615,7 @@ Type-safe event listener function
 
 ### IapticEventType
 
-> **IapticEventType**: `"purchase.updated"` \| `"subscription.updated"` \| `"subscription.renewed"` \| `"subscription.cancelled"` \| `"subscription.expired"` \| `"subscription.changed"` \| `"pendingPurchase.updated"` \| `"nonConsumable.updated"` \| `"nonConsumable.owned"` \| `"nonConsumable.unowned"` \| `"consumable.purchased"` \| `"consumable.refunded"` \| `"error"`
+> **IapticEventType**: `"products.updated"` \| `"purchase.updated"` \| `"subscription.updated"` \| `"subscription.renewed"` \| `"subscription.cancelled"` \| `"subscription.expired"` \| `"subscription.changed"` \| `"pendingPurchase.updated"` \| `"nonConsumable.updated"` \| `"nonConsumable.owned"` \| `"nonConsumable.unowned"` \| `"consumable.purchased"` \| `"consumable.refunded"` \| `"error"`
 
 
 All possible event types that can be listened to.
@@ -3715,3 +4751,48 @@ Subscription status component that automatically updates when subscription chang
   }}
 />
 ```
+
+***
+
+### IapticProductList()
+
+> **IapticProductList**(`__namedParameters`): `Element`
+
+
+#### Parameters
+
+##### \_\_namedParameters
+
+[`IapticProductListProps`](globals.md#iapticproductlistprops)
+
+#### Returns
+
+`Element`
+
+***
+
+### IapticSubscriptionView()
+
+> **IapticSubscriptionView**(`props`): `ReactNode`
+
+
+#### Parameters
+
+##### props
+
+[`IapticSubscriptionViewProps`](globals.md#iapticsubscriptionviewprops) & `RefAttributes`\<[`IapticSubscriptionViewHandle`](globals.md#iapticsubscriptionviewhandle)\>
+
+#### Returns
+
+`ReactNode`
+
+***
+
+### IapticTestComponent()
+
+> **IapticTestComponent**(): `Element`
+
+
+#### Returns
+
+`Element`

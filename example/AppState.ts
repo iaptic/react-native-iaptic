@@ -1,4 +1,4 @@
-import { IapticPendingPurchase, IapticProduct } from 'react-native-iaptic';
+import { IapticProduct } from '../src';
 
 /**
  * The state of the app
@@ -19,9 +19,6 @@ export interface AppState {
     numDone: number;
     total: number;
   };
-
-  /** Information about the purchase in progress */
-  pendingPurchase?: IapticPendingPurchase;
 }
 
 /**
@@ -30,7 +27,6 @@ export interface AppState {
 export const initialAppState: AppState = {
   applicationUsername: 'iaptic-rn-demo-user',
   availableProducts: [],
-  pendingPurchase: undefined,
   restorePurchasesInProgress: undefined,
   entitlements: [],
 }
@@ -63,17 +59,6 @@ export class AppStateManager {
   set(value: Partial<AppState>) {
     this._state = { ...this._state, ...value };
     this.setAppState(this._state);
-  }
-
-  /**
-   * Set the purchase status
-   */
-  updatePendingPurchase(pendingPurchase: IapticPendingPurchase) {
-    if (pendingPurchase.status === 'completed') {
-      this.set({ pendingPurchase: undefined });
-    } else {
-      this.set({ pendingPurchase: { ...pendingPurchase } });
-    }
   }
 
   setRestorePurchasesProgress(numDone: number, total: number) {

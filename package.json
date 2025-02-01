@@ -4,18 +4,24 @@
   "description": "React Native In-App Purchase library with Iaptic receipt validation",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
   "files": [
-    "lib/**/*.d.ts",
-    "lib/**/*.js",
+    "lib/**/*",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "rm -rf lib/ && tsc",
+    "build": "tsc",
+    "buildw": "tsc -w",
     "prepare": "npm run build",
     "test": "jest --setupFiles ./jest.setup.js",
     "lint": "eslint src/**/*.ts",
-    "docs": "typedoc src/index.ts",
+    "docs": "typedoc --excludeInternal --excludePrivate src/index.ts",
     "docs-md": "typedoc --plugin typedoc-plugin-markdown --out ./docs-markdown.tmp --outputFileStrategy modules src/index.ts && ./postprocessMarkdown",
     "prepublishOnly": "npm run build && npm run docs-md"
   },
@@ -29,12 +35,13 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.7",
+    "typescript": "^5.0.0",
     "@babel/preset-env": "^7.26.7",
     "@babel/preset-typescript": "^7.26.0",
     "@testing-library/react-native": "^12.4.0",
     "@types/base-64": "^1.0.2",
     "@types/jest": "^29.5.0",
-    "@types/react": "^18.2.0",
+    "@types/react": "18.3.1",
     "@types/react-native": "^0.72.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
@@ -43,10 +50,7 @@
     "base-64": "^1.0.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
-    "metro-react-native-babel-preset": "^0.77.0",
-    "react-test-renderer": "18.2.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.0.0",
     "typedoc": "^0.27.6",
     "typedoc-plugin-markdown": "^4.4.1"
   },
@@ -67,5 +71,10 @@
   "bugs": {
     "url": "https://github.com/iaptic/iaptic-react-native-sdk/issues"
   },
-  "homepage": "https://www.iaptic.com/documentation/react-native"
+  "homepage": "https://www.iaptic.com/documentation/react-native",
+  "typesVersions": {
+    "*": {
+      "*": ["lib/*"]
+    }
+  }
 }

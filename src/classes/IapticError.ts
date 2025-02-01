@@ -9,7 +9,7 @@ import { Locales } from "./Locales";
  * - WARNING: The error is important and can be reported to the user as a toast message.
  * - ERROR: The error is critical and should be reported to the user as a pop-up alert.
  */
-export enum IapticErrorSeverity {
+export enum IapticSeverity {
   INFO = 0,
   WARNING = 1,
   ERROR = 2,
@@ -76,7 +76,7 @@ export function toIapticErrorCode(code: IAP.ErrorCode | undefined): IapticErrorC
  * @returns The Iaptic error
  * @internal
  */
-export function toIapticError(err: IAP.PurchaseError | Error, severity: IapticErrorSeverity, defaultCode: IapticErrorCode = IapticErrorCode.UNKNOWN, extraDebugMessage: string = ''): IapticError {
+export function toIapticError(err: IAP.PurchaseError | Error, severity: IapticSeverity, defaultCode: IapticErrorCode = IapticErrorCode.UNKNOWN, extraDebugMessage: string = ''): IapticError {
   if (err instanceof IAP.PurchaseError) {
     return new IapticError(err.message, {
       severity,
@@ -119,7 +119,7 @@ export function toIapticError(err: IAP.PurchaseError | Error, severity: IapticEr
  * ```
  */
 export class IapticError extends Error {
-  public readonly severity: IapticErrorSeverity;
+  public readonly severity: IapticSeverity;
   public readonly code: IapticErrorCode;
   public readonly localizedTitle: string;
   public readonly localizedMessage: string;
@@ -130,7 +130,7 @@ export class IapticError extends Error {
    * @internal
    */
   constructor(message: string, options: {
-    severity: IapticErrorSeverity,
+    severity: IapticSeverity,
     code: IapticErrorCode,
     localizedTitle: string,
     localizedMessage: string,

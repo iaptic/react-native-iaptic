@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, SafeAreaView, TouchableOpacity, Text, ScrollView } from 'react-native';
-import { IapticActiveSubscription, IapticLogger, IapticLoggerVerbosityLevel, IapticRN } from '../src'; // 'react-native-iaptic'
+import { StyleSheet, SafeAreaView, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { IapticActiveSubscription } from '../src'; // 'react-native-iaptic'
 import { AppStateManager, initialAppState } from './AppState';
 import { AppService } from './AppService';
-
-IapticLogger.VERBOSITY = IapticLoggerVerbosityLevel.DEBUG;
+import ProductList from '../src/components/ProductList';
+import { SubscriptionView } from '../src/components/SubscriptionView/Modal';
 
 // Create stable references outside component
 let appStateManagerInstance: AppStateManager | null = null;
@@ -26,10 +26,15 @@ function App(): React.JSX.Element {
   useEffect(() => iapService.onAppStartup(), []);
 
   const restorePurchasesInProgress = appState.restorePurchasesInProgress;
-  const pendingPurchase = appState.pendingPurchase;
 
   return (
     <SafeAreaView style={styles.container}>
+      <SubscriptionView 
+        entitlementLabels={{
+          pro_feature: 'Professional Features',
+          premium_feature: 'Premium Content'
+        }}
+      />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.productsContainer}>
         <Text style={styles.subscriptionText}>Subscription</Text>
         
@@ -51,42 +56,9 @@ function App(): React.JSX.Element {
           <Text style={styles.buttonText}>Premium Access: {appState.entitlements.includes('premium') ? 'Granted' : 'Locked'}</Text>
         </TouchableOpacity>
 
-        {/* Liste des produits disponibles */}
-        {appState.availableProducts.map((product) => (
-          <View key={product.id} style={styles.productContainer}>
-            <Text style={styles.productTitle}>{product.title}</Text>
-            <View style={styles.offersContainer}>
-              {product.offers.map(offer => (
-                <View key={offer.id} style={styles.offerContainer}>
-                  <TouchableOpacity
-                    disabled={pendingPurchase?.productId === product.id}
-                    style={[
-                      styles.button,
-                      pendingPurchase?.productId === product.id && styles.buttonDisabled
-                    ]}
-                    onPress={() => {
-                      iapService.handleSubscribeButton(offer);
-                    }}
-                  >
-                    <Text style={styles.buttonText}>
-                      {pendingPurchase?.productId === product.id && (pendingPurchase?.offerId === offer.id || !pendingPurchase?.offerId)
-                        ? `${pendingPurchase.status}...`
-                        : `${offer.pricingPhases[0].price} ${IapticRN.utils.formatBillingCycleEN(offer.pricingPhases[0])}`}
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  {offer.pricingPhases.length > 1 && (
-                    <Text style={styles.pricingPhasesText}>
-                      {offer.pricingPhases.slice(1).map((phase, index) => (
-                        `then ${phase.price} ${IapticRN.utils.formatBillingCycleEN(phase)}`
-                      )).join('\n')}
-                    </Text>
-                  )}
-                </View>
-              ))}
-            </View>
-          </View>
-        ))}
+        <ProductList 
+          onOrder={(offer) => iapService.handleSubscribeButton(offer)}
+        />
         
         <Text style={styles.restoreText}>
           Previously purchased items? Restore them here:
@@ -111,7 +83,6 @@ function App(): React.JSX.Element {
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>Rendered: {new Date().toISOString().slice(11, 23)}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -127,7 +98,7 @@ const styles = StyleSheet.create({
   productsContainer: {
     padding: 10,
     gap: 10,
-    paddingBottom: 20, // Add some padding at the bottom for better scrolling
+    paddingBottom: 20,
   },
   button: {
     backgroundColor: '#007AFF',
@@ -142,10 +113,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
   },
-  footerText: {
-    fontSize: 12,
-    textAlign: 'center',
-  },
   restoreText: {
     textAlign: 'center',
     marginTop: 20,
@@ -153,45 +120,13 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   restoreButton: {
-    backgroundColor: '#5856D6', // Different color to distinguish from purchase buttons
+    backgroundColor: '#5856D6',
   },
   subscriptionText: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
-  },
-  productContainer: {
-    marginBottom: 20,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    padding: 12,
-  },
-  productTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-  },
-  offersContainer: {
-    gap: 12,
-  },
-  offerContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  pricingPhasesText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-    marginLeft: 8,
-    textAlign: 'right',
   },
 });
 

@@ -2,6 +2,7 @@ import * as IAP from 'react-native-iap';
 import { IapticProductDefinition, IapticProduct, IapticOffer, IapticPricingPhase, IapticProductType, IapticRecurrenceMode, IapticPaymentMode, IapticPurchasePlatform } from '../types';
 import { getPlatform } from '../functions/getPlatform';
 import { logger } from './IapticLogger';
+import { IapticEvents } from './IapticEvents';
 
 /** Manages the catalog of available in-app purchase products */
 export class StoreProducts {
@@ -19,10 +20,11 @@ export class StoreProducts {
    * @param subscriptions - Initial subscription products
    * @param products - Initial non-subscription products
    */
-  constructor(definitions: IapticProductDefinition[], subscriptions: IAP.Subscription[], products: IAP.Product[]) {
+  constructor(definitions: IapticProductDefinition[], subscriptions: IAP.Subscription[], products: IAP.Product[], private readonly events: IapticEvents) {
     this.definitions = definitions;
     this.subscriptions = subscriptions;
     this.products = products;
+    this.events.emit('products.updated', this.all());
   }
 
   /**
@@ -81,7 +83,9 @@ export class StoreProducts {
         this.products.push(product);
       }
     }
-    return this.all();
+    const updatedProducts = this.all();
+    this.events.emit('products.updated', updatedProducts);
+    return updatedProducts;
   }
 
   /**
@@ -158,7 +162,11 @@ export class StoreProducts {
           id: d.id,
           offers: this.subscriptionOffers(sub),
           title: this.cleanupTitle(sub.title),
+          description: sub.description,
           platform: getPlatform(),
+          entitlements: d.entitlements,
+          tokenType: d.tokenType,
+          tokenValue: d.tokenValue,
         }
       default:
         const product = this.products.find(p => p.productId === d.id);
@@ -168,7 +176,11 @@ export class StoreProducts {
           id: d.id,
           offers: this.productOffers(product),
           title: this.cleanupTitle(product.title),
+          description: product.description,
           platform: getPlatform(),
+          entitlements: d.entitlements,
+          tokenType: d.tokenType,
+          tokenValue: d.tokenValue,
         }
     }
   }

@@ -1,5 +1,5 @@
 import { Platform, Alert, ToastAndroid } from 'react-native';
-import { IapticError, IapticErrorSeverity, IapticLoggerVerbosityLevel, IapticOffer, IapticRN, IapticConfig } from '../src';
+import { IapticError, IapticSeverity, IapticVerbosity, IapticOffer, IapticRN, IapticConfig } from '../src';
 import { AppStateManager } from './AppState';
 
 export const config = {
@@ -7,7 +7,7 @@ export const config = {
     appName: 'test',
     publicKey: '',
     iosBundleId: 'com.example.app',
-    verbosity: IapticLoggerVerbosityLevel.DEBUG,
+    verbosity: IapticVerbosity.DEBUG,
     products: [{
       id: 'com.example.app.pro',
       type: 'paid subscription',
@@ -22,7 +22,7 @@ export const config = {
 
 export class AppService {
 
-  log(message: string, severity: IapticErrorSeverity = IapticErrorSeverity.INFO) {
+  log(message: string, severity: IapticSeverity = IapticSeverity.INFO) {
     const SYMBOLS = ['💡', '🔔', '❌'];
     console.log(`${new Date().toISOString()} ${SYMBOLS[severity]} ${message}`);
   }
@@ -41,27 +41,26 @@ export class AppService {
    */
   onAppStartup() {
     this.log('onAppStartup');    
-    this.initIaptic();
+    this.initializeIaptic();
     return () => {
       IapticRN.removeAllEventListeners();
     }
   }
 
-  async initIaptic() {
+  async initializeIaptic() {
     try {
-      await IapticRN.initialize(config.iaptic);
-      IapticRN.setApplicationUsername(this.appState.getState().applicationUsername);
-
-      IapticRN.addEventListener('pendingPurchase.updated', purchase => {
-        this.log('🔄 Pending purchase updated: ' + JSON.stringify(purchase));
-        this.appState.updatePendingPurchase(purchase);
-      });
-  
       IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
         this.log('🔄 Subscription updated: ' + reason + ' for ' + JSON.stringify(purchase));
         this.appState.set({ entitlements: IapticRN.listEntitlements() });
       });
+      IapticRN.addEventListener('products.updated', (availableProducts) => {
+        this.log('🔄 Products updated: ' + JSON.stringify(availableProducts));
+        this.appState.set({ availableProducts });
+      });
 
+      await IapticRN.initialize(config.iaptic);
+      IapticRN.setApplicationUsername(this.appState.getState().applicationUsername);
+  
       this.appState.set({
         availableProducts: IapticRN.getProducts(),
         entitlements: IapticRN.listEntitlements(),
@@ -79,8 +78,8 @@ export class AppService {
 
     if (error instanceof IapticError) {
       this.log(`IapticRN #${error.code}: ${error.message}`, error.severity);
-      if (error.severity === IapticErrorSeverity.INFO) return;
-      if (error.severity === IapticErrorSeverity.WARNING && Platform.OS === 'android') {
+      if (error.severity === IapticSeverity.INFO) return;
+      if (error.severity === IapticSeverity.WARNING && Platform.OS === 'android') {
         ToastAndroid.show(error.localizedMessage, ToastAndroid.SHORT);
       }
       else {
@@ -88,7 +87,7 @@ export class AppService {
       }
     }
     else {
-      this.log(error.message, IapticErrorSeverity.ERROR);
+      this.log(error.message, IapticSeverity.ERROR);
       Alert.alert('Error', error.message);
     }
   }

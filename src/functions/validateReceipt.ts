@@ -1,4 +1,4 @@
-import { IapticError, IapticErrorSeverity } from "../classes/IapticError";
+import { IapticError, IapticSeverity } from "../classes/IapticError";
 import { Locales } from "../classes/Locales";
 import { IapticStoreConfig, IapticErrorCode, IapticProduct, IapticValidateRequest, IapticValidateRequestTransaction, IapticValidateResponse, IapticValidationData } from "../types";
 import { Platform } from "react-native";
@@ -39,7 +39,7 @@ export async function validateReceipt(data: IapticValidationData, products: Iapt
   }
   else {
     throw new IapticError('Unsupported platform', {
-      severity: IapticErrorSeverity.ERROR,
+      severity: IapticSeverity.ERROR,
       localizedTitle: Locales.get(`ValidationError`),
       localizedMessage: Locales.get(`IapticError_UnsupportedPlatform`),
       debugMessage: 'Unsupported platform',
@@ -72,7 +72,7 @@ export async function validateReceipt(data: IapticValidationData, products: Iapt
 
     if (!response.ok) {
       throw new IapticError(response.statusText, {
-        severity: IapticErrorSeverity.ERROR,
+        severity: IapticSeverity.ERROR,
         localizedTitle: Locales.get(`ValidationError`),
         localizedMessage: Locales.get(`IapticError_${IapticErrorCode.COMMUNICATION}`),
         debugMessage: response.statusText,
@@ -86,7 +86,7 @@ export async function validateReceipt(data: IapticValidationData, products: Iapt
       data = await response.json();
     } catch (error) {
       throw new IapticError('Failed to parse response', {
-        severity: IapticErrorSeverity.ERROR,
+        severity: IapticSeverity.ERROR,
         localizedTitle: Locales.get(`ValidationError`),
         localizedMessage: Locales.get(`IapticError_${IapticErrorCode.BAD_RESPONSE}`, [], 'Failed to parse response'),
         debugMessage: 'Failed to parse response',
@@ -110,7 +110,7 @@ export async function validateReceipt(data: IapticValidationData, products: Iapt
         }
       }
       throw new IapticError(data.message ?? 'Receipt validation failed', {
-        severity: IapticErrorSeverity.ERROR,
+        severity: IapticSeverity.ERROR,
         localizedTitle: Locales.get(`ValidationError`),
         localizedMessage: Locales.get(`IapticError_${data.code ?? IapticErrorCode.UNKNOWN}`, [], data.message ?? ''),
         debugMessage: data.message ?? '',
@@ -139,7 +139,7 @@ export async function validateReceipt(data: IapticValidationData, products: Iapt
     const code: IapticErrorCode = error.response?.data?.code ?? error.code ?? IapticErrorCode.UNKNOWN;
     throw new IapticError(errorMessage,
       {
-        severity: IapticErrorSeverity.ERROR,
+        severity: IapticSeverity.ERROR,
         localizedTitle: Locales.get(`ValidationError`),
         localizedMessage: Locales.get(`IapticError_${code}`, [], error.message),
         debugMessage: error.message,

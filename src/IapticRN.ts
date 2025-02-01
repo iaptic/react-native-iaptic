@@ -1,12 +1,13 @@
-import { IapticError, IapticErrorSeverity } from "./classes/IapticError";
+import { IapticError, IapticSeverity } from "./classes/IapticError";
 import { IapticLogger } from "./classes/IapticLogger";
 import { IapticStore } from "./classes/IapticStore";
 import { Locales } from "./classes/Locales";
-import { Utils } from "./classes/Utils";
+import { IapticLocale } from "./classes/IapticLocale";
+import { utils } from "./classes/Utils";
 import {
   IapticStoreConfig,
   IapticErrorCode,
-  IapticLoggerVerbosityLevel,
+  IapticVerbosity,
   IapticProductDefinition,
   IapticVerifiedPurchase,
   IapticEventType,
@@ -16,6 +17,7 @@ import {
 } from "./types";
 import type { md5UUID } from "./functions/md5UUID";
 import type { md5 } from "./functions/md5";
+import { subscriptionViewEvents } from './components/SubscriptionView/Modal';
 
 /**
  * Configuration for Iaptic React Native SDK
@@ -23,7 +25,7 @@ import type { md5 } from "./functions/md5";
 export interface IapticConfig extends IapticStoreConfig {
   products?: IapticProductDefinition[];
   applicationUsername?: string;
-  verbosity?: IapticLoggerVerbosityLevel;
+  verbosity?: IapticVerbosity;
 }
 
 /**
@@ -34,12 +36,14 @@ export class IapticRN {
   /**
    * Utility functions
    */
-  static readonly utils: Utils = new Utils();
+  static readonly utils = utils;
 
   /**
    * Singleton instance of IapticStore
    */
   static store: IapticStore | undefined;
+
+  // private static subscriptionViewRef: RefObject<SubscriptionViewHandle> | null = null;
 
   /**
    * Initialize the IapticRN singleton
@@ -56,6 +60,13 @@ export class IapticRN {
    * ```
    */
   static async initialize(config: IapticConfig) {
+    if (IapticRN.store) throw new IapticError('IapticRN.store is already initialized', {
+      severity: IapticSeverity.ERROR,
+      code: IapticErrorCode.SETUP,
+      localizedTitle: Locales.get('ProgrammingError'),
+      localizedMessage: Locales.get('IapticError_StoreAlreadyInitialized'),
+      debugMessage: 'IapticRN.store is already initialized, call IapticRN.destroy() first',
+    });
     IapticRN.store = new IapticStore(config);
     if (config.verbosity) IapticRN.setVerbosity(config.verbosity);
     await IapticRN.store.initialize();
@@ -90,13 +101,18 @@ export class IapticRN {
    */
   static getStore(): IapticStore {
     if (!IapticRN.store) throw new IapticError('IapticRN.store is not initialized', {
-      severity: IapticErrorSeverity.ERROR,
+      severity: IapticSeverity.ERROR,
       code: IapticErrorCode.SETUP,
       localizedTitle: Locales.get('ProgrammingError'),
       localizedMessage: Locales.get('IapticError_StoreNotInitialized'),
       debugMessage: 'IapticRN.store is not initialized, call IapticRN.initialize() first',
     });
     return IapticRN.store;
+  }
+
+  static async getStoreSync(): Promise<IapticStore> {
+    await IapticRN.waitForStore();
+    return IapticRN.store!;
   }
 
   /**
@@ -119,8 +135,8 @@ export class IapticRN {
    * IapticRN.setApplicationUsername(undefined);
    * ```
    */
-  static setApplicationUsername(username: string | undefined) {
-    IapticRN.getStore().setApplicationUsername(username);
+  static async setApplicationUsername(username: string | undefined) {
+    (await IapticRN.getStoreSync()).setApplicationUsername(username);
   }
 
   /**
@@ -131,7 +147,7 @@ export class IapticRN {
    * IapticRN.setVerbosity(IapticLoggerVerbosityLevel.DEBUG);
    * ```
    */
-  static setVerbosity(verbosity: IapticLoggerVerbosityLevel) {
+  static setVerbosity(verbosity: IapticVerbosity) {
     IapticLogger.VERBOSITY = verbosity;
     if (IapticRN.store) IapticRN.store.setVerbosity(verbosity);
   }
@@ -202,7 +218,7 @@ export class IapticRN {
    * @param definitions - The products to load
    */
   static async loadProducts(definitions?: IapticProductDefinition[]) {
-    return IapticRN.getStore().loadProducts(definitions);
+    return (await IapticRN.getStoreSync()).loadProducts(definitions);
   }
 
   /**
@@ -218,7 +234,7 @@ export class IapticRN {
    * @returns List of verified purchases.
    */
   static async loadPurchases(): Promise<IapticVerifiedPurchase[]> {
-    return IapticRN.getStore().loadPurchases();
+    return (await IapticRN.getStoreSync()).loadPurchases();
   }
 
   /**
@@ -233,8 +249,8 @@ export class IapticRN {
    * 
    * @see {@link TokensManager} for a convenient way to handle your consumable products.
    */
-  static consume(purchase: IapticVerifiedPurchase) {
-    IapticRN.getStore().consume(purchase);
+  static async consume(purchase: IapticVerifiedPurchase) {
+    (await IapticRN.getStoreSync()).consume(purchase);
   }
 
   /**
@@ -261,6 +277,7 @@ export class IapticRN {
      * @returns True if the user has active access to the specified feature
      */
   static checkEntitlement(featureId: string): boolean {
+    if (!IapticRN.store) return false;
     return IapticRN.getStore().checkEntitlement(featureId);
   }
 
@@ -286,6 +303,7 @@ export class IapticRN {
    * @returns Array of entitlement IDs the user currently has access to
    */
   static listEntitlements(): string[] {
+    if (!IapticRN.store) return [];
     return IapticRN.getStore().listEntitlements();
   }
 
@@ -332,7 +350,25 @@ export class IapticRN {
    * @see {@link IapticEventType} for all possible event types
    */
   static addEventListener<T extends IapticEventType>(eventType: T, listener: IapticEventListener<T>) {
-    return IapticRN.getStore().addEventListener(eventType, listener, 'User');
+    // Some components might be created before the store is initialized.
+    // We need to wait for the store to be initialized before adding the event listener.
+    if (!IapticRN.store) {
+      let remover = {
+        remove: () => {
+          clearInterval(interval);
+        }
+      };
+      const interval = setInterval(() => {
+        if (IapticRN.store) {
+          clearInterval(interval);
+          remover = IapticRN.getStore().addEventListener(eventType, listener, 'User');
+        }
+      }, 100);
+      return remover;
+    }
+    else {
+      return IapticRN.getStore().addEventListener(eventType, listener, 'User');
+    }
   }
 
   /**
@@ -342,6 +378,7 @@ export class IapticRN {
    * @param eventType - Optional event type to remove listeners for
    */
   static removeAllEventListeners(eventType?: IapticEventType): void {
+    if (!IapticRN.store) return;
     IapticRN.getStore().removeAllEventListeners(eventType);
   }
 
@@ -349,9 +386,35 @@ export class IapticRN {
    * Get all products from the product catalog
    * 
    * @returns List of products
+   * 
+   * @example
+   * ```typescript
+   * const products = IapticRN.getProducts();
+   * ```
+   * 
+   * @see {@link IapticProduct} for more information on the product object
    */
   static getProducts(): IapticProduct[] {
+    if (!IapticRN.store) return [];
     return IapticRN.getStore().products.all();
+  }
+
+  /**
+   * Get a product from the product catalog
+   * 
+   * @param productId - The product identifier
+   * @returns The product or undefined if not found
+   * 
+   * @example
+   * ```typescript
+   * const product = IapticRN.getProduct('premium_monthly');
+   * ```
+   * 
+   * @see {@link IapticProduct} for more information on the product object
+   */
+  static getProduct(productId: string): IapticProduct | undefined {
+    if (!IapticRN.store) return undefined;
+    return IapticRN.getStore().products.get(productId);
   }
 
   /**
@@ -367,6 +430,7 @@ export class IapticRN {
    * @see {@link IapticVerifiedPurchase} for more information on the purchase object
    */
   static getPurchases(): IapticVerifiedPurchase[] {
+    if (!IapticRN.store) return [];
     return IapticRN.getStore().purchases.sorted();
   }
 
@@ -377,11 +441,10 @@ export class IapticRN {
    * 
    * @example
    * ```typescript
-   * // Order a subscription offer
-   * const subscriptionOffer = IapticRN.products.get('premium_monthly')?.offers[0];
-   * if (subscriptionOffer) {
+   * const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
+   * if (offer) {
    *   try {
-   *     await IapticRN.order(subscriptionOffer);
+   *     await IapticRN.order(offer);
    *     console.log('Purchase started successfully');
    *   } catch (error) {
    *     console.error('Purchase failed:', error);
@@ -390,6 +453,7 @@ export class IapticRN {
    * ```
    */
   static async order(offer: IapticOffer) {
+    await IapticRN.waitForStore();
     return IapticRN.getStore().order(offer);
   }
 
@@ -412,6 +476,7 @@ export class IapticRN {
    * ```
    */
   static async restorePurchases(progressCallback: (processed: number, total: number) => void): Promise<number> {
+    await IapticRN.waitForStore();
     return IapticRN.getStore().restorePurchases(progressCallback);
   }
 
@@ -442,6 +507,7 @@ export class IapticRN {
    * ```
    */
   static getActiveSubscription(): IapticVerifiedPurchase | undefined {
+    if (!IapticRN.store) return undefined;
     return IapticRN.getStore().subscriptions.active();
   }
 
@@ -463,6 +529,7 @@ export class IapticRN {
    * ```
    */
   static isOwned(productId: string): boolean {
+    if (!IapticRN.store) return false;
     return IapticRN.getStore().isOwned(productId);
   }
 
@@ -470,6 +537,7 @@ export class IapticRN {
    * Opens the platform-specific subscription management page.
    */
   static async manageSubscriptions() {
+    await IapticRN.waitForStore();
     return IapticRN.getStore().manageSubscriptions();
   }
 
@@ -477,6 +545,108 @@ export class IapticRN {
    * Opens the platform-specific billing management page.
    */
   static async manageBilling() {
+    await IapticRN.waitForStore();
     return IapticRN.getStore().manageBilling();
   }
+
+  /**
+   * Add a locale for Iaptic provided components and error messages.
+   * 
+   * @param code - The language code
+   * @param messages - The locale messages
+   * 
+   * @example
+   * ```typescript
+   * IapticRN.addLocale('fr', {...});
+   * ```
+   */
+  static addLocale(code: string, messages: IapticLocale) {
+    Locales.addLanguage(code, messages);
+  }
+
+  /**
+   * Set the current locale for Iaptic provided components and error messages.
+   * 
+   * It's automatically set to the device's language, but you can override it.
+   * 
+   * @param code - The language code
+   * 
+   * @example
+   * ```typescript
+   * IapticRN.setLocale('fr');
+   * ```
+   */
+  static setLocale(code: string, fallbackCode: string = 'en') {
+    Locales.setLanguage(code, fallbackCode);
+  }
+
+  /**
+   * Present a subscription comparison view with product cards and feature grid
+   * 
+   * @example Basic usage
+   * ```typescript
+   * // Show subscription view with feature labels
+   * IapticRN.presentSubscriptionView({
+   *   entitlementLabels: {
+   *     premium: 'Premium Content',
+   *     adfree: 'Ad-Free Experience',
+   *     downloads: 'Unlimited Downloads'
+   *   }
+   * });
+   * ```
+   * 
+   * @example With custom styling
+   * ```typescript
+   * // Customize the appearance
+   * IapticRN.presentSubscriptionView({
+   *   entitlementLabels: {...},
+   *   styles: {
+   *     productCard: {
+   *       backgroundColor: '#f8f9fa',
+   *       borderWidth: 1,
+   *       borderColor: '#dee2e6'
+   *     },
+   *     ctaButton: {
+   *       backgroundColor: '#4CAF50'
+   *     }
+   *   }
+   * });
+   * ```
+   * 
+   * @param options - Configuration for the subscription view
+   * @param options.entitlementLabels - Localized text for each entitlement/feature
+   * @param options.styles - Custom styles for different parts of the view
+   * @param options.sortProducts - Whether to sort products by number of entitlements (default: true)
+   * 
+   * @note This is a singleton component - render it once at your root component:
+   * ```tsx
+   * // In your App.tsx
+   * export default function App() {
+   *   return (
+   *     <>
+   *       <MainComponent />
+   *       <IapticSubscriptionView />
+   *     </>
+   *   );
+   * }
+   * ```
+   */
+  static presentSubscriptionView() {
+    subscriptionViewEvents.emit('present');
+    // if (this.subscriptionViewRef?.current) {
+    //   this.subscriptionViewRef.current.show();
+    // }
+  }
+    
+  /**
+   * @internal
+   */
+  static async waitForStore() {
+    while (!IapticRN.store) await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  // static setSubscriptionViewRef(ref: RefObject<SubscriptionViewHandle>) {
+  //   this.subscriptionViewRef = ref;
+  // }
 }
+
