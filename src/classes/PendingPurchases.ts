@@ -3,6 +3,8 @@ import { IapticEvents } from "./IapticEvents";
 
 /**
  * Keep track of the state of pending purchases.
+ * 
+ * @internal
  */
 export class PendingPurchases {
   private pendingPurchases: IapticPendingPurchase[] = [];

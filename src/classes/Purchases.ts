@@ -3,7 +3,11 @@ import { IapticVerifiedPurchase } from "../types";
 import { IapticEvents } from "./IapticEvents";
 import { logger } from "./IapticLogger";
 
-/** Manages the collection of verified purchases */
+/**
+ * Manages the collection of verified purchases
+ * 
+ * @internal
+ */
 export class Purchases {
 
   /** Map of purchase keys to verified purchases */

@@ -181,6 +181,10 @@ export interface IapticLocale {
   SubscriptionView_Continue: string;
   /** "Processing..." */
   SubscriptionView_Processing: string;
+  /** "Current Plan" */
+  SubscriptionView_CurrentPlan: string;
+  /** "Update Plan" */
+  SubscriptionView_UpdatePlan: string;
   /** "Date" */
   DateFormatter_Date: string;
   /** "Time" */

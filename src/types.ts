@@ -2,6 +2,8 @@ import { IapticError } from "./classes/IapticError";
 
 /**
  * Configuration for the iaptic validator
+ * 
+ * @internal
  */
 export interface IapticStoreConfig {
   iosBundleId?: string;
@@ -54,6 +56,8 @@ export interface IapticProductDefinition {
 
 /**
  * Data needed to validate a purchase
+ * 
+ * @internal
  */ 
 export interface IapticValidationData {
   productId: string,
@@ -75,10 +79,16 @@ export type IapticProductType = 'application' | 'paid subscription' | 'non renew
 
 /**
  * Response from the iaptic validator endpoint
+ * 
+ * @internal
  */
 export type IapticValidateResponse = IapticValidateSuccessPayload | IapticValidateErrorPayload;
 
-/** Success response from iaptic validator endpoint */
+/**
+ * Success response from iaptic validator endpoint
+ * 
+ * @internal
+ */
 export interface IapticValidateSuccessPayload {
 
   /** Indicates a successful request */
@@ -253,7 +263,11 @@ export enum IapticPurchasePlatform {
 // VALIDATOR FAILURE RESPONSE DEFINITIONS
 //
 
-/** Error response from the validator endpoint */
+/**
+ * Error response from the validator endpoint
+ * 
+ * @internal
+ */
 export interface IapticValidateErrorPayload {
   /** Value `false` indicates that the request returned an error */
   ok: false;
@@ -412,6 +426,8 @@ export type IapticSubscriptionReason = 'renewed' | 'cancelled' | 'expired' | 'ch
 
 /**
  * Body of a receipt validation request,
+ * 
+ * @internal
  */
 export interface IapticValidateRequest {
 
@@ -470,6 +486,11 @@ export interface IapticValidateRequest {
   offers?: IapticOffer[];
 }
 
+/**
+ * Transaction definition for a specific platforms
+ * 
+ * @internal
+ */
 export type IapticValidateRequestTransaction =
   IapticValidateRequestTransactionApple |
   IapticValidateRequestTransactionGoogle;
@@ -525,7 +546,11 @@ export interface IapticProduct {
   tokenValue?: number;
 }
 
-/** Transaction type from an Apple powered device  */
+/**
+ * Transaction definition for an Apple powered device 
+ * 
+ * @internal
+ */
 export interface IapticValidateRequestTransactionApple {
 
   /** Value `"ios-appstore"` */
@@ -538,7 +563,11 @@ export interface IapticValidateRequestTransactionApple {
   appStoreReceipt: string;
 }
 
-/** Transaction type from a google powered device  */
+/**
+ * Transaction definition for a Google powered device 
+ * 
+ * @internal
+ */
 export interface IapticValidateRequestTransactionGoogle {
   /** Value `"android-playstore"` */
   type: 'android-playstore';

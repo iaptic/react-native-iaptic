@@ -4,7 +4,11 @@ import { StoreProducts } from "./StoreProducts";
 import { Purchases } from "./Purchases";
 import { IapticEvents } from "./IapticEvents";
 
-/** Manages subscription-specific functionality */
+/**
+ * Manages subscription-specific functionality
+ * 
+ * @internal
+ */
 export class Subscriptions {
 
   /** Map of purchase IDs to their last known state */

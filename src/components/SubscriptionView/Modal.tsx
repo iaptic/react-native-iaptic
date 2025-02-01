@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
 import { IapticProduct, IapticOffer, IapticPendingPurchase, IapticProductDefinition } from '../../types';
 import { EntitlementGrid } from './EntitlementGrid';
@@ -177,6 +177,27 @@ const defaultStyles = StyleSheet.create({
     backgroundColor: '#999',
     opacity: 0.7,
   },
+  currentPlanCard: {
+    borderColor: '#4CAF50',
+    borderWidth: 2,
+  },
+  currentPlanBadge: {
+    position: 'absolute',
+    top: -3,
+    right: 8,
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  currentPlanBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  ctaButtonCurrentPlan: {
+    backgroundColor: '#4CAF50',
+  },
 });
 
 
@@ -196,6 +217,8 @@ export const SubscriptionView = ({
   const isLandscape = windowWidth > windowHeight;
   const [visible, setVisible] = useState(false);
   const styles = { ...defaultStyles, ...StyleSheet.create(customStyles) };
+  const portraitScrollRef = useRef<ScrollView>(null);
+  const landscapeScrollRef = useRef<ScrollView>(null);
 
   // Expose show/hide methods via ref
   // useImperativeHandle(ref, () => ({
@@ -251,10 +274,15 @@ export const SubscriptionView = ({
 
   // Listen to purchase updates
   useEffect(() => {
-    const listener = IapticRN.addEventListener('pendingPurchase.updated', purchase => {
-      setPendingPurchase(purchase.status === 'completed' ? null : purchase);
-    });
-    return () => listener.remove();
+    const listeners = [
+      IapticRN.addEventListener('pendingPurchase.updated', purchase => {
+        setPendingPurchase(purchase.status === 'completed' ? null : purchase);
+      }),
+      IapticRN.addEventListener('products.updated', () => {
+        updateProducts();
+      })
+    ];
+    return () => listeners.forEach(listener => listener.remove());
   }, []);
 
   const handlePurchase = async () => {
@@ -271,7 +299,34 @@ export const SubscriptionView = ({
     subscriptionViewEvents.emit('subscription.dismiss');
   };
 
+  const activeSubscription = IapticRN.getActiveSubscription();
+
   if (!selectedProduct || !selectedOffer) return null;
+
+  const isCurrentPlan = activeSubscription?.productId === selectedProduct?.id;
+
+  // New helper function to handle product selection
+  const handleProductSelect = (product: IapticProduct) => {
+    setSelectedProduct(product);
+    setSelectedOffer(product.offers[0]);
+    
+    const index = products.findIndex(p => p.id === product.id);
+    if (index === -1) return;
+
+    // Calculate scroll positions
+    if (!isLandscape) {
+      // Portrait mode (horizontal scroll)
+      const itemWidth = windowWidth * 0.7;
+      const scrollViewWidth = windowWidth - 48; // Account for parent padding
+      const x = (itemWidth + 16) * index - (scrollViewWidth - itemWidth) / 2;
+      portraitScrollRef.current?.scrollTo({ x, animated: true });
+    } else {
+      // Landscape mode (vertical scroll)
+      const itemHeight = 200; // Approximate card height
+      const y = itemHeight * index - (windowHeight * 0.4 - itemHeight / 2);
+      landscapeScrollRef.current?.scrollTo({ y, animated: true });
+    }
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -291,38 +346,47 @@ export const SubscriptionView = ({
           {/* Landscape mode columns */}
           {isLandscape && (
             <ScrollView 
+              ref={landscapeScrollRef}
               style={{ width: '50%', marginRight: 16 }}
               contentContainerStyle={{ paddingVertical: 16 }}
             >
-              {products.map(product => (
-                <TouchableOpacity
-                  key={product.id}
-                  style={[
-                    styles.productCard,
-                    { 
-                      width: '100%',
-                      minWidth: 0,
-                      marginHorizontal: 0,
-                      marginBottom: 16
-                    },
-                    product.id === selectedProduct?.id && styles.productCardSelected
-                  ]}
-                  onPress={() => {
-                    setSelectedProduct(product);
-                    setSelectedOffer(product.offers[0]);
-                  }}
-                >
-                  <Text style={styles.productTitle}>{product.title}</Text>
-                  {product.offers[0] && (
-                    <Text style={styles.productPrice}>
-                      <ProductPrice product={product} styles={styles} />
+              {products.map(product => {
+                const isCurrentPlan = activeSubscription?.productId === product.id;
+                return (
+                  <TouchableOpacity
+                    key={product.id}
+                    style={[
+                      styles.productCard,
+                      { 
+                        width: '100%',
+                        minWidth: 0,
+                        marginHorizontal: 0,
+                        marginBottom: 16,
+                        ...(product.id === selectedProduct?.id && styles.productCardSelected),
+                        ...(isCurrentPlan && styles.currentPlanCard)
+                      }
+                    ]}
+                    onPress={() => handleProductSelect(product)}
+                  >
+                    {isCurrentPlan && (
+                      <View style={styles.currentPlanBadge}>
+                        <Text style={styles.currentPlanBadgeText}>
+                          {Locales.get('SubscriptionView_CurrentPlan')}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={styles.productTitle}>{product.title}</Text>
+                    {product.offers[0] && (
+                      <Text style={styles.productPrice}>
+                        <ProductPrice product={product} styles={styles} />
+                      </Text>
+                    )}
+                    <Text style={styles.productDescription}>
+                      {product.description}
                     </Text>
-                  )}
-                  <Text style={styles.productDescription}>
-                    {product.description}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           )}
 
@@ -352,37 +416,46 @@ export const SubscriptionView = ({
             {/* Portrait product carousel */}
             {!isLandscape && (
               <ScrollView 
+                ref={portraitScrollRef}
                 horizontal 
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
               >
-                {products.map(product => (
-                  <TouchableOpacity
-                    key={product.id}
-                    style={[
-                      styles.productCard,
-                      { 
-                        width: windowWidth * 0.7,
-                        minWidth: 280
-                      },
-                      product.id === selectedProduct?.id && styles.productCardSelected
-                    ]}
-                    onPress={() => {
-                      setSelectedProduct(product);
-                      setSelectedOffer(product.offers[0]);
-                    }}
-                  >
-                    <Text style={styles.productTitle}>{product.title}</Text>
-                    {product.offers[0] && (
-                      <Text style={styles.productPrice}>
-                        <ProductPrice product={product} styles={styles} />
+                {products.map(product => {
+                  const isCurrentPlan = activeSubscription?.productId === product.id;
+                  return (
+                    <TouchableOpacity
+                      key={product.id}
+                      style={[
+                        styles.productCard,
+                        { 
+                          width: windowWidth * 0.7,
+                          minWidth: 280,
+                          ...(product.id === selectedProduct?.id && styles.productCardSelected),
+                          ...(isCurrentPlan && styles.currentPlanCard)
+                        }
+                      ]}
+                      onPress={() => handleProductSelect(product)}
+                    >
+                      {isCurrentPlan && (
+                        <View style={styles.currentPlanBadge}>
+                          <Text style={styles.currentPlanBadgeText}>
+                            {Locales.get('SubscriptionView_CurrentPlan')}
+                          </Text>
+                        </View>
+                      )}
+                      <Text style={styles.productTitle}>{product.title}</Text>
+                      {product.offers[0] && (
+                        <Text style={styles.productPrice}>
+                          <ProductPrice product={product} styles={styles} />
+                        </Text>
+                      )}
+                      <Text style={styles.productDescription}>
+                        {product.description}
                       </Text>
-                    )}
-                    <Text style={styles.productDescription}>
-                      {product.description}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
             )}
 
@@ -441,15 +514,19 @@ export const SubscriptionView = ({
               style={[
                 styles.ctaButton,
                 pendingPurchase && styles.ctaButtonDisabled,
-                isLandscape && { 
-                  marginTop: 16,
-                }
+                isCurrentPlan && styles.ctaButtonCurrentPlan,
+                isLandscape && { marginTop: 16 }
               ]}
               onPress={handlePurchase}
-              disabled={!!pendingPurchase}
+              disabled={!!pendingPurchase || (isCurrentPlan && selectedProduct.offers.length === 1)}
             >
               <Text style={styles.ctaButtonText}>
-                {pendingPurchase ? Locales.get('SubscriptionView_Processing') : Locales.get('SubscriptionView_Continue')}
+                {isCurrentPlan ? 
+                  (selectedProduct.offers.length > 1 
+                    ? Locales.get('SubscriptionView_UpdatePlan') 
+                    : Locales.get('SubscriptionView_CurrentPlan')) :
+                  (pendingPurchase ? Locales.get('SubscriptionView_Processing') : Locales.get('SubscriptionView_Continue'))
+                }
               </Text>
             </TouchableOpacity>
           </ScrollView>

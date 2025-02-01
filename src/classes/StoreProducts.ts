@@ -4,7 +4,11 @@ import { getPlatform } from '../functions/getPlatform';
 import { logger } from './IapticLogger';
 import { IapticEvents } from './IapticEvents';
 
-/** Manages the catalog of available in-app purchase products */
+/**
+ * Manages the catalog of available in-app purchase products
+ * 
+ * @internal
+ */
 export class StoreProducts {
 
   /** List of product definitions */

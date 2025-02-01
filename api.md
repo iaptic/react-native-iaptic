@@ -11,7 +11,40 @@ through the Iaptic service.
 
 The API entry point is [IapticRN](globals.md#iapticrn).
 
-## Example
+## Examples
+
+```typescript
+import { IapticSubscriptionView } from 'react-native-iaptic';
+const app = (props) => {
+  useEffect(() => {
+    IapticRN.initialize({
+      appName: 'com.example.app',
+      publicKey: 'YOUR_API_KEY',
+      iosBundleId: 'com.yourcompany.app',,
+      products: [{
+        id: 'premium_subscription',
+        type: 'paid subscription',
+        entitlements: ['premium']
+      }, {
+        id: 'basic_subscription',
+        type: 'paid subscription',
+        entitlements: ['basic']
+      }],
+    });
+  }, []);
+  return (
+    <View> // your root node
+      <TouchableOpacity onPress={() => IapticRN.presentSubscriptionView()}>
+        <Text>Subscribe</Text>
+      </TouchableOpacity>
+      <IapticSubscriptionView entitlementLabels={{
+        premium: 'Premium Features',
+        basic: 'Basic Features',
+      }} />
+    </View>
+  );
+};
+```
 
 ```typescript
 // 1. Initialize with your configuration
@@ -513,49 +546,6 @@ Error severity
 
 ## Classes
 
-### IapticConsumables
-
-
-**`Internal`**
-
-Manages consumable purchases
-
-Note: This class is currently a placeholder for future implementation
-of consumable purchase management functionality.
-
-#### Constructors
-
-##### new IapticConsumables()
-
-> **new IapticConsumables**(`purchases`, `products`, `events`): [`IapticConsumables`](globals.md#iapticconsumables)
-
-
-**`Internal`**
-
-Creates a new consumables manager
-
-###### Parameters
-
-###### purchases
-
-[`IapticPurchases`](globals.md#iapticpurchases)
-
-The purchases manager
-
-###### products
-
-[`IapticStoreProducts`](globals.md#iapticstoreproducts)
-
-###### events
-
-`IapticEvents`
-
-###### Returns
-
-[`IapticConsumables`](globals.md#iapticconsumables)
-
-***
-
 ### IapticError
 
 
@@ -583,55 +573,6 @@ try {
 #### Extends
 
 - `Error`
-
-#### Constructors
-
-##### new IapticError()
-
-> **new IapticError**(`message`, `options`): [`IapticError`](globals.md#iapticerror)
-
-
-**`Internal`**
-
-###### Parameters
-
-###### message
-
-`string`
-
-###### options
-
-###### code
-
-[`IapticErrorCode`](globals.md#iapticerrorcode)
-
-###### debugMessage
-
-`string`
-
-###### localizedMessage
-
-`string`
-
-###### localizedTitle
-
-`string`
-
-###### severity
-
-[`IapticSeverity`](globals.md#iapticseverity)
-
-###### status
-
-`number`
-
-###### Returns
-
-[`IapticError`](globals.md#iapticerror)
-
-###### Overrides
-
-`Error.constructor`
 
 #### Properties
 
@@ -765,569 +706,6 @@ Create .stack property on a target object
 ###### Inherited from
 
 `Error.captureStackTrace`
-
-***
-
-### IapticLocales
-
-
-**`Internal`**
-
-Handles localized messages for the iaptic React Native plugin
-
-Supported languages:
-- English (en)
-- English (United Kingdom) (en_uk)
-- English (Australia) (en_au)
-- Spanish (es)
-- French (fr)
-- German (de)
-- Japanese (ja)
-- Chinese (zh)
-- Portuguese (pt)
-
-#### Constructors
-
-##### new IapticLocales()
-
-> **new IapticLocales**(): [`IapticLocales`](globals.md#iapticlocales)
-
-###### Returns
-
-[`IapticLocales`](globals.md#iapticlocales)
-
-#### Methods
-
-##### addLanguage()
-
-> `static` **addLanguage**(`language`, `messages`): `void`
-
-
-Adds a new language to the locales
-
-###### Parameters
-
-###### language
-
-`string`
-
-The language code to add
-
-###### messages
-
-[`IapticLocale`](globals.md#iapticlocale)
-
-The messages for the language
-
-###### Returns
-
-`void`
-
-##### get()
-
-> `static` **get**(`key`, `args`, `fallbackMessage`): `string`
-
-
-###### Parameters
-
-###### key
-
-keyof [`IapticLocale`](globals.md#iapticlocale)
-
-###### args
-
-`string`[] = `[]`
-
-###### fallbackMessage
-
-`string` = `''`
-
-###### Returns
-
-`string`
-
-##### getDeviceLanguage()
-
-> `static` **getDeviceLanguage**(): `string`
-
-
-Gets the device language and returns a supported language code
-Defaults to 'en' if the device language is not supported
-
-###### Returns
-
-`string`
-
-##### getForCount()
-
-> `static` **getForCount**(`keyPrefix`, `count`, `args`): `string`
-
-
-###### Parameters
-
-###### keyPrefix
-
-`string`
-
-###### count
-
-`number`
-
-###### args
-
-`string`[] = `[]`
-
-###### Returns
-
-`string`
-
-##### initialize()
-
-> `static` **initialize**(): `void`
-
-
-Initializes the locales with the device language
-
-###### Returns
-
-`void`
-
-##### setLanguage()
-
-> `static` **setLanguage**(`language`, `fallbackLanguage`): `void`
-
-
-Sets the current language for messages
-
-###### Parameters
-
-###### language
-
-`string`
-
-The language code to use
-
-###### fallbackLanguage
-
-`string` = `'en'`
-
-The fallback language code to use if the current language is not supported
-
-###### Returns
-
-`void`
-
-***
-
-### IapticLogger
-
-
-**`Internal`**
-
-Iaptic logger
-
-#### Constructors
-
-##### new IapticLogger()
-
-> **new IapticLogger**(`verbosity`): [`IapticLogger`](globals.md#iapticlogger)
-
-
-###### Parameters
-
-###### verbosity
-
-[`IapticVerbosity`](globals.md#iapticverbosity)
-
-###### Returns
-
-[`IapticLogger`](globals.md#iapticlogger)
-
-#### Properties
-
-##### verbosity
-
-> **verbosity**: [`IapticVerbosity`](globals.md#iapticverbosity) = `IapticLogger.VERBOSITY`
-
-
-##### VERBOSITY
-
-> `static` **VERBOSITY**: [`IapticVerbosity`](globals.md#iapticverbosity) = `IapticVerbosity.WARN`
-
-
-Default verbosity level
-
-#### Methods
-
-##### \_message()
-
-> **\_message**(`message`, `severity`): `string`
-
-
-###### Parameters
-
-###### message
-
-`string`
-
-###### severity
-
-[`IapticVerbosity`](globals.md#iapticverbosity)
-
-###### Returns
-
-`string`
-
-##### debug()
-
-> **debug**(`message`): `void`
-
-
-###### Parameters
-
-###### message
-
-`string`
-
-###### Returns
-
-`void`
-
-##### error()
-
-> **error**(`message`): `void`
-
-
-###### Parameters
-
-###### message
-
-`string`
-
-###### Returns
-
-`void`
-
-##### info()
-
-> **info**(`message`): `void`
-
-
-###### Parameters
-
-###### message
-
-`string`
-
-###### Returns
-
-`void`
-
-##### warn()
-
-> **warn**(`message`): `void`
-
-
-###### Parameters
-
-###### message
-
-`string`
-
-###### Returns
-
-`void`
-
-***
-
-### IapticNonConsumables
-
-
-Manages non-consumable purchases
-
-#### Constructors
-
-##### new IapticNonConsumables()
-
-> **new IapticNonConsumables**(`purchases`, `products`, `events`): [`IapticNonConsumables`](globals.md#iapticnonconsumables)
-
-
-Creates a new non-consumables manager
-
-###### Parameters
-
-###### purchases
-
-[`IapticPurchases`](globals.md#iapticpurchases)
-
-The purchases manager
-
-###### products
-
-[`IapticStoreProducts`](globals.md#iapticstoreproducts)
-
-The product catalog
-
-###### events
-
-`IapticEvents`
-
-###### Returns
-
-[`IapticNonConsumables`](globals.md#iapticnonconsumables)
-
-#### Methods
-
-##### get()
-
-> **get**(`productId`): `undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-
-Gets a non-consumable purchase by product ID
-
-###### Parameters
-
-###### productId
-
-`string`
-
-The product identifier
-
-###### Returns
-
-`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-The verified purchase if found
-
-##### owned()
-
-> **owned**(`productId`): `boolean`
-
-
-Checks if a non-consumable product is owned
-
-###### Parameters
-
-###### productId
-
-`string`
-
-The product identifier
-
-###### Returns
-
-`boolean`
-
-True if the product is owned
-
-***
-
-### IapticPendingPurchases
-
-
-Keep track of the state of pending purchases.
-
-#### Constructors
-
-##### new IapticPendingPurchases()
-
-> **new IapticPendingPurchases**(`events`): [`IapticPendingPurchases`](globals.md#iapticpendingpurchases)
-
-
-###### Parameters
-
-###### events
-
-`IapticEvents`
-
-###### Returns
-
-[`IapticPendingPurchases`](globals.md#iapticpendingpurchases)
-
-#### Methods
-
-##### add()
-
-> **add**(`offer`): `void`
-
-
-###### Parameters
-
-###### offer
-
-[`IapticOffer`](globals.md#iapticoffer)
-
-###### Returns
-
-`void`
-
-##### get()
-
-> **get**(): [`IapticPendingPurchase`](globals.md#iapticpendingpurchase)[]
-
-
-###### Returns
-
-[`IapticPendingPurchase`](globals.md#iapticpendingpurchase)[]
-
-##### getStatus()
-
-> **getStatus**(`productId`, `offerId`?): `undefined` \| [`IapticPendingPurchaseState`](globals.md#iapticpendingpurchasestate)
-
-
-###### Parameters
-
-###### productId
-
-`string`
-
-###### offerId?
-
-`string`
-
-###### Returns
-
-`undefined` \| [`IapticPendingPurchaseState`](globals.md#iapticpendingpurchasestate)
-
-##### remove()
-
-> **remove**(`productId`, `offerId`?): `void`
-
-
-###### Parameters
-
-###### productId
-
-`string`
-
-###### offerId?
-
-`string`
-
-###### Returns
-
-`void`
-
-##### update()
-
-> **update**(`productId`, `status`, `offerId`?): `void`
-
-
-###### Parameters
-
-###### productId
-
-`string`
-
-###### status
-
-[`IapticPendingPurchaseState`](globals.md#iapticpendingpurchasestate)
-
-###### offerId?
-
-`string`
-
-###### Returns
-
-`void`
-
-***
-
-### IapticPurchases
-
-
-Manages the collection of verified purchases
-
-#### Constructors
-
-##### new IapticPurchases()
-
-> **new IapticPurchases**(`events`): [`IapticPurchases`](globals.md#iapticpurchases)
-
-
-###### Parameters
-
-###### events
-
-`IapticEvents`
-
-###### Returns
-
-[`IapticPurchases`](globals.md#iapticpurchases)
-
-#### Methods
-
-##### addPurchase()
-
-> **addPurchase**(`purchase`): `void`
-
-
-Adds a new verified purchase
-
-###### Parameters
-
-###### purchase
-
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-The verified purchase to add
-
-###### Returns
-
-`void`
-
-##### getPurchase()
-
-> **getPurchase**(`productId`, `transactionId`?): `undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-
-Gets a specific purchase by product ID and optional transaction ID
-
-###### Parameters
-
-###### productId
-
-`string`
-
-The product identifier
-
-###### transactionId?
-
-`string`
-
-Optional transaction identifier
-
-###### Returns
-
-`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-The verified purchase if found
-
-##### list()
-
-> **list**(): [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-
-Lists all verified purchases
-
-###### Returns
-
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-Array of verified purchases
-
-##### sorted()
-
-> **sorted**(): [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-
-Returns a sorted list of verified purchases, with the most recent first
-
-###### Returns
-
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-Array of verified purchases
 
 ***
 
@@ -1910,18 +1288,10 @@ if (offer) {
 
 ##### presentSubscriptionView()
 
-> `static` **presentSubscriptionView**(`options`): `void`
+> `static` **presentSubscriptionView**(): `void`
 
 
 Present a subscription comparison view with product cards and feature grid
-
-###### Parameters
-
-###### options
-
-`Omit`\<[`IapticSubscriptionViewProps`](globals.md#iapticsubscriptionviewprops), `"visible"` \| `"onClose"`\>
-
-Configuration for the subscription view
 
 ###### Returns
 
@@ -2150,21 +1520,6 @@ IapticRN.setProductDefinitions([
   }
 ]);
 
-##### setSubscriptionViewRef()
-
-> `static` **setSubscriptionViewRef**(`ref`): `void`
-
-
-###### Parameters
-
-###### ref
-
-`RefObject`\<[`IapticSubscriptionViewHandle`](globals.md#iapticsubscriptionviewhandle)\>
-
-###### Returns
-
-`void`
-
 ##### setVerbosity()
 
 > `static` **setVerbosity**(`verbosity`): `void`
@@ -2187,314 +1542,6 @@ Set the verbosity level for the iaptic service.
 ```typescript
 IapticRN.setVerbosity(IapticLoggerVerbosityLevel.DEBUG);
 ```
-
-##### waitForStore()
-
-> `static` **waitForStore**(): `Promise`\<`void`\>
-
-
-**`Internal`**
-
-###### Returns
-
-`Promise`\<`void`\>
-
-***
-
-### IapticStoreProducts
-
-
-Manages the catalog of available in-app purchase products
-
-#### Constructors
-
-##### new IapticStoreProducts()
-
-> **new IapticStoreProducts**(`definitions`, `subscriptions`, `products`, `events`): [`IapticStoreProducts`](globals.md#iapticstoreproducts)
-
-
-Creates a new product catalog
-
-###### Parameters
-
-###### definitions
-
-[`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
-
-Initial product definitions
-
-###### subscriptions
-
-`Subscription`[]
-
-Initial subscription products
-
-###### products
-
-`Product`[]
-
-Initial non-subscription products
-
-###### events
-
-`IapticEvents`
-
-###### Returns
-
-[`IapticStoreProducts`](globals.md#iapticstoreproducts)
-
-#### Methods
-
-##### add()
-
-> **add**(`definitions`, `subscriptions`, `products`): [`IapticProduct`](globals.md#iapticproduct)[]
-
-
-Adds products to the catalog
-
-###### Parameters
-
-###### definitions
-
-[`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
-
-Product definitions to add
-
-###### subscriptions
-
-`Subscription`[]
-
-Subscription products to add
-
-###### products
-
-`Product`[]
-
-Non-subscription products to add
-
-###### Returns
-
-[`IapticProduct`](globals.md#iapticproduct)[]
-
-##### all()
-
-> **all**(): [`IapticProduct`](globals.md#iapticproduct)[]
-
-
-Return the list of all products in iaptic unified format
-
-###### Returns
-
-[`IapticProduct`](globals.md#iapticproduct)[]
-
-##### get()
-
-> **get**(`productId`): `undefined` \| [`IapticProduct`](globals.md#iapticproduct)
-
-
-Get a product by its identifier
-
-###### Parameters
-
-###### productId
-
-`string`
-
-The product identifier
-
-###### Returns
-
-`undefined` \| [`IapticProduct`](globals.md#iapticproduct)
-
-The product
-
-##### getDefinition()
-
-> **getDefinition**(`productId`): `undefined` \| [`IapticProductDefinition`](globals.md#iapticproductdefinition)
-
-
-Get a product definition by its identifier
-
-###### Parameters
-
-###### productId
-
-`string`
-
-The product identifier
-
-###### Returns
-
-`undefined` \| [`IapticProductDefinition`](globals.md#iapticproductdefinition)
-
-The product definition
-
-##### getIapProduct()
-
-> **getIapProduct**(`productId`): `undefined` \| `Product`
-
-
-**`Internal`**
-
-###### Parameters
-
-###### productId
-
-`string`
-
-###### Returns
-
-`undefined` \| `Product`
-
-##### getIapSubscription()
-
-> **getIapSubscription**(`productId`): `undefined` \| `Subscription`
-
-
-**`Internal`**
-
-###### Parameters
-
-###### productId
-
-`string`
-
-###### Returns
-
-`undefined` \| `Subscription`
-
-##### getType()
-
-> **getType**(`productId`): [`IapticProductType`](globals.md#iapticproducttype)
-
-
-Gets the type of a product
-
-###### Parameters
-
-###### productId
-
-`string`
-
-The product identifier
-
-###### Returns
-
-[`IapticProductType`](globals.md#iapticproducttype)
-
-The type of the product
-
-##### load()
-
-> **load**(`definitions`?): `Promise`\<[`IapticProduct`](globals.md#iapticproduct)[]\>
-
-
-Load some products from the store, add them to the catalog and return them.
-
-###### Parameters
-
-###### definitions?
-
-[`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
-
-The product definitions to load
-
-###### Returns
-
-`Promise`\<[`IapticProduct`](globals.md#iapticproduct)[]\>
-
-The loaded products
-
-***
-
-### IapticSubscriptions
-
-
-Manages subscription-specific functionality
-
-#### Constructors
-
-##### new IapticSubscriptions()
-
-> **new IapticSubscriptions**(`purchases`, `products`, `events`): [`IapticSubscriptions`](globals.md#iapticsubscriptions)
-
-
-Creates a new subscriptions manager
-
-###### Parameters
-
-###### purchases
-
-[`IapticPurchases`](globals.md#iapticpurchases)
-
-The purchases manager
-
-###### products
-
-[`IapticStoreProducts`](globals.md#iapticstoreproducts)
-
-The product catalog
-
-###### events
-
-`IapticEvents`
-
-###### Returns
-
-[`IapticSubscriptions`](globals.md#iapticsubscriptions)
-
-#### Methods
-
-##### active()
-
-> **active**(): `undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-
-Return one of the active subscriptions
-When you don't sell multiple subscriptions that can be all in parallel, that's all you need.
-
-###### Returns
-
-`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
-
-##### activesOnly()
-
-> **activesOnly**(): [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-
-Lists only active subscription purchases
-
-###### Returns
-
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-Array of active subscription purchases
-
-##### all()
-
-> **all**(): [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-
-Lists all subscription purchases
-
-###### Returns
-
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-Array of subscription purchases
-
-##### hasActive()
-
-> **hasActive**(): `boolean`
-
-
-Checks if there are any active subscriptions
-
-###### Returns
-
-`boolean`
-
-True if there are active subscriptions
 
 ***
 
@@ -2672,6 +1719,21 @@ Utility methods for users of the iaptic library.
 
 #### Methods
 
+##### cheapestOffer()
+
+> **cheapestOffer**(`product`): [`IapticOffer`](globals.md#iapticoffer)
+
+
+###### Parameters
+
+###### product
+
+[`IapticProduct`](globals.md#iapticproduct)
+
+###### Returns
+
+[`IapticOffer`](globals.md#iapticoffer)
+
 ##### fixedRecurrenceMode()
 
 > **fixedRecurrenceMode**(`pricingPhase`): `undefined` \| [`IapticRecurrenceMode`](globals.md#iapticrecurrencemode)
@@ -2697,7 +1759,7 @@ FINITE_RECURRING with billingCycles=0 is like INFINITE_RECURRING
 
 Generate a localized version of the billing cycle in a pricing phase.
 
-For supported languages, check [Locales](globals.md#iapticlocales).
+For supported languages, check Locales.
 
 Example outputs:
 
@@ -2721,9 +1783,66 @@ Example outputs:
 IapticRN.utils.formatBillingCycle(offer.pricingPhases[0])
 ```
 
-##### formatDurationEN()
+##### formatCurrency()
 
-> **formatDurationEN**(`iso`?, `options`?): `string`
+> **formatCurrency**(`amountMicros`, `currency`): `string`
+
+
+Format a currency amount from micros with proper localization
+
+###### Parameters
+
+###### amountMicros
+
+`number`
+
+Amount in micros (1/1,000,000 of currency unit)
+
+###### currency
+
+`string`
+
+ISO 4217 currency code (e.g., 'USD', 'EUR')
+
+###### Returns
+
+`string`
+
+Formatted currency string
+
+###### Example
+
+```ts
+Utils.formatCurrency(1990000, 'USD') // Returns "$1.99"
+Utils.formatCurrency(1000000, 'EUR') // Returns "€1"
+```
+
+##### formatDuration()
+
+> **formatDuration**(`iso`, `count`, `includeCount`?): `string`
+
+
+###### Parameters
+
+###### iso
+
+`` `P${number}D` `` | `` `P${number}W` `` | `` `P${number}M` `` | `` `P${number}Y` ``
+
+###### count
+
+`number`
+
+###### includeCount?
+
+`boolean`
+
+###### Returns
+
+`string`
+
+##### getBillingCycleTemplate()
+
+> **getBillingCycleTemplate**(`cycles`, `duration`): `string`
 
 
 Format a simple ISO 8601 duration to plain English.
@@ -2737,17 +1856,13 @@ need some other method that supports multiple locales.
 
 ###### Parameters
 
-###### iso?
+###### cycles
+
+`number`
+
+###### duration
 
 `string`
-
-Duration formatted in IS0 8601
-
-###### options?
-
-###### omitOne
-
-`boolean`
 
 ###### Returns
 
@@ -2755,9 +1870,27 @@ Duration formatted in IS0 8601
 
 The duration in plain english. Example: "1 year" or "3 weeks".
 
-##### getBillingCycleTemplate()
+formatDurationEN(iso?: string, options?: { omitOne?: boolean }): string {
+ if (!iso) return '';
+ const l = iso.length;
+ const n = iso.slice(1, l - 1);
+ if (n === '1') {
+   if (options?.omitOne) {
+     return ({ 'D': 'day', 'W': 'week', 'M': 'month', 'Y': 'year', }[iso[l - 1]]) || iso[l - 1];
+   }
+   else {
+     return ({ 'D': '1 day', 'W': '1 week', 'M': '1 month', 'Y': '1 year', }[iso[l - 1]]) || iso[l - 1];
+   }
+ }
+ else {
+   const u = ({ 'D': 'days', 'W': 'weeks', 'M': 'months', 'Y': 'years', }[iso[l - 1]]) || iso[l - 1];
+   return `${n} ${u}`;
+ }
+}
 
-> **getBillingCycleTemplate**(`cycles`, `duration`): `string`
+##### getBillingCycleTemplateInfinite()
+
+> **getBillingCycleTemplateInfinite**(`cycles`, `duration`): `string`
 
 
 ###### Parameters
@@ -2774,54 +1907,39 @@ The duration in plain english. Example: "1 year" or "3 weeks".
 
 `string`
 
-##### getBillingCycleTemplateInfinite()
-
-> **getBillingCycleTemplateInfinite**(`duration`): `string`
-
-
-###### Parameters
-
-###### duration
-
-`string`
-
-###### Returns
-
-`string`
-
 ##### getBillingCycleTemplateNonRecurring()
 
-> **getBillingCycleTemplateNonRecurring**(`duration`): `string`
+> **getBillingCycleTemplateNonRecurring**(`cycles`, `duration`): `string`
 
 
 ###### Parameters
 
-###### duration
-
-`string`
-
-###### Returns
-
-`string`
-
-##### getDurationUnit()
-
-> **getDurationUnit**(`iso`, `count`): `string`
-
-
-###### Parameters
-
-###### iso
-
-`` `P${number}D` `` | `` `P${number}W` `` | `` `P${number}M` `` | `` `P${number}Y` ``
-
-###### count
+###### cycles
 
 `number`
 
+###### duration
+
+`string`
+
 ###### Returns
 
 `string`
+
+##### monthlyPriceMicros()
+
+> **monthlyPriceMicros**(`offer`): `number`
+
+
+###### Parameters
+
+###### offer
+
+[`IapticOffer`](globals.md#iapticoffer)
+
+###### Returns
+
+`number`
 
 ## Interfaces
 
@@ -2992,6 +2110,20 @@ every {duration}
 
 for {duration}
 
+##### DateFormatter\_Date
+
+> **DateFormatter\_Date**: `string`
+
+
+"Date"
+
+##### DateFormatter\_Time
+
+> **DateFormatter\_Time**: `string`
+
+
+"Time"
+
 ##### Duration\_D\_plural
 
 > **Duration\_D\_plural**: `string`
@@ -3047,6 +2179,13 @@ years
 
 
 year
+
+##### EntitlementGrid\_Checkmark
+
+> **EntitlementGrid\_Checkmark**: `string`
+
+
+"✓"
 
 ##### Error
 
@@ -3307,6 +2446,13 @@ Unsupported platform
 
 IapticRN.initialize() can only be called once
 
+##### ProductPrice\_StartingAt
+
+> **ProductPrice\_StartingAt**: `string`
+
+
+"starting at {0} per month" - {0} will be replaced with price component
+
 ##### ProgrammingError
 
 > **ProgrammingError**: `string`
@@ -3439,6 +2585,41 @@ An error occurred in the application.
 
 
 Purchase Error #{0}
+
+##### SubscriptionView\_Close
+
+> **SubscriptionView\_Close**: `string`
+
+
+"Close"
+
+##### SubscriptionView\_Continue
+
+> **SubscriptionView\_Continue**: `string`
+
+
+"Continue"
+
+##### SubscriptionView\_Includes
+
+> **SubscriptionView\_Includes**: `string`
+
+
+"Includes:"
+
+##### SubscriptionView\_Processing
+
+> **SubscriptionView\_Processing**: `string`
+
+
+"Processing..."
+
+##### SubscriptionView\_Title
+
+> **SubscriptionView\_Title**: `string`
+
+
+"Choose Your Plan"
 
 ##### UnknownError
 
@@ -3896,116 +3077,142 @@ Custom styles
 
 ***
 
-### IapticStoreConfig
-
-
-Configuration for the iaptic validator
-
-#### Properties
-
-##### appName
-
-> **appName**: `string`
-
-
-##### baseUrl?
-
-> `optional` **baseUrl**: `string`
-
-
-The base URL of the iaptic validator
-
-##### iosBundleId?
-
-> `optional` **iosBundleId**: `string`
-
-
-##### publicKey
-
-> **publicKey**: `string`
-
-
-##### showAlerts?
-
-> `optional` **showAlerts**: `boolean`
-
-
-Disable alert by setting this to false.
-
-By default, IapticRN will display relevant alerts to the user when something goes wrong.
-
-Default is true.
-
-***
-
-### IapticSubscriptionViewHandle
-
-
-#### Properties
-
-##### hide()
-
-> **hide**: () => `void`
-
-
-###### Returns
-
-`void`
-
-##### show()
-
-> **show**: () => `void`
-
-
-###### Returns
-
-`void`
-
-***
-
 ### IapticSubscriptionViewProps
 
+
+Component props for SubscriptionView
+ SubscriptionViewProps
+
+#### Example
+
+```ts
+// Basic usage example:
+<SubscriptionView
+  visible={true}
+  onClose={() => setIsVisible(false)}
+  entitlementLabels={{ premium: 'Premium Features' }}
+  styles={{ productCard: { backgroundColor: '#FFF' }}}
+/>
+```
 
 #### Properties
 
 ##### entitlementLabels?
 
-> `optional` **entitlementLabels**: `Record`\<`string`, `string`\>
+> `optional` **entitlementLabels**: `Record`\<`string`, \{ `detail`: `string`; `label`: `string`; \}\>
 
 
-Localized text for each entitlement/feature
-Example: { premium: 'Premium Features', downloads: 'Unlimited Downloads' }
+Localized descriptions for each entitlement/feature
+
+###### Default
+
+```ts
+{}
+```
+
+###### Example
+
+```ts
+{ 
+   *   premium: { label: 'Premium Features', detail: 'Unlimited Downloads' },
+   *   adFree: { label: 'Ad-Free', detail: 'Remove All Ads While Watching Videos' }
+   * }
+```
+
+###### See
+
+ - IapticRN.listEntitlements()
+ - IapticProductDefinition.entitlements
 
 ##### onClose()?
 
 > `optional` **onClose**: () => `void`
 
 
+Callback when modal is closed (either via button or backdrop tap)
+
 ###### Returns
 
 `void`
+
+###### Example
+
+```ts
+onClose={() => console.log('Modal closed')}
+```
 
 ##### sortProducts?
 
 > `optional` **sortProducts**: `boolean`
 
 
-Optional: Order products by number of entitlements (default: true)
+Sort products by number of entitlements (most first)
+
+###### Default
+
+```ts
+true
+```
+
+###### Example
+
+```ts
+sortProducts={false} // Disable automatic sorting
+```
 
 ##### styles?
 
 > `optional` **styles**: `Partial`\<[`IapticSubscriptionViewStyles`](globals.md#iapticsubscriptionviewstyles)\>
 
 
+Custom styles for component elements (merges with defaults)
+
+###### Example
+
+```ts
+styles={{
+  modalContainer: { backgroundColor: 'rgba(0,0,0,0.8)' },
+  ctaButton: { backgroundColor: '#FF3B30' }
+}}
+```
+
 ##### visible?
 
 > `optional` **visible**: `boolean`
 
 
+Controls visibility of the modal
+
+###### Default
+
+```ts
+false
+```
+
+###### Example
+
+```ts
+<SubscriptionView visible={true} />
+```
+
 ***
 
 ### IapticSubscriptionViewStyles
 
+
+Style definitions for the SubscriptionView component
+ SubscriptionViewStyles
+
+#### Example
+
+```ts
+// Basic style override example:
+{
+  modalContainer: { backgroundColor: 'rgba(0,0,0,0.8)' },
+  productTitle: { fontSize: 22, color: '#2C3E50' },
+  ctaButton: { backgroundColor: '#4CD964', borderRadius: 14 }
+}
+```
 
 #### Properties
 
@@ -4014,434 +3221,300 @@ Optional: Order products by number of entitlements (default: true)
 > `optional` **billingOption**: `ViewStyle`
 
 
+Style for the billing option
+
+###### Style Property
+
+###### Example
+
+```ts
+{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginHorizontal: 4 }
+```
+
 ##### billingOptionSelected?
 
 > `optional` **billingOptionSelected**: `ViewStyle`
 
+
+Style for the selected billing option
+
+###### Style Property
+
+###### Example
+
+```ts
+{ borderColor: '#007AFF', backgroundColor: '#e6f3ff' }
+```
 
 ##### billingOptionText?
 
 > `optional` **billingOptionText**: `TextStyle`
 
 
+Style for the billing option text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ color: '#333', fontWeight: '500' }
+```
+
 ##### billingSelector?
 
 > `optional` **billingSelector**: `ViewStyle`
 
+
+Style for the billing selector container
+
+###### Style Property
+
+###### Example
+
+```ts
+{ marginVertical: 16, gap: 8 }
+```
 
 ##### closeButton?
 
 > `optional` **closeButton**: `ViewStyle`
 
 
+Style for the close button
+
+###### Style Property
+
+###### Example
+
+```ts
+{ padding: 8 }
+```
+
 ##### closeButtonText?
 
 > `optional` **closeButtonText**: `TextStyle`
 
+
+Style for the close button text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ fontSize: 18, color: '#007AFF' }
+```
 
 ##### contentContainer?
 
 > `optional` **contentContainer**: `ViewStyle`
 
 
+Style for the main content container (white card)
+
+###### Style Property
+
+###### Example
+
+```ts
+{ backgroundColor: '#F5F5F5', borderTopLeftRadius: 32 }
+```
+
 ##### ctaButton?
 
 > `optional` **ctaButton**: `ViewStyle`
 
+
+Style for the CTA button
+
+###### Style Property
+
+###### Example
+
+```ts
+{ backgroundColor: '#007AFF', borderRadius: 12, padding: 20, alignItems: 'center', marginTop: 24 }
+```
 
 ##### ctaButtonDisabled?
 
 > `optional` **ctaButtonDisabled**: `ViewStyle`
 
 
+Style for the disabled CTA button
+
+###### Style Property
+
+###### Example
+
+```ts
+{ backgroundColor: '#999', opacity: 0.7 }
+```
+
 ##### ctaButtonText?
 
 > `optional` **ctaButtonText**: `TextStyle`
 
+
+Style for the CTA button text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ color: 'white', fontSize: 18, fontWeight: '600' }
+```
 
 ##### featuresTitle?
 
 > `optional` **featuresTitle**: `TextStyle`
 
 
+Style for the features title text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ fontSize: 16, fontWeight: '600', color: '#1a1a1a', marginVertical: 16 }
+```
+
 ##### header?
 
 > `optional` **header**: `ViewStyle`
 
+
+Style for the header container (title + close button row)
+
+###### Style Property
+
+###### Example
+
+```ts
+{ paddingHorizontal: 20, marginBottom: 32 }
+```
 
 ##### modalContainer?
 
 > `optional` **modalContainer**: `ViewStyle`
 
 
+Style for the outer modal container (covers entire screen)
+
+###### Style Property
+
+###### Example
+
+```ts
+{ backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center' }
+```
+
 ##### productCard?
 
 > `optional` **productCard**: `ViewStyle`
 
+
+Style for the product card
+
+###### Style Property
+
+###### Example
+
+```ts
+{ backgroundColor: '#ffffff', borderRadius: 16, padding: 16, marginHorizontal: 8, marginBottom: 8, width: windowWidth * 0.75 }
+```
 
 ##### productCardSelected?
 
 > `optional` **productCardSelected**: `ViewStyle`
 
 
+Style for the selected product card
+
+###### Style Property
+
+###### Example
+
+```ts
+{ borderWidth: 2, borderColor: '#007AFF' }
+```
+
 ##### productDescription?
 
 > `optional` **productDescription**: `TextStyle`
 
+
+Style for the product description text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ fontSize: 14, color: '#666', marginBottom: 16 }
+```
 
 ##### productPrice?
 
 > `optional` **productPrice**: `TextStyle`
 
 
+Style for the product price text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ fontSize: 24, fontWeight: '700', color: '#007AFF', marginBottom: 8 }
+```
+
+##### productPriceSentence?
+
+> `optional` **productPriceSentence**: `TextStyle`
+
+
+Style for the product price sentence text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ fontSize: 16, color: '#666', marginBottom: 8 }
+```
+
 ##### productTitle?
 
 > `optional` **productTitle**: `TextStyle`
 
+
+Style for the product title text
+
+###### Style Property
+
+###### Example
+
+```ts
+{ fontSize: 20, fontWeight: '600', marginBottom: 8, color: '#1a1a1a' }
+```
 
 ##### title?
 
 > `optional` **title**: `TextStyle`
 
 
-***
+Style for the title text
 
-### IapticValidateErrorPayload
+###### Style Property
 
+###### Example
 
-Error response from the validator endpoint
-
-#### Properties
-
-##### code?
-
-> `optional` **code**: [`IapticErrorCode`](globals.md#iapticerrorcode)
-
-
-An ErrorCode
-
-##### data?
-
-> `optional` **data**: `object`
-
-
-###### latest\_receipt?
-
-> `optional` **latest\_receipt**: `boolean`
-
-We validated using the latest version of the receipt, not need to refresh it.
-
-##### message?
-
-> `optional` **message**: `string`
-
-
-Human readable description of the error
-
-##### ok
-
-> **ok**: `false`
-
-
-Value `false` indicates that the request returned an error
-
-##### status?
-
-> `optional` **status**: `number`
-
-
-Error status (HTTP status)
-
-***
-
-### IapticValidateRequest
-
-
-Body of a receipt validation request,
-
-#### Properties
-
-##### additionalData?
-
-> `optional` **additionalData**: `object`
-
-
-Additional data about the purchase
-
-###### applicationUsername?
-
-> `optional` **applicationUsername**: `string` \| `number`
-
-Attach the purchases to the given application user. Should be a string.
-
-See [/documentation/application-username](/documentation/application-username) for more information.
-
-###### Optional
-
-##### device?
-
-> `optional` **device**: `object`
-
-
-###### Index Signature
-
-\[`key`: `string`\]: `string`
-
-##### id?
-
-> `optional` **id**: `string`
-
-
-Identifier of the product you want to validate. On iOS, can be set to your application identifier.
-
-###### Required
-
-##### offers?
-
-> `optional` **offers**: [`IapticOffer`](globals.md#iapticoffer)[]
-
-
-List of offers available for this product
-
-##### products
-
-> **products**: [`IapticProduct`](globals.md#iapticproduct)[]
-
-
-List of products available in the store
-
-##### transaction?
-
-> `optional` **transaction**: [`IapticValidateRequestTransaction`](globals.md#iapticvalidaterequesttransaction)
-
-
-Details about the native transaction.
-
-Can be:
-<ul>
- <li>An <a href="#api-Types-Validate.TransactionApple">Apple Transaction</a></li>
- <li>A <a href="#api-Types-Validate.TransactionGoogle">Google Transaction</a></li>
- <li>A <a href="#api-Types-Validate.TransactionWindows">Windows Transaction</a></li>
- <li>A <a href="#api-Types-Validate.TransactionStripe">Stripe Transaction</a></li>
-</ul>
-
-###### Required
-
-##### type?
-
-> `optional` **type**: [`IapticProductType`](globals.md#iapticproducttype)
-
-
-Type of product being validated. Possible values:
-
-<ul>
-<li>`application` – Validate the application download (Apple only).</li>
-<li>`paid subscription` – An auto-renewing subscription.</li>
-<li>`non renewing subscription` – A non renewing subscription.</li>
-<li>`consumable` – A consumable product.</li>
-<li>`non consumable` – A non-consumable product.</li>
-</ul>
-
-###### Required
-
-***
-
-### IapticValidateRequestTransactionApple
-
-
-Transaction type from an Apple powered device
-
-#### Properties
-
-##### appStoreReceipt
-
-> **appStoreReceipt**: `string`
-
-
-Apple appstore receipt, base64 encoded.
-
-###### Required
-
-##### id
-
-> **id**: `string`
-
-
-Identifier of the transaction to evaluate, or set it to your application identifier if id has been set so.
-
-###### Required
-
-##### type
-
-> **type**: `"ios-appstore"`
-
-
-Value `"ios-appstore"`
-
-***
-
-### IapticValidateRequestTransactionGoogle
-
-
-Transaction type from a google powered device
-
-#### Properties
-
-##### id
-
-> **id**: `string`
-
-
-Identifier of the transaction to evaluate.
-
-Corresponds to:
-- the `orderId` in the receipt from Google.
-- the `transactionId` in the receipt from Apple (or bundleID for the application receipt).
-
-###### Required
-
-##### purchaseToken
-
-> **purchaseToken**: `string`
-
-
-Google purchase token.
-
-###### Required
-
-##### receipt
-
-> **receipt**: `string`
-
-
-Google receipt in a JSON-encoded string.
-
-###### Required
-
-##### signature
-
-> **signature**: `string`
-
-
-Google receipt signature (used to validate the local receipt).
-
-###### Required
-
-##### type
-
-> **type**: `"android-playstore"`
-
-
-Value `"android-playstore"`
-
-***
-
-### IapticValidateSuccessPayload
-
-
-Success response from iaptic validator endpoint
-
-#### Properties
-
-##### data
-
-> **data**: `object`
-
-
-###### collection?
-
-> `optional` **collection**: [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
-
-The collection of purchases in this receipt.
-
-An array of ValidatorPurchase
-
-###### date?
-
-> `optional` **date**: `string`
-
-Date and time the receipt was validated.
-
-It will provide the client with a more reliable clock time
-than the user's device when needed.
-
-###### id
-
-> **id**: `string`
-
-Id of the product that have been validated
-
-###### ineligible\_for\_intro\_price?
-
-> `optional` **ineligible\_for\_intro\_price**: `string`[]
-
-List of product ids for which intro price isn't available anymore
-
-###### latest\_receipt
-
-> **latest\_receipt**: `boolean`
-
-Tell the plugin that we've used the latest receipt
-
-###### transaction
-
-> **transaction**: `any`
-
-Native transaction detail
-
-###### warning?
-
-> `optional` **warning**: `string`
-
-A warning message about this validation.
-
-It might be present when the server had to fallback to a backup validation solution.
-
-##### ok
-
-> **ok**: `true`
-
-
-Indicates a successful request
-
-***
-
-### IapticValidationData
-
-
-Data needed to validate a purchase
-
-#### Properties
-
-##### applicationUsername?
-
-> `optional` **applicationUsername**: `string`
-
-
-##### productId
-
-> **productId**: `string`
-
-
-##### productType
-
-> **productType**: [`IapticProductType`](globals.md#iapticproducttype)
-
-
-##### receipt
-
-> **receipt**: `string`
-
-
-##### receiptSignature
-
-> **receiptSignature**: `string`
-
-
-##### transactionId
-
-> **transactionId**: `string`
-
+```ts
+{ fontSize: 24, fontWeight: '600', color: '#1a1a1a' }
+```
 
 ***
 
@@ -4683,22 +3756,6 @@ Type of recurring payment
 
 Reason why a subscription status changed
 
-***
-
-### IapticValidateRequestTransaction
-
-> **IapticValidateRequestTransaction**: [`IapticValidateRequestTransactionApple`](globals.md#iapticvalidaterequesttransactionapple) \| [`IapticValidateRequestTransactionGoogle`](globals.md#iapticvalidaterequesttransactiongoogle)
-
-
-***
-
-### IapticValidateResponse
-
-> **IapticValidateResponse**: [`IapticValidateSuccessPayload`](globals.md#iapticvalidatesuccesspayload) \| [`IapticValidateErrorPayload`](globals.md#iapticvalidateerrorpayload)
-
-
-Response from the iaptic validator endpoint
-
 ## Variables
 
 ### ERROR\_CODES\_BASE
@@ -4771,28 +3828,40 @@ Subscription status component that automatically updates when subscription chang
 
 ***
 
-### IapticSubscriptionView()
+### IapticProductPrice()
 
-> **IapticSubscriptionView**(`props`): `ReactNode`
+> **IapticProductPrice**(`__namedParameters`): `null` \| `Element`
 
 
 #### Parameters
 
-##### props
+##### \_\_namedParameters
 
-[`IapticSubscriptionViewProps`](globals.md#iapticsubscriptionviewprops) & `RefAttributes`\<[`IapticSubscriptionViewHandle`](globals.md#iapticsubscriptionviewhandle)\>
+###### product
+
+[`IapticProduct`](globals.md#iapticproduct)
+
+###### styles
+
+[`IapticSubscriptionViewStyles`](globals.md#iapticsubscriptionviewstyles)
 
 #### Returns
 
-`ReactNode`
+`null` \| `Element`
 
 ***
 
-### IapticTestComponent()
+### IapticSubscriptionView()
 
-> **IapticTestComponent**(): `Element`
+> **IapticSubscriptionView**(`__namedParameters`): `null` \| `Element`
 
+
+#### Parameters
+
+##### \_\_namedParameters
+
+[`IapticSubscriptionViewProps`](globals.md#iapticsubscriptionviewprops)
 
 #### Returns
 
-`Element`
+`null` \| `Element`

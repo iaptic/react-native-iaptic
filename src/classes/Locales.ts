@@ -98,7 +98,9 @@ const EN: IapticLocale = {
   SubscriptionView_Processing: "Processing...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "Current Plan",
+  SubscriptionView_UpdatePlan: "Update Plan"
 };
 
 /**
@@ -206,7 +208,9 @@ const ES: IapticLocale = {
   SubscriptionView_Processing: "Procesando...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "Plan Actual",
+  SubscriptionView_UpdatePlan: "Actualizar Plan"
 };
 
 /**
@@ -300,7 +304,9 @@ const FR: IapticLocale = {
   SubscriptionView_Processing: "En cours...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "Plan Actuel",
+  SubscriptionView_UpdatePlan: "Modifier le Plan"
 };
 
 /**
@@ -394,7 +400,9 @@ const DE: IapticLocale = {
   SubscriptionView_Processing: "Wird verarbeitet...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "Aktueller Plan",
+  SubscriptionView_UpdatePlan: "Plan aktualisieren"
 };
 
 /**
@@ -488,7 +496,9 @@ const JA: IapticLocale = {
   SubscriptionView_Processing: "処理中...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "現在のプラン",
+  SubscriptionView_UpdatePlan: "プランを更新"
 };
 
 /**
@@ -582,7 +592,9 @@ const ZH: IapticLocale = {
   SubscriptionView_Processing: "处理中...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "当前计划",
+  SubscriptionView_UpdatePlan: "更新计划"
 };
 
 /**
@@ -676,7 +688,9 @@ const PT: IapticLocale = {
   SubscriptionView_Processing: "Processando...",
   EntitlementGrid_Checkmark: "✓",
   DateFormatter_Date: "{0}",
-  DateFormatter_Time: "{0}"
+  DateFormatter_Time: "{0}",
+  SubscriptionView_CurrentPlan: "Plano Atual",
+  SubscriptionView_UpdatePlan: "Atualizar Plano"
 };
 
 /**

@@ -3,7 +3,11 @@ import { Purchases } from "./Purchases";
 import { IapticVerifiedPurchase } from "../types";
 import { IapticEvents } from "./IapticEvents";
 
-/** Manages non-consumable purchases */
+/**
+ * Manages non-consumable purchases
+ * 
+ * @internal
+ */
 export class NonConsumables {
 
   /** Map of purchase IDs to their current state */
