@@ -69,6 +69,7 @@ export class IapticRN {
       debugMessage: 'IapticRN.store is already initialized, call IapticRN.destroy() first',
     });
     IapticRN.store = new IapticStore(config);
+    IapticRN.commitPendingEventListeners();
     if (config.verbosity) IapticRN.setVerbosity(config.verbosity);
     await IapticRN.store.initialize();
     if (config.products) {
@@ -356,20 +357,27 @@ export class IapticRN {
     if (!IapticRN.store) {
       let remover = {
         remove: () => {
-          clearInterval(interval);
+          IapticRN._pendingEventListeners = IapticRN._pendingEventListeners.filter(l => l.listener !== listener);
         }
       };
-      const interval = setInterval(() => {
-        if (IapticRN.store) {
-          clearInterval(interval);
-          remover = IapticRN.getStore().addEventListener(eventType, listener, 'User');
-        }
-      }, 100);
+      IapticRN._pendingEventListeners.push({ type: eventType, listener, remover });
       return remover;
     }
     else {
       return IapticRN.getStore().addEventListener(eventType, listener, 'User');
     }
+  }
+
+  /** @internal */
+  static _pendingEventListeners: { type: IapticEventType, listener: IapticEventListener<any>, remover: { remove: () => void } }[] = [];
+
+  /** @internal */
+  static commitPendingEventListeners() {
+    if (!IapticRN.store) return;
+    for (const listener of IapticRN._pendingEventListeners) {
+      listener.remover.remove = IapticRN.getStore().addEventListener(listener.type, listener.listener, 'User').remove;
+    }
+    IapticRN._pendingEventListeners = [];
   }
 
   /**
@@ -380,6 +388,7 @@ export class IapticRN {
    */
   static removeAllEventListeners(eventType?: IapticEventType): void {
     if (!IapticRN.store) return;
+    IapticRN._pendingEventListeners = [];
     IapticRN.getStore().removeAllEventListeners(eventType);
   }
 
