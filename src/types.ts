@@ -365,6 +365,7 @@ export enum IapticErrorCode {
 /**
  * All possible event types that can be listened to.
  * 
+ * - `products.updated` - When any product metadata is updated (title, price, description, etc.)
  * - `purchase.updated` - When any purchase is updated (subscription, consumable, non-consumable)
  * - `subscription.updated` - When a subscription is updated (renewed, cancelled, expired, changed)
  * - `subscription.renewed` - When a subscription is renewed

@@ -1,7 +1,15 @@
 /**
  * List of keys a locale must provide.
  * 
- * @external IapticLocale
+ * @example
+ * ```typescript
+ * const myLocale: IapticLocale = {
+ *   ProgrammingError: 'No pa bon',
+ *   ...
+ * };
+ * 
+ * IapticRN.addLocale('xx_yy', myLocale);
+ * ```
  */
 export interface IapticLocale {
   /** Programming Error */

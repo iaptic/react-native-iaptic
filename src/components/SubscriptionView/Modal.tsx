@@ -5,40 +5,33 @@ import { EntitlementGrid } from './EntitlementGrid';
 import { IapticRN } from '../../IapticRN';
 import EventEmitter from 'react-native/Libraries/vendor/emitter/EventEmitter';
 import { logger } from '../../classes/IapticLogger';
-import { SubscriptionViewStyles } from './Styles';
+import { IapticSubscriptionViewStyles } from './Styles';
 import { ProductPrice } from './ProductPrice';
 import { Locales } from '../../classes/Locales';
 import { IapticError, IapticSeverity } from '../../classes/IapticError';
-import { ActiveSubscription } from '../ActiveSubscription';
+import { IapticActiveSubscription } from '../ActiveSubscription';
 
 /**
- * Component props for SubscriptionView
- * @interface SubscriptionViewProps
+ * Props for IapticSubscriptionView Component
+ * 
  * @example
  * // Basic usage example:
- * <SubscriptionView
- *   visible={true}
- *   onClose={() => setIsVisible(false)}
+ * <IapticSubscriptionView
  *   entitlementLabels={{ premium: 'Premium Features' }}
  *   styles={{ productCard: { backgroundColor: '#FFF' }}}
  * />
  */
-export interface SubscriptionViewProps {
+export interface IapticSubscriptionViewProps {
+
   /** 
    * Controls visibility of the modal
    * @default false
-   * @example <SubscriptionView visible={true} />
    */
   visible?: boolean;
 
   /** 
-   * Callback when modal is closed (either via button or backdrop tap)
-   * @example onClose={() => console.log('Modal closed')}
-   */
-  onClose?: () => void;
-
-  /** 
-   * Callback when a purchase is complete (you should show a thank you message)
+   * Callback when a purchase is complete (show a thank you message or whatever)
+   * 
    * @example onPurchaseComplete={() => console.log('Purchase complete')}
    */
   onPurchaseComplete?: () => void;
@@ -51,7 +44,7 @@ export interface SubscriptionViewProps {
    *   premium: { label: 'Premium Features', detail: 'Unlimited Downloads' },
    *   adFree: { label: 'Ad-Free', detail: 'Remove All Ads While Watching Videos' }
    * }
-   * @see IapticRN.listEntitlements()
+   * @see IapticRN.listEntitlements
    * @see IapticProductDefinition.entitlements
    */
   entitlementLabels?: Record<string, { label: string, detail?: string }>;
@@ -63,7 +56,7 @@ export interface SubscriptionViewProps {
    *   ctaButton: { backgroundColor: '#FF3B30' }
    * }}
    */
-  styles?: Partial<SubscriptionViewStyles>;
+  styles?: Partial<IapticSubscriptionViewStyles>;
 
   /** 
    * Sort products by number of entitlements (most first)
@@ -319,22 +312,33 @@ const defaultStyles = StyleSheet.create({
   },
 });
 
-
-// Add type for component reference
-// export interface SubscriptionViewHandle {
-//   show: () => void;
-//   hide: () => void;
-// }
-
-export const SubscriptionView = ({
-  onClose,
-  onPurchaseComplete,
-  entitlementLabels = {},
-  styles: customStyles = {},
-  sortProducts = true,
-  termsUrl,
-  showRestorePurchase = true,
-}: SubscriptionViewProps) => {
+/**
+ * Subscription modal UI component
+ * 
+ * @remarks React Component
+ * 
+ * @param props Propertis
+ * 
+ * @example
+ * ```tsx
+ * <IapticSubscriptionView
+ *   entitlementLabels={{
+ *     premium: { label: 'Premium Features', detail: 'Unlimited Downloads' },
+ *     adFree: { label: 'Ad-Free', detail: 'Remove All Ads While Watching Videos' }
+ *   }},
+ *   termsUrl="https://example.com/terms"
+ * />
+ * ```
+ */
+export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
+  const {
+    onPurchaseComplete,
+    entitlementLabels = {},
+    styles: customStyles = {},
+    sortProducts = true,
+    termsUrl,
+    showRestorePurchase = true,
+  } = props;
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscape = windowWidth > windowHeight;
@@ -357,31 +361,11 @@ export const SubscriptionView = ({
     const subsProducts = IapticRN.getProducts().filter(p =>
       p.type === 'paid subscription' || p.type === 'non renewing subscription'
     );
-
     if (sortProducts) {
       subsProducts.sort((a, b) => (a.entitlements?.length || 0) - (b.entitlements?.length || 0));
     }
-    setProducts(subsProducts /* .concat([{
-      id: 'test',
-      title: 'Test',
-      description: 'Test Description',
-      entitlements: ['pro'],
-      offers: [{
-        id: 'test',
-        pricingPhases: [{
-          price: '$1.99',
-          priceMicros: 1990000,
-          currency: 'USD',
-          billingPeriod: 'P1M',
-        }],
-        offerType: "Subscription",
-        platform: IapticPurchasePlatform.APPLE_APPSTORE,
-        productId: 'test',
-      }],
-      type: 'paid subscription',
-      platform: IapticPurchasePlatform.APPLE_APPSTORE
-    }]) */);
     if (subsProducts.length > 0) {
+      setProducts(subsProducts);
       setSelectedProduct(subsProducts[0]);
       setSelectedOffer(subsProducts[0].offers[0]);
     }
@@ -552,7 +536,7 @@ export const SubscriptionView = ({
               </TouchableOpacity>
             </View>
 
-            <ActiveSubscription styles={customStyles} entitlementLabels={entitlementLabels} />
+            <IapticActiveSubscription styles={customStyles} entitlementLabels={entitlementLabels} />
 
             <TouchableOpacity
               style={[styles.changePlanButton, { marginTop: 8 }]}
@@ -921,5 +905,7 @@ export const SubscriptionView = ({
  * @example
  * subscriptionViewEvents.emit('dismiss');
  * subscriptionViewEvents.emit('present');
+ * 
+ * @internal
  */
 export const subscriptionViewEvents = new EventEmitter();

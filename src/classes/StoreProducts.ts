@@ -73,17 +73,29 @@ export class StoreProducts {
    */
   add(definitions: IapticProductDefinition[], subscriptions: IAP.Subscription[], products: IAP.Product[]): IapticProduct[] {
     for (const definition of definitions) {
-      if (!this.definitions.find(d => d.id === definition.id)) {
+      const existing = this.definitions.find(d => d.id === definition.id);
+      if (existing) {
+        Object.assign(existing, definition);
+      }
+      else {
         this.definitions.push(definition);
       }
     }
     for (const subscription of subscriptions) {
-      if (!this.subscriptions.find(s => s.productId === subscription.productId)) {
+      const existing = this.subscriptions.find(s => s.productId === subscription.productId);
+      if (existing) {
+        Object.assign(existing, subscription);
+      }
+      else {
         this.subscriptions.push(subscription);
       }
     }
     for (const product of products) {
-      if (!this.products.find(p => p.productId === product.productId)) {
+      const existing = this.products.find(p => p.productId === product.productId);
+      if (existing) {
+        Object.assign(existing, product);
+      }
+      else {
         this.products.push(product);
       }
     }

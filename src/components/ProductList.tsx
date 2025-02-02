@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from '
 import { IapticOffer, IapticPendingPurchase, IapticProduct } from '../types';
 import { IapticRN } from '../IapticRN';
 
+/**
+ * @internal
+ */
 export interface ProductListStyles {
   container?: ViewStyle;
   productContainer?: ViewStyle;
@@ -16,7 +19,9 @@ export interface ProductListStyles {
 }
 
 /**
- * ProductList component
+ * ProductList component props
+ * 
+ * @internal
  */
 export interface ProductListProps {
   /**
@@ -81,6 +86,13 @@ const defaultStyles = StyleSheet.create({
   },
 });
 
+/**
+ * ProductList component
+ * 
+ * @remarks React Component
+ * 
+ * @internal
+ */
 export const ProductList = ({
   productIds,
   onOrder: onSubscribe,

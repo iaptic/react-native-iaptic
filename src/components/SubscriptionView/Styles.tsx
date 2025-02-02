@@ -1,8 +1,8 @@
 import { TextStyle, ViewStyle } from "react-native";
 
 /**
- * Style definitions for the SubscriptionView component
- * @interface SubscriptionViewStyles
+ * Style definitions for the IapticSubscriptionView component
+ * 
  * @example
  * // Basic style override example:
  * {
@@ -11,7 +11,7 @@ import { TextStyle, ViewStyle } from "react-native";
  *   ctaButton: { backgroundColor: '#4CD964', borderRadius: 14 }
  * }
  */
-export interface SubscriptionViewStyles {
+export interface IapticSubscriptionViewStyles {
   /** 
    * Style for the outer modal container (covers entire screen)
    * @styleProperty

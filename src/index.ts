@@ -98,7 +98,8 @@ export { IapticLogger } from './classes/IapticLogger';
  * UI Components
  */
 export {
-  ActiveSubscription as IapticActiveSubscription,
+  IapticActiveSubscription,
+  IapticActiveSubscriptionProps,
 } from './components/ActiveSubscription';
 export {
   ProductList as IapticProductList,
@@ -106,11 +107,11 @@ export {
   ProductListStyles as IapticProductListStyles,
 } from './components/ProductList';
 export {
-  SubscriptionView as IapticSubscriptionView,
-  SubscriptionViewProps as IapticSubscriptionViewProps,
+  IapticSubscriptionView,
+  IapticSubscriptionViewProps,
 } from './components/SubscriptionView/Modal';
 export {
-  SubscriptionViewStyles as IapticSubscriptionViewStyles,
+  IapticSubscriptionViewStyles as IapticSubscriptionViewStyles,
 } from './components/SubscriptionView/Styles';
 export {
   ProductPrice as IapticProductPrice,

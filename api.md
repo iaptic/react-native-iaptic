@@ -2121,9 +2121,16 @@ Event argument types mapped to their event names
 
 List of keys a locale must provide.
 
-#### External
+#### Example
 
-IapticLocale
+```typescript
+const myLocale: IapticLocale = {
+  ProgrammingError: 'No pa bon',
+  ...
+};
+
+IapticRN.addLocale('xx_yy', myLocale);
+```
 
 #### Properties
 
@@ -3183,147 +3190,16 @@ Type of the product (subscription, consumable, or non-consumable)
 
 ***
 
-### IapticProductListProps
-
-
-ProductList component
-
-#### Properties
-
-##### onOrder()
-
-> **onOrder**: (`offer`) => `void`
-
-
-Handlers when the user request purchasing a given offer
-
-###### Parameters
-
-###### offer
-
-[`IapticOffer`](#iapticoffer)
-
-###### Returns
-
-`void`
-
-##### productIds?
-
-> `optional` **productIds**: `string`[]
-
-
-Filter the products to display (optional)
-
-##### styles?
-
-> `optional` **styles**: `object`
-
-
-Custom styles
-
-###### button?
-
-> `optional` **button**: `ViewStyle` \| `TextStyle`
-
-###### buttonDisabled?
-
-> `optional` **buttonDisabled**: `ViewStyle` \| `TextStyle`
-
-###### buttonText?
-
-> `optional` **buttonText**: `ViewStyle` \| `TextStyle`
-
-###### container?
-
-> `optional` **container**: `ViewStyle` \| `TextStyle`
-
-###### offerContainer?
-
-> `optional` **offerContainer**: `ViewStyle` \| `TextStyle`
-
-###### offersContainer?
-
-> `optional` **offersContainer**: `ViewStyle` \| `TextStyle`
-
-###### pricingPhasesText?
-
-> `optional` **pricingPhasesText**: `ViewStyle` \| `TextStyle`
-
-###### productContainer?
-
-> `optional` **productContainer**: `ViewStyle` \| `TextStyle`
-
-###### productTitle?
-
-> `optional` **productTitle**: `ViewStyle` \| `TextStyle`
-
-***
-
-### IapticProductListStyles
-
-
-#### Properties
-
-##### button?
-
-> `optional` **button**: `ViewStyle`
-
-
-##### buttonDisabled?
-
-> `optional` **buttonDisabled**: `ViewStyle`
-
-
-##### buttonText?
-
-> `optional` **buttonText**: `TextStyle`
-
-
-##### container?
-
-> `optional` **container**: `ViewStyle`
-
-
-##### offerContainer?
-
-> `optional` **offerContainer**: `ViewStyle`
-
-
-##### offersContainer?
-
-> `optional` **offersContainer**: `ViewStyle`
-
-
-##### pricingPhasesText?
-
-> `optional` **pricingPhasesText**: `TextStyle`
-
-
-##### productContainer?
-
-> `optional` **productContainer**: `ViewStyle`
-
-
-##### productTitle?
-
-> `optional` **productTitle**: `TextStyle`
-
-
-***
-
 ### IapticSubscriptionViewProps
 
 
-Component props for SubscriptionView
- SubscriptionViewProps
+Props for IapticSubscriptionView Component
 
 #### Example
 
 ```ts
 // Basic usage example:
-<SubscriptionView
-  visible={true}
-  onClose={() => setIsVisible(false)}
+<IapticSubscriptionView
   entitlementLabels={{ premium: 'Premium Features' }}
   styles={{ productCard: { backgroundColor: '#FFF' }}}
 />
@@ -3355,32 +3231,15 @@ Localized descriptions for each entitlement/feature
 
 ###### See
 
- - IapticRN.listEntitlements()
+ - IapticRN.listEntitlements
  - IapticProductDefinition.entitlements
-
-##### onClose()?
-
-> `optional` **onClose**: () => `void`
-
-
-Callback when modal is closed (either via button or backdrop tap)
-
-###### Returns
-
-`void`
-
-###### Example
-
-```ts
-onClose={() => console.log('Modal closed')}
-```
 
 ##### onPurchaseComplete()?
 
 > `optional` **onPurchaseComplete**: () => `void`
 
 
-Callback when a purchase is complete (you should show a thank you message)
+Callback when a purchase is complete (show a thank you message or whatever)
 
 ###### Returns
 
@@ -3466,19 +3325,12 @@ Controls visibility of the modal
 false
 ```
 
-###### Example
-
-```ts
-<SubscriptionView visible={true} />
-```
-
 ***
 
 ### IapticSubscriptionViewStyles
 
 
-Style definitions for the SubscriptionView component
- SubscriptionViewStyles
+Style definitions for the IapticSubscriptionView component
 
 #### Example
 
@@ -3970,6 +3822,7 @@ Type-safe event listener function
 
 All possible event types that can be listened to.
 
+- `products.updated` - When any product metadata is updated (title, price, description, etc.)
 - `purchase.updated` - When any purchase is updated (subscription, consumable, non-consumable)
 - `subscription.updated` - When a subscription is updated (renewed, cancelled, expired, changed)
 - `subscription.renewed` - When a subscription is renewed
@@ -4042,107 +3895,37 @@ Reason why a subscription status changed
 
 ## Functions
 
-### IapticActiveSubscription()
+### IapticSubscriptionView()
 
-> **IapticActiveSubscription**(`props`, `deprecatedLegacyContext`?): `ReactNode`
+> **IapticSubscriptionView**(`props`): `null` \| `Element`
 
 
-Subscription status component that automatically updates when subscription changes.
+Subscription modal UI component
 
 #### Parameters
 
 ##### props
 
-`ActiveSubscriptionProps`
+[`IapticSubscriptionViewProps`](#iapticsubscriptionviewprops)
 
-##### deprecatedLegacyContext?
-
-`any`
-
-**Deprecated**
-
-**See**
-
-[React Docs](https://legacy.reactjs.org/docs/legacy-context.html#referencing-context-in-lifecycle-methods)
+Propertis
 
 #### Returns
 
-`ReactNode`
+`null` \| `Element`
 
-#### Component
+#### Remarks
+
+React Component
 
 #### Example
 
-```ts
-// Full example with entitlements
-<ActiveSubscription
-  iaptic={iapticInstance}
+```tsx
+<IapticSubscriptionView
   entitlementLabels={{
-    pro: { label: 'Pro Features', detail: 'Unlimited access to premium features' },
-    premium: { label: 'Premium Access', detail: 'Unlimited downloads and priority support' }
-  }}
-  styles={{
-    entitlementTag: { 
-      backgroundColor: '#e3f2fd',
-      color: '#1976d2'
-    }
-  }}
+    premium: { label: 'Premium Features', detail: 'Unlimited Downloads' },
+    adFree: { label: 'Ad-Free', detail: 'Remove All Ads While Watching Videos' }
+  }},
+  termsUrl="https://example.com/terms"
 />
 ```
-
-***
-
-### IapticProductList()
-
-> **IapticProductList**(`__namedParameters`): `Element`
-
-
-#### Parameters
-
-##### \_\_namedParameters
-
-[`IapticProductListProps`](#iapticproductlistprops)
-
-#### Returns
-
-`Element`
-
-***
-
-### IapticProductPrice()
-
-> **IapticProductPrice**(`__namedParameters`): `null` \| `Element`
-
-
-#### Parameters
-
-##### \_\_namedParameters
-
-###### product
-
-[`IapticProduct`](#iapticproduct)
-
-###### styles
-
-[`IapticSubscriptionViewStyles`](#iapticsubscriptionviewstyles)
-
-#### Returns
-
-`null` \| `Element`
-
-***
-
-### IapticSubscriptionView()
-
-> **IapticSubscriptionView**(`__namedParameters`): `null` \| `Element`
-
-
-#### Parameters
-
-##### \_\_namedParameters
-
-[`IapticSubscriptionViewProps`](#iapticsubscriptionviewprops)
-
-#### Returns
-
-`null` \| `Element`

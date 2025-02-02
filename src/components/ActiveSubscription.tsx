@@ -14,19 +14,16 @@ import { IapticRN } from '../IapticRN';
  * - Auto-updates when subscription changes
  * - Full style customization support
  * 
- * @usage
+ * @example
  * 
  * Basic usage:
  * ```tsx
- * <ActiveSubscription 
- *   iaptic={iapticInstance} 
- * />
+ * <IapticActiveSubscription />
  * ```
  * 
  * With custom styling:
  * ```tsx
- * <ActiveSubscription
- *   iaptic={iapticInstance}
+ * <IapticActiveSubscription
  *   styles={{
  *     container: { borderWidth: 1, borderRadius: 10 },
  *     title: { color: '#2c3e50' },
@@ -35,16 +32,11 @@ import { IapticRN } from '../IapticRN';
  * />
  * ```
  * 
- * @props
- * - `iaptic` (required): IapticRN instance - Must be properly initialized
- * - `styles`: Optional style overrides for complete visual control
- * 
- * @behavior
+ * @remarks
  * - Automatically subscribes to subscription updates
  * - Shows nothing when no active subscription exists
  * - Handles platform-specific management links (opens native UI)
  * 
- * @localization
  * Requires these translation keys (via Locales.get()):
  * - ActiveSubscription_Status_Active
  * - ActiveSubscription_Status_Expired
@@ -55,7 +47,6 @@ import { IapticRN } from '../IapticRN';
  * - ActiveSubscription_ManageSubscriptions
  * - ActiveSubscription_ManageBilling
  * 
- * @styling
  * Style object accepts these optional properties:
  * | Style Key       | Applies To                          | Default Theme               |
  * |-----------------|-------------------------------------|-----------------------------|
@@ -68,8 +59,10 @@ import { IapticRN } from '../IapticRN';
  * | retryTag        | Billing retry status                | Orange accent               |
  * | entitlementTag  | Entitlement access badges           | Green accent                |
  * | manageLink      | "Manage" links                      | Blue underlined text        |
+ * 
+ * @internal
  */
-interface ActiveSubscriptionProps {
+export interface IapticActiveSubscriptionProps {
   /**
    * Localized labels for each entitlement
    * 
@@ -108,11 +101,52 @@ interface ActiveSubscriptionProps {
 /**
  * Subscription status component that automatically updates when subscription changes.
  * 
- * @component
+ * Key features:
+ * - Shows current subscription status (active/expired)
+ * - Displays trial/billing retry indicators when applicable
+ * - Lists granted entitlements (access rights)
+ * - Provides management links for subscription/billing
+ * - Auto-updates when subscription changes
+ * - Full style customization support
+ * 
+ * @example
+ * 
+ * Basic usage:
+ * ```tsx
+ * <IapticActiveSubscription />
+ * ```
+ * 
+ * With custom styling:
+ * ```tsx
+ * <IapticActiveSubscription
+ *   styles={{
+ *     container: { borderWidth: 1, borderRadius: 10 },
+ *     title: { color: '#2c3e50' },
+ *     trialTag: { backgroundColor: '#f0e6fa' }
+ *   }}
+ * />
+ * ```
+ * 
+ * @remarks React Component
+ * 
+ * @remarks
+ * - Automatically subscribes to subscription updates
+ * - Shows nothing when no active subscription exists
+ * - Handles platform-specific management links (opens native UI)
+ * 
+ * Requires these translation keys (via Locales.get()):
+ * - ActiveSubscription_Status_Active
+ * - ActiveSubscription_Status_Expired
+ * - ActiveSubscription_WillCancel
+ * - ActiveSubscription_WillRenew
+ * - ActiveSubscription_Tag_Trial
+ * - ActiveSubscription_Tag_Retry
+ * - ActiveSubscription_ManageSubscriptions
+ * - ActiveSubscription_ManageBilling
  * 
  * @example
  * // Full example with entitlements
- * <ActiveSubscription
+ * <IapticActiveSubscription
  *   iaptic={iapticInstance}
  *   entitlementLabels={{
  *     pro: { label: 'Pro Features', detail: 'Unlimited access to premium features' },
@@ -125,11 +159,15 @@ interface ActiveSubscriptionProps {
  *     }
  *   }}
  * />
+ * 
+ * @internal
  */
-export const ActiveSubscription: React.FC<ActiveSubscriptionProps> = ({
-  styles: customStyles,
-  entitlementLabels,
-}) => {
+export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> = (props: IapticActiveSubscriptionProps) => {
+  const {
+    entitlementLabels = {},
+    styles: customStyles = {},
+  } = props;
+
   // Track subscription state
   const [state, setState] = useState({
     subscription: IapticRN.getActiveSubscription(),

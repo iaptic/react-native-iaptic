@@ -1,11 +1,29 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { IapticOffer, IapticProduct } from '../../types';
-import { SubscriptionViewStyles } from './Styles';
+import { IapticSubscriptionViewStyles } from './Styles';
 import { utils } from '../../classes/Utils';
 import { Locales } from '../../classes/Locales';
 
-export const ProductPrice = ({ product, styles }: { product: IapticProduct, styles?: SubscriptionViewStyles }) => {
+/**
+ * Props for the ProductPrice component
+ * 
+ * @internal
+ */
+export interface ProductPriceProps {
+  product: IapticProduct;
+  styles?: IapticSubscriptionViewStyles;
+}
+
+/**
+ * Product price component
+ * 
+ * @remarks React Component
+ * 
+ * @internal
+ */
+export const ProductPrice = (props: ProductPriceProps) => {
+  const { product, styles } = props;
   if (product.offers.length === 0) {
     return null;
   }
@@ -32,8 +50,6 @@ export const ProductPrice = ({ product, styles }: { product: IapticProduct, styl
   }
 }
 
-const OfferPrice = ({ offer, styles }: { offer: IapticOffer, styles?: SubscriptionViewStyles }) => {
+const OfferPrice = ({ offer, styles }: { offer: IapticOffer, styles?: IapticSubscriptionViewStyles }) => {
   return <Text style={styles?.productPriceSentence}><Text style={styles?.productPrice}>{offer.pricingPhases[0].price}</Text> {utils.formatBillingCycle(offer.pricingPhases[0])}</Text>;
 }
-
-export default ProductPrice;

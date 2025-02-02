@@ -2,6 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Locales } from '../../classes/Locales';
 
+/**
+ * Props for the EntitlementGrid component
+ * 
+ * @internal
+ */
 export interface EntitlementGridProps {
   entitlements: string[];
   labels: Record<string, {
@@ -10,7 +15,14 @@ export interface EntitlementGridProps {
   }>;
 }
 
-const EntitlementGrid = ({ entitlements, labels }: EntitlementGridProps) => (
+/**
+ * Grid of entitlements with checkmarks and labels
+ * 
+ * @remarks React Component
+ * 
+ * @internal
+ */
+export const EntitlementGrid = ({ entitlements, labels }: EntitlementGridProps) => (
   <View style={styles.grid}>
     {entitlements.map(entitlement => {
       const { label, detail } = labels[entitlement] || { label: entitlement };
@@ -29,6 +41,11 @@ const EntitlementGrid = ({ entitlements, labels }: EntitlementGridProps) => (
   </View>
 );
 
+/**
+ * Styles for the EntitlementGrid component
+ * 
+ * @internal
+ */
 const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
@@ -64,5 +81,3 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
-
-export { EntitlementGrid }; 
