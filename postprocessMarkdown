@@ -1,3 +1,3 @@
 #!/bin/bash
-cat docs-markdown.tmp/globals.md | grep -v '^Defined in' > api.md
+cat docs-markdown.tmp/globals.md | grep -v '^Defined in' | sed 's/globals.md//g' > api.md
 rm -fr docs-markdown.tmp

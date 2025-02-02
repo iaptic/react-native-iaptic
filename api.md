@@ -9,7 +9,7 @@ Iaptic React Native SDK
 Provides in-app purchase functionality with integrated receipt validation
 through the Iaptic service.
 
-The API entry point is [IapticRN](globals.md#iapticrn).
+The API entry point is [IapticRN](#iapticrn).
 
 ## Examples
 
@@ -587,7 +587,7 @@ try {
 
 ##### code
 
-> `readonly` **code**: [`IapticErrorCode`](globals.md#iapticerrorcode)
+> `readonly` **code**: [`IapticErrorCode`](#iapticerrorcode)
 
 
 ##### debugMessage
@@ -625,7 +625,7 @@ try {
 
 ##### severity
 
-> `readonly` **severity**: [`IapticSeverity`](globals.md#iapticseverity)
+> `readonly` **severity**: [`IapticSeverity`](#iapticseverity)
 
 
 ##### stack?
@@ -718,11 +718,11 @@ Iaptic React Native SDK
 
 ##### new IapticRN()
 
-> **new IapticRN**(): [`IapticRN`](globals.md#iapticrn)
+> **new IapticRN**(): [`IapticRN`](#iapticrn)
 
 ###### Returns
 
-[`IapticRN`](globals.md#iapticrn)
+[`IapticRN`](#iapticrn)
 
 #### Properties
 
@@ -735,7 +735,7 @@ Singleton instance of IapticStore
 
 ##### utils
 
-> `readonly` `static` **utils**: [`IapticUtils`](globals.md#iapticutils)
+> `readonly` `static` **utils**: [`IapticUtils`](#iapticutils)
 
 
 Utility functions
@@ -753,7 +753,7 @@ To remove a listener, call the returned object's `remove()` method.
 
 ###### Type Parameters
 
-• **T** *extends* [`IapticEventType`](globals.md#iapticeventtype)
+• **T** *extends* [`IapticEventType`](#iapticeventtype)
 
 ###### Parameters
 
@@ -765,7 +765,7 @@ Type of event to listen for
 
 ###### listener
 
-[`IapticEventListener`](globals.md#iapticeventlistenert)\<`T`\>
+[`IapticEventListener`](#iapticeventlistenert)\<`T`\>
 
 Callback function that will be called when the event occurs
 
@@ -814,7 +814,7 @@ listener.remove();
 
 ###### See
 
-[IapticEventType](globals.md#iapticeventtype) for all possible event types
+[IapticEventType](#iapticeventtype) for all possible event types
 
 ##### addLocale()
 
@@ -833,7 +833,7 @@ The language code
 
 ###### messages
 
-[`IapticLocale`](globals.md#iapticlocale)
+[`IapticLocale`](#iapticlocale)
 
 The locale messages
 
@@ -873,7 +873,7 @@ True if the user has active access to the specified feature
 
 ###### See
 
-[setProductDefinitions](globals.md#setproductdefinitions)
+[setProductDefinitions](#setproductdefinitions)
 
 ###### Example
 
@@ -900,7 +900,7 @@ Consume a purchase. Only for consumable products.
 
 ###### purchase
 
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
+[`IapticVerifiedPurchase`](#iapticverifiedpurchase)
 
 The purchase to consume
 
@@ -931,7 +931,7 @@ For advanced use-cases only.
 
 ###### config
 
-[`IapticConfig`](globals.md#iapticconfig)
+[`IapticConfig`](#iapticconfig)
 
 ###### Returns
 
@@ -950,25 +950,25 @@ Destroy the IapticRN singleton, cleanup everything.
 
 ##### getActiveSubscription()
 
-> `static` **getActiveSubscription**(): `undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
+> `static` **getActiveSubscription**(): `undefined` \| [`IapticVerifiedPurchase`](#iapticverifiedpurchase)
 
 
 Get the active subscription (if any)
 
 For **apps that sell multiple subscriptions** that can be active at the same time,
 this returns the first one. To check if there is any active subscription:
-- [getPurchases](globals.md#getpurchases) to manually parse and find all active subscriptions.
-- [isOwned](globals.md#isowned) with all your product ids to check if there is any active subscription.
+- [getPurchases](#getpurchases) to manually parse and find all active subscriptions.
+- [isOwned](#isowned) with all your product ids to check if there is any active subscription.
 
 ###### Returns
 
-`undefined` \| [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)
+`undefined` \| [`IapticVerifiedPurchase`](#iapticverifiedpurchase)
 
 The active subscription or undefined if there is no active subscription
 
 ###### See
 
-[IapticVerifiedPurchase](globals.md#iapticverifiedpurchase) for more information on the purchase object
+[IapticVerifiedPurchase](#iapticverifiedpurchase) for more information on the purchase object
 
 ###### Example
 
@@ -987,20 +987,20 @@ if (activeSubscription) {
 
 ##### getPendingPurchases()
 
-> `static` **getPendingPurchases**(): [`IapticPendingPurchase`](globals.md#iapticpendingpurchase)[]
+> `static` **getPendingPurchases**(): [`IapticPendingPurchase`](#iapticpendingpurchase)[]
 
 
 Get all pending purchases.
 
 ###### Returns
 
-[`IapticPendingPurchase`](globals.md#iapticpendingpurchase)[]
+[`IapticPendingPurchase`](#iapticpendingpurchase)[]
 
 List of pending purchases
 
 ##### getProduct()
 
-> `static` **getProduct**(`productId`): `undefined` \| [`IapticProduct`](globals.md#iapticproduct)
+> `static` **getProduct**(`productId`): `undefined` \| [`IapticProduct`](#iapticproduct)
 
 
 Get a product from the product catalog
@@ -1015,7 +1015,7 @@ The product identifier
 
 ###### Returns
 
-`undefined` \| [`IapticProduct`](globals.md#iapticproduct)
+`undefined` \| [`IapticProduct`](#iapticproduct)
 
 The product or undefined if not found
 
@@ -1027,18 +1027,18 @@ const product = IapticRN.getProduct('premium_monthly');
 
 ###### See
 
-[IapticProduct](globals.md#iapticproduct) for more information on the product object
+[IapticProduct](#iapticproduct) for more information on the product object
 
 ##### getProducts()
 
-> `static` **getProducts**(): [`IapticProduct`](globals.md#iapticproduct)[]
+> `static` **getProducts**(): [`IapticProduct`](#iapticproduct)[]
 
 
 Get all products from the product catalog
 
 ###### Returns
 
-[`IapticProduct`](globals.md#iapticproduct)[]
+[`IapticProduct`](#iapticproduct)[]
 
 List of products
 
@@ -1050,18 +1050,18 @@ const products = IapticRN.getProducts();
 
 ###### See
 
-[IapticProduct](globals.md#iapticproduct) for more information on the product object
+[IapticProduct](#iapticproduct) for more information on the product object
 
 ##### getPurchases()
 
-> `static` **getPurchases**(): [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
+> `static` **getPurchases**(): [`IapticVerifiedPurchase`](#iapticverifiedpurchase)[]
 
 
 Get all verified purchases.
 
 ###### Returns
 
-[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]
+[`IapticVerifiedPurchase`](#iapticverifiedpurchase)[]
 
 List of purchases, most recent first
 
@@ -1073,7 +1073,7 @@ const purchases = IapticRN.getPurchases();
 
 ###### See
 
-[IapticVerifiedPurchase](globals.md#iapticverifiedpurchase) for more information on the purchase object
+[IapticVerifiedPurchase](#iapticverifiedpurchase) for more information on the purchase object
 
 ##### getStore()
 
@@ -1110,7 +1110,7 @@ Initialize the IapticRN singleton
 
 ###### config
 
-[`IapticConfig`](globals.md#iapticconfig)
+[`IapticConfig`](#iapticconfig)
 
 The configuration for the IapticRN singleton
 
@@ -1183,7 +1183,7 @@ Array of entitlement IDs the user currently has access to
 
 ###### See
 
-[setProductDefinitions](globals.md#setproductdefinitions)
+[setProductDefinitions](#setproductdefinitions)
 
 ###### Example
 
@@ -1195,7 +1195,7 @@ const unlockedFeatures = IapticRN.listEntitlements();
 
 ##### loadProducts()
 
-> `static` **loadProducts**(`definitions`?): `Promise`\<[`IapticProduct`](globals.md#iapticproduct)[]\>
+> `static` **loadProducts**(`definitions`?): `Promise`\<[`IapticProduct`](#iapticproduct)[]\>
 
 
 Load products from the Store.
@@ -1204,13 +1204,13 @@ Load products from the Store.
 
 ###### definitions?
 
-[`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
+[`IapticProductDefinition`](#iapticproductdefinition)[]
 
 The products to load
 
 ###### Returns
 
-`Promise`\<[`IapticProduct`](globals.md#iapticproduct)[]\>
+`Promise`\<[`IapticProduct`](#iapticproduct)[]\>
 
 ###### Example
 
@@ -1225,7 +1225,7 @@ await IapticRN.loadProducts([
 
 ##### loadPurchases()
 
-> `static` **loadPurchases**(): `Promise`\<[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]\>
+> `static` **loadPurchases**(): `Promise`\<[`IapticVerifiedPurchase`](#iapticverifiedpurchase)[]\>
 
 
 Load and validate active purchases details from the Store and Iaptic using their receipts
@@ -1234,7 +1234,7 @@ Notice that this is done when initialize the Store already.
 
 ###### Returns
 
-`Promise`\<[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)[]\>
+`Promise`\<[`IapticVerifiedPurchase`](#iapticverifiedpurchase)[]\>
 
 List of verified purchases.
 
@@ -1277,7 +1277,7 @@ Order a product with an offer.
 
 ###### offer
 
-[`IapticOffer`](globals.md#iapticoffer)
+[`IapticOffer`](#iapticoffer)
 
 The offer to order
 
@@ -1367,7 +1367,7 @@ If no event type is specified, removes all listeners for all events
 
 ###### eventType?
 
-[`IapticEventType`](globals.md#iapticeventtype)
+[`IapticEventType`](#iapticeventtype)
 
 Optional event type to remove listeners for
 
@@ -1487,7 +1487,7 @@ across multiple products (e.g. a subscription and lifetime purchase both grantin
 
 ###### productDefinitions
 
-[`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
+[`IapticProductDefinition`](#iapticproductdefinition)[]
 
 ###### Returns
 
@@ -1544,7 +1544,7 @@ Set the verbosity level for the iaptic service.
 
 ###### verbosity
 
-[`IapticVerbosity`](globals.md#iapticverbosity)
+[`IapticVerbosity`](#iapticverbosity)
 
 ###### Returns
 
@@ -1587,7 +1587,7 @@ const balance = tokensManager.getBalance('coin');
 
 ##### new IapticTokensManager()
 
-> **new IapticTokensManager**(`consumePurchases`): [`IapticTokensManager`](globals.md#iaptictokensmanager)
+> **new IapticTokensManager**(`consumePurchases`): [`IapticTokensManager`](#iaptictokensmanager)
 
 
 ###### Parameters
@@ -1598,7 +1598,7 @@ const balance = tokensManager.getBalance('coin');
 
 ###### Returns
 
-[`IapticTokensManager`](globals.md#iaptictokensmanager)
+[`IapticTokensManager`](#iaptictokensmanager)
 
 #### Methods
 
@@ -1724,32 +1724,32 @@ Utility methods for users of the iaptic library.
 
 ##### new IapticUtils()
 
-> **new IapticUtils**(): [`IapticUtils`](globals.md#iapticutils)
+> **new IapticUtils**(): [`IapticUtils`](#iapticutils)
 
 ###### Returns
 
-[`IapticUtils`](globals.md#iapticutils)
+[`IapticUtils`](#iapticutils)
 
 #### Methods
 
 ##### cheapestOffer()
 
-> **cheapestOffer**(`product`): [`IapticOffer`](globals.md#iapticoffer)
+> **cheapestOffer**(`product`): [`IapticOffer`](#iapticoffer)
 
 
 ###### Parameters
 
 ###### product
 
-[`IapticProduct`](globals.md#iapticproduct)
+[`IapticProduct`](#iapticproduct)
 
 ###### Returns
 
-[`IapticOffer`](globals.md#iapticoffer)
+[`IapticOffer`](#iapticoffer)
 
 ##### fixedRecurrenceMode()
 
-> **fixedRecurrenceMode**(`pricingPhase`): `undefined` \| [`IapticRecurrenceMode`](globals.md#iapticrecurrencemode)
+> **fixedRecurrenceMode**(`pricingPhase`): `undefined` \| [`IapticRecurrenceMode`](#iapticrecurrencemode)
 
 
 FINITE_RECURRING with billingCycles=1 is like NON_RECURRING
@@ -1759,11 +1759,11 @@ FINITE_RECURRING with billingCycles=0 is like INFINITE_RECURRING
 
 ###### pricingPhase
 
-[`IapticPricingPhase`](globals.md#iapticpricingphase)
+[`IapticPricingPhase`](#iapticpricingphase)
 
 ###### Returns
 
-`undefined` \| [`IapticRecurrenceMode`](globals.md#iapticrecurrencemode)
+`undefined` \| [`IapticRecurrenceMode`](#iapticrecurrencemode)
 
 ##### formatBillingCycle()
 
@@ -1784,7 +1784,7 @@ Example outputs:
 
 ###### pricingPhase
 
-[`IapticPricingPhase`](globals.md#iapticpricingphase)
+[`IapticPricingPhase`](#iapticpricingphase)
 
 ###### Returns
 
@@ -1948,7 +1948,7 @@ formatDurationEN(iso?: string, options?: { omitOne?: boolean }): string {
 
 ###### offer
 
-[`IapticOffer`](globals.md#iapticoffer)
+[`IapticOffer`](#iapticoffer)
 
 ###### Returns
 
@@ -2003,7 +2003,7 @@ The base URL of the iaptic validator
 
 ##### products?
 
-> `optional` **products**: [`IapticProductDefinition`](globals.md#iapticproductdefinition)[]
+> `optional` **products**: [`IapticProductDefinition`](#iapticproductdefinition)[]
 
 
 ##### publicKey
@@ -2032,7 +2032,7 @@ Default is true.
 
 ##### verbosity?
 
-> `optional` **verbosity**: [`IapticVerbosity`](globals.md#iapticverbosity)
+> `optional` **verbosity**: [`IapticVerbosity`](#iapticverbosity)
 
 
 ***
@@ -2046,72 +2046,72 @@ Event argument types mapped to their event names
 
 ##### consumable.purchased
 
-> **purchased**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **purchased**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### consumable.refunded
 
-> **refunded**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **refunded**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### error
 
-> **error**: \[[`IapticError`](globals.md#iapticerror)\]
+> **error**: \[[`IapticError`](#iapticerror)\]
 
 
 ##### nonConsumable.owned
 
-> **owned**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **owned**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### nonConsumable.unowned
 
-> **unowned**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **unowned**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### nonConsumable.updated
 
-> **updated**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **updated**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### pendingPurchase.updated
 
-> **updated**: \[[`IapticPendingPurchase`](globals.md#iapticpendingpurchase)\]
+> **updated**: \[[`IapticPendingPurchase`](#iapticpendingpurchase)\]
 
 
 ##### products.updated
 
-> **updated**: \[[`IapticProduct`](globals.md#iapticproduct)[]\]
+> **updated**: \[[`IapticProduct`](#iapticproduct)[]\]
 
 
 ##### purchase.updated
 
-> **updated**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **updated**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### subscription.cancelled
 
-> **cancelled**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **cancelled**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### subscription.changed
 
-> **changed**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **changed**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### subscription.expired
 
-> **expired**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **expired**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### subscription.renewed
 
-> **renewed**: \[[`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **renewed**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ##### subscription.updated
 
-> **updated**: \[[`IapticSubscriptionReason`](globals.md#iapticsubscriptionreason), [`IapticVerifiedPurchase`](globals.md#iapticverifiedpurchase)\]
+> **updated**: \[[`IapticSubscriptionReason`](#iapticsubscriptionreason), [`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
 ***
@@ -2915,14 +2915,14 @@ Type of offer
 
 ##### platform
 
-> **platform**: [`IapticPurchasePlatform`](globals.md#iapticpurchaseplatform)
+> **platform**: [`IapticPurchasePlatform`](#iapticpurchaseplatform)
 
 
 Platform of the product
 
 ##### pricingPhases
 
-> **pricingPhases**: [`IapticPricingPhase`](globals.md#iapticpricingphase)[]
+> **pricingPhases**: [`IapticPricingPhase`](#iapticpricingphase)[]
 
 
 Pricing phases for this offer
@@ -2943,7 +2943,7 @@ Product identifier
 
 ##### productType?
 
-> `optional` **productType**: [`IapticProductType`](globals.md#iapticproducttype)
+> `optional` **productType**: [`IapticProductType`](#iapticproducttype)
 
 
 Type of product (subscription, consumable, etc.)
@@ -2973,7 +2973,7 @@ Product identifier
 
 ##### status
 
-> **status**: [`IapticPendingPurchaseState`](globals.md#iapticpendingpurchasestate)
+> **status**: [`IapticPendingPurchaseState`](#iapticpendingpurchasestate)
 
 
 Status of the purchase
@@ -2987,7 +2987,7 @@ Description of a phase for the pricing of a purchase.
 
 #### See
 
-[IapticOffer.pricingPhases](globals.md#pricingphases)
+[IapticOffer.pricingPhases](#pricingphases)
 
 #### Properties
 
@@ -3014,7 +3014,7 @@ Currency code
 
 ##### paymentMode?
 
-> `optional` **paymentMode**: [`IapticPaymentMode`](globals.md#iapticpaymentmode)
+> `optional` **paymentMode**: [`IapticPaymentMode`](#iapticpaymentmode)
 
 
 Payment mode for the pricing phase ("PayAsYouGo", "UpFront", or "FreeTrial")
@@ -3033,7 +3033,7 @@ Price in micro-units (divide by 1000000 to get numeric price)
 
 ##### recurrenceMode?
 
-> `optional` **recurrenceMode**: [`IapticRecurrenceMode`](globals.md#iapticrecurrencemode)
+> `optional` **recurrenceMode**: [`IapticRecurrenceMode`](#iapticrecurrencemode)
 
 
 Type of recurring payment
@@ -3079,14 +3079,14 @@ Product identifier on the store (unique per platform)
 
 ##### offers
 
-> **offers**: [`IapticOffer`](globals.md#iapticoffer)[]
+> **offers**: [`IapticOffer`](#iapticoffer)[]
 
 
 List of offers available for this product
 
 ##### platform
 
-> **platform**: [`IapticPurchasePlatform`](globals.md#iapticpurchaseplatform)
+> **platform**: [`IapticPurchasePlatform`](#iapticpurchaseplatform)
 
 
 Platform of the product
@@ -3122,7 +3122,7 @@ Amount of tokens this product will give to the user for consumable products.
 
 ##### type
 
-> **type**: [`IapticProductType`](globals.md#iapticproducttype)
+> **type**: [`IapticProductType`](#iapticproducttype)
 
 
 Type of product (subscription, consumable, etc.)
@@ -3176,7 +3176,7 @@ Amount of tokens this product will give to the user for consumable products.
 
 ##### type
 
-> **type**: [`IapticProductType`](globals.md#iapticproducttype)
+> **type**: [`IapticProductType`](#iapticproducttype)
 
 
 Type of the product (subscription, consumable, or non-consumable)
@@ -3201,7 +3201,7 @@ Handlers when the user request purchasing a given offer
 
 ###### offer
 
-[`IapticOffer`](globals.md#iapticoffer)
+[`IapticOffer`](#iapticoffer)
 
 ###### Returns
 
@@ -3426,7 +3426,7 @@ sortProducts={false} // Disable automatic sorting
 
 ##### styles?
 
-> `optional` **styles**: `Partial`\<[`IapticSubscriptionViewStyles`](globals.md#iapticsubscriptionviewstyles)\>
+> `optional` **styles**: `Partial`\<[`IapticSubscriptionViewStyles`](#iapticsubscriptionviewstyles)\>
 
 
 Custom styles for component elements (merges with defaults)
@@ -3804,7 +3804,7 @@ Purchase verified by the receipt validator.
 
 ##### cancelationReason?
 
-> `optional` **cancelationReason**: [`IapticCancelationReason`](globals.md#iapticcancelationreason)
+> `optional` **cancelationReason**: [`IapticCancelationReason`](#iapticcancelationreason)
 
 
 The reason a subscription or purchase was cancelled.
@@ -3880,14 +3880,14 @@ Last time a subscription was renewed.
 
 ##### platform?
 
-> `optional` **platform**: [`IapticPurchasePlatform`](globals.md#iapticpurchaseplatform)
+> `optional` **platform**: [`IapticPurchasePlatform`](#iapticpurchaseplatform)
 
 
 Platform this purchase was made on
 
 ##### priceConsentStatus?
 
-> `optional` **priceConsentStatus**: [`IapticPriceConsentStatus`](globals.md#iapticpriceconsentstatus)
+> `optional` **priceConsentStatus**: [`IapticPriceConsentStatus`](#iapticpriceconsentstatus)
 
 
 Whether or not the user agreed or has been notified of a price change.
@@ -3949,13 +3949,13 @@ Type-safe event listener function
 
 #### Type Parameters
 
-• **T** *extends* [`IapticEventType`](globals.md#iapticeventtype)
+• **T** *extends* [`IapticEventType`](#iapticeventtype)
 
 #### Parameters
 
 ##### args
 
-...[`IapticEventMap`](globals.md#iapticeventmap)\[`T`\]
+...[`IapticEventMap`](#iapticeventmap)\[`T`\]
 
 #### Returns
 
@@ -4101,7 +4101,7 @@ Subscription status component that automatically updates when subscription chang
 
 ##### \_\_namedParameters
 
-[`IapticProductListProps`](globals.md#iapticproductlistprops)
+[`IapticProductListProps`](#iapticproductlistprops)
 
 #### Returns
 
@@ -4120,11 +4120,11 @@ Subscription status component that automatically updates when subscription chang
 
 ###### product
 
-[`IapticProduct`](globals.md#iapticproduct)
+[`IapticProduct`](#iapticproduct)
 
 ###### styles
 
-[`IapticSubscriptionViewStyles`](globals.md#iapticsubscriptionviewstyles)
+[`IapticSubscriptionViewStyles`](#iapticsubscriptionviewstyles)
 
 #### Returns
 
@@ -4141,7 +4141,7 @@ Subscription status component that automatically updates when subscription chang
 
 ##### \_\_namedParameters
 
-[`IapticSubscriptionViewProps`](globals.md#iapticsubscriptionviewprops)
+[`IapticSubscriptionViewProps`](#iapticsubscriptionviewprops)
 
 #### Returns
 
