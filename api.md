@@ -1,7 +1,3 @@
-[**react-native-iaptic**](README.md)
-
-***
-
 # react-native-iaptic
 
 Iaptic React Native SDK
@@ -726,13 +722,6 @@ Iaptic React Native SDK
 
 #### Properties
 
-##### store
-
-> `static` **store**: `undefined` \| `IapticStore`
-
-
-Singleton instance of IapticStore
-
 ##### utils
 
 > `readonly` `static` **utils**: [`IapticUtils`](#iapticutils)
@@ -918,25 +907,6 @@ IapticRN.consume(purchase);
 
 TokensManager for a convenient way to handle your consumable products.
 
-##### createStore()
-
-> `static` **createStore**(`config`): `IapticStore`
-
-
-Instanciate the singleton instance of IapticStore
-
-For advanced use-cases only.
-
-###### Parameters
-
-###### config
-
-[`IapticConfig`](#iapticconfig)
-
-###### Returns
-
-`IapticStore`
-
 ##### destroy()
 
 > `static` **destroy**(): `void`
@@ -1074,30 +1044,6 @@ const purchases = IapticRN.getPurchases();
 ###### See
 
 [IapticVerifiedPurchase](#iapticverifiedpurchase) for more information on the purchase object
-
-##### getStore()
-
-> `static` **getStore**(): `IapticStore`
-
-
-Get the singleton instance of IapticStore
-
-###### Returns
-
-`IapticStore`
-
-###### Throws
-
-If the store is not initialized
-
-##### getStoreSync()
-
-> `static` **getStoreSync**(): `Promise`\<`IapticStore`\>
-
-
-###### Returns
-
-`Promise`\<`IapticStore`\>
 
 ##### initialize()
 
@@ -1310,39 +1256,15 @@ Present a subscription comparison view with product cards and feature grid
 
 `void`
 
-###### Examples
+###### Example
 
 ```typescript
-// Show subscription view with feature labels
-IapticRN.presentSubscriptionView({
-  entitlementLabels: {
-    premium: 'Premium Content',
-    adfree: 'Ad-Free Experience',
-    downloads: 'Unlimited Downloads'
-  }
-});
+IapticRN.presentSubscriptionView();
 ```
 
-```typescript
-// Customize the appearance
-IapticRN.presentSubscriptionView({
-  entitlementLabels: {...},
-  styles: {
-    productCard: {
-      backgroundColor: '#f8f9fa',
-      borderWidth: 1,
-      borderColor: '#dee2e6'
-    },
-    ctaButton: {
-      backgroundColor: '#4CAF50'
-    }
-  }
-});
-```
+###### Remarks
 
-###### Note
-
-This is a singleton component - render it once at your root component:
+This is a singleton component - Render it once at your root component:
 ```tsx
 // In your App.tsx
 export default function App() {
@@ -1417,8 +1339,8 @@ Set the application username for the iaptic service.
 
 This is used to track which user is making the purchase and associate it with the user's account.
 
-- On iOS, the application username is also added as an appAccountToken in the form of a UUID formatted MD5 (md5UUID).
-- On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string (md5).
+- On iOS, the application username is also added as an appAccountToken in the form of a UUID formatted MD5 ([utils.md5UUID](#md5uuid)).
+- On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string ([utils.md5](#md5)).
 
 Don't forget to update the username in the app service if the user changes (login/logout).
 
@@ -1663,7 +1585,7 @@ Get balance for a specific token type
 
 ##### getTransactions()
 
-> **getTransactions**(`tokenType`?): `TokenTransaction`[]
+> **getTransactions**(`tokenType`?): [`IapticTokenTransaction`](#iaptictokentransaction)[]
 
 
 Get transaction history for a specific token type
@@ -1676,7 +1598,7 @@ Get transaction history for a specific token type
 
 ###### Returns
 
-`TokenTransaction`[]
+[`IapticTokenTransaction`](#iaptictokentransaction)[]
 
 ##### hasTransaction()
 
@@ -1853,27 +1775,16 @@ Utils.formatCurrency(1000000, 'EUR') // Returns "€1"
 
 `string`
 
-##### getBillingCycleTemplate()
+##### md5()
 
-> **getBillingCycleTemplate**(`cycles`, `duration`): `string`
+> **md5**(`account`): `string`
 
 
-Format a simple ISO 8601 duration to plain English.
-
-This works for non-composite durations, i.e. that have a single unit with associated amount. For example: "P1Y" or "P3W".
-
-See https://en.wikipedia.org/wiki/ISO_8601#Durations
-
-This method is provided as a utility for getting simple things done quickly. In your application, you'll probably
-need some other method that supports multiple locales.
+Returns the MD5 hash-value of the passed string.
 
 ###### Parameters
 
-###### cycles
-
-`number`
-
-###### duration
+###### account
 
 `string`
 
@@ -1881,63 +1792,30 @@ need some other method that supports multiple locales.
 
 `string`
 
-The duration in plain english. Example: "1 year" or "3 weeks".
+##### md5UUID()
 
-formatDurationEN(iso?: string, options?: { omitOne?: boolean }): string {
- if (!iso) return '';
- const l = iso.length;
- const n = iso.slice(1, l - 1);
- if (n === '1') {
-   if (options?.omitOne) {
-     return ({ 'D': 'day', 'W': 'week', 'M': 'month', 'Y': 'year', }[iso[l - 1]]) || iso[l - 1];
-   }
-   else {
-     return ({ 'D': '1 day', 'W': '1 week', 'M': '1 month', 'Y': '1 year', }[iso[l - 1]]) || iso[l - 1];
-   }
- }
- else {
-   const u = ({ 'D': 'days', 'W': 'weeks', 'M': 'months', 'Y': 'years', }[iso[l - 1]]) || iso[l - 1];
-   return `${n} ${u}`;
- }
-}
+> **md5UUID**(`account`): `string`
 
-##### getBillingCycleTemplateInfinite()
 
-> **getBillingCycleTemplateInfinite**(`cycles`, `duration`): `string`
+Generate a UUID v3-like string from an account string.
 
+The username is first hashed with MD5, then formatted as a UUID v3-like string by adding dashes between the different parts of the hash.
+
+This is used to generate a appAccountToken for Apple App Store purchases.
 
 ###### Parameters
 
-###### cycles
-
-`number`
-
-###### duration
+###### account
 
 `string`
+
+The account string
 
 ###### Returns
 
 `string`
 
-##### getBillingCycleTemplateNonRecurring()
-
-> **getBillingCycleTemplateNonRecurring**(`cycles`, `duration`): `string`
-
-
-###### Parameters
-
-###### cycles
-
-`number`
-
-###### duration
-
-`string`
-
-###### Returns
-
-`string`
+The UUID v3-like string
 
 ##### monthlyPriceMicros()
 
@@ -3285,7 +3163,7 @@ sortProducts={false} // Disable automatic sorting
 
 ##### styles?
 
-> `optional` **styles**: `Partial`\<[`IapticSubscriptionViewStyles`](#iapticsubscriptionviewstyles)\>
+> `optional` **styles**: `Partial`\<`IapticSubscriptionViewStyles`\>
 
 
 Custom styles for component elements (merges with defaults)
@@ -3312,6 +3190,19 @@ URL to Terms & Conditions (optional)
 termsUrl="https://example.com/terms"
 ```
 
+##### theme?
+
+> `optional` **theme**: `Partial`\<[`IapticTheme`](#iaptictheme)\>
+
+
+Theme configuration for colors
+
+###### Example
+
+```ts
+theme={{ primaryColor: '#FF3B30', backgroundColor: '#F5F5F5' }}
+```
+
 ##### visible?
 
 > `optional` **visible**: `boolean`
@@ -3327,323 +3218,128 @@ false
 
 ***
 
-### IapticSubscriptionViewStyles
+### IapticTheme
 
 
-Style definitions for the IapticSubscriptionView component
+Theme configuration for Iaptic components
 
 #### Example
 
 ```ts
-// Basic style override example:
 {
-  modalContainer: { backgroundColor: 'rgba(0,0,0,0.8)' },
-  productTitle: { fontSize: 22, color: '#2C3E50' },
-  ctaButton: { backgroundColor: '#4CD964', borderRadius: 14 }
-}
+ *   primaryColor: '#007AFF',
+ *   secondaryColor: '#4CAF50',
+ *   backgroundColor: '#FFFFFF',
+ *   textColor: '#1A1A1A',
+ *   secondaryTextColor: '#666666',
+ *   borderColor: '#EEEEEE',
+ *   successColor: '#4CAF50',
+ *   warningColor: '#FF9800',
+ *   errorColor: '#FF3B30'
+ * }
 ```
 
 #### Properties
 
-##### billingOption?
+##### backgroundColor
 
-> `optional` **billingOption**: `ViewStyle`
+> **backgroundColor**: `string`
 
 
-Style for the billing option
+Background color for modals/cards
 
-###### Style Property
+##### borderColor
 
-###### Example
+> **borderColor**: `string`
 
-```ts
-{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginHorizontal: 4 }
-```
 
-##### billingOptionSelected?
+Border and divider colors
 
-> `optional` **billingOptionSelected**: `ViewStyle`
+##### errorColor?
 
+> `optional` **errorColor**: `string`
 
-Style for the selected billing option
 
-###### Style Property
+Error states color
 
-###### Example
+##### primaryColor
 
-```ts
-{ borderColor: '#007AFF', backgroundColor: '#e6f3ff' }
-```
+> **primaryColor**: `string`
 
-##### billingOptionText?
 
-> `optional` **billingOptionText**: `TextStyle`
+Primary brand color for buttons, highlights
 
+##### secondaryColor
 
-Style for the billing option text
+> **secondaryColor**: `string`
 
-###### Style Property
 
-###### Example
+Secondary color for current plan badges, success states
 
-```ts
-{ color: '#333', fontWeight: '500' }
-```
+##### secondaryTextColor
 
-##### billingSelector?
+> **secondaryTextColor**: `string`
 
-> `optional` **billingSelector**: `ViewStyle`
 
+Secondary/subdued text color
 
-Style for the billing selector container
+##### successColor?
 
-###### Style Property
+> `optional` **successColor**: `string`
 
-###### Example
 
-```ts
-{ marginVertical: 16, gap: 8 }
-```
+Success states color
 
-##### closeButton?
+##### textColor
 
-> `optional` **closeButton**: `ViewStyle`
+> **textColor**: `string`
 
 
-Style for the close button
+Primary text color
 
-###### Style Property
+##### warningColor?
 
-###### Example
+> `optional` **warningColor**: `string`
 
-```ts
-{ padding: 8 }
-```
 
-##### closeButtonText?
+Warning states color
 
-> `optional` **closeButtonText**: `TextStyle`
+***
 
+### IapticTokenTransaction
 
-Style for the close button text
 
-###### Style Property
+A transaction that has occurred.
 
-###### Example
+#### Properties
 
-```ts
-{ fontSize: 18, color: '#007AFF' }
-```
+##### amount
 
-##### contentContainer?
+> **amount**: `number`
 
-> `optional` **contentContainer**: `ViewStyle`
 
+Number of tokens earned (positive) or spent (negative) for this transaction
 
-Style for the main content container (white card)
+##### timestamp
 
-###### Style Property
+> **timestamp**: `number`
 
-###### Example
 
-```ts
-{ backgroundColor: '#F5F5F5', borderTopLeftRadius: 32 }
-```
+When the transaction occurred
 
-##### ctaButton?
+##### transactionId
 
-> `optional` **ctaButton**: `ViewStyle`
+> **transactionId**: `string`
 
 
-Style for the CTA button
+Unique identifier from the store
 
-###### Style Property
+##### type
 
-###### Example
+> **type**: `string`
 
-```ts
-{ backgroundColor: '#007AFF', borderRadius: 12, padding: 20, alignItems: 'center', marginTop: 24 }
-```
 
-##### ctaButtonDisabled?
-
-> `optional` **ctaButtonDisabled**: `ViewStyle`
-
-
-Style for the disabled CTA button
-
-###### Style Property
-
-###### Example
-
-```ts
-{ backgroundColor: '#999', opacity: 0.7 }
-```
-
-##### ctaButtonText?
-
-> `optional` **ctaButtonText**: `TextStyle`
-
-
-Style for the CTA button text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ color: 'white', fontSize: 18, fontWeight: '600' }
-```
-
-##### featuresTitle?
-
-> `optional` **featuresTitle**: `TextStyle`
-
-
-Style for the features title text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ fontSize: 16, fontWeight: '600', color: '#1a1a1a', marginVertical: 16 }
-```
-
-##### header?
-
-> `optional` **header**: `ViewStyle`
-
-
-Style for the header container (title + close button row)
-
-###### Style Property
-
-###### Example
-
-```ts
-{ paddingHorizontal: 20, marginBottom: 32 }
-```
-
-##### modalContainer?
-
-> `optional` **modalContainer**: `ViewStyle`
-
-
-Style for the outer modal container (covers entire screen)
-
-###### Style Property
-
-###### Example
-
-```ts
-{ backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center' }
-```
-
-##### productCard?
-
-> `optional` **productCard**: `ViewStyle`
-
-
-Style for the product card
-
-###### Style Property
-
-###### Example
-
-```ts
-{ backgroundColor: '#ffffff', borderRadius: 16, padding: 16, marginHorizontal: 8, marginBottom: 8, width: windowWidth * 0.75 }
-```
-
-##### productCardSelected?
-
-> `optional` **productCardSelected**: `ViewStyle`
-
-
-Style for the selected product card
-
-###### Style Property
-
-###### Example
-
-```ts
-{ borderWidth: 2, borderColor: '#007AFF' }
-```
-
-##### productDescription?
-
-> `optional` **productDescription**: `TextStyle`
-
-
-Style for the product description text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ fontSize: 14, color: '#666', marginBottom: 16 }
-```
-
-##### productPrice?
-
-> `optional` **productPrice**: `TextStyle`
-
-
-Style for the product price text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ fontSize: 24, fontWeight: '700', color: '#007AFF', marginBottom: 8 }
-```
-
-##### productPriceSentence?
-
-> `optional` **productPriceSentence**: `TextStyle`
-
-
-Style for the product price sentence text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ fontSize: 16, color: '#666', marginBottom: 8 }
-```
-
-##### productTitle?
-
-> `optional` **productTitle**: `TextStyle`
-
-
-Style for the product title text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ fontSize: 20, fontWeight: '600', marginBottom: 8, color: '#1a1a1a' }
-```
-
-##### title?
-
-> `optional` **title**: `TextStyle`
-
-
-Style for the title text
-
-###### Style Property
-
-###### Example
-
-```ts
-{ fontSize: 24, fontWeight: '600', color: '#1a1a1a' }
-```
+Type of token (e.g., 'gem', 'coin', 'credit')
 
 ***
 
@@ -3897,7 +3593,7 @@ Reason why a subscription status changed
 
 ### IapticSubscriptionView()
 
-> **IapticSubscriptionView**(`props`): `null` \| `Element`
+> **IapticSubscriptionView**(`props`): `any`
 
 
 Subscription modal UI component
@@ -3912,7 +3608,7 @@ Propertis
 
 #### Returns
 
-`null` \| `Element`
+`any`
 
 #### Remarks
 

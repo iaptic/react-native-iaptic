@@ -6,11 +6,12 @@
  * 
  * The API entry point is {@link IapticRN}.
  * 
- * @example Using SubscriptionView
- * ```typescript
+ * @example Quick Start: Using Iaptic Subscription UI Component
+ * ```tsx
  * import { IapticSubscriptionView } from 'react-native-iaptic';
  * const app = (props) => {
  *   useEffect(() => {
+ *     // Initialize the SDK with your configuration at startup
  *     IapticRN.initialize({
  *       appName: 'com.example.app',
  *       publicKey: 'YOUR_API_KEY',
@@ -18,7 +19,7 @@
  *       products: [{
  *         id: 'premium_subscription',
  *         type: 'paid subscription',
- *         entitlements: ['premium']
+ *         entitlements: ['basic', 'premium']
  *       }, {
  *         id: 'basic_subscription',
  *         type: 'paid subscription',
@@ -27,48 +28,29 @@
  *     });
  *   }, []);
  *   return (
- *     <View> // your root node
- *       <TouchableOpacity onPress={() => IapticRN.presentSubscriptionView()}>
- *         <Text>Subscribe</Text>
- *       </TouchableOpacity>
+ *     <View>
+ *       // In your root node, add the modal component
  *       <IapticSubscriptionView entitlementLabels={{
  *         premium: 'Premium Features',
  *         basic: 'Basic Features',
  *       }} />
+ * 
+ *       // Anyway in your app, open the Subscription UI
+ *       <TouchableOpacity onPress={() => IapticRN.presentSubscriptionView()}>
+ *         <Text>Subscribe</Text>
+ *       </TouchableOpacity>
  *     </View>
  *   );
  * };
- * ```
  * 
- * @example Quick Start
- * ```typescript
- * // 1. Initialize with your configuration
- * await IapticRN.initialize({
- *   appName: 'com.example.app',
- *   publicKey: 'YOUR_API_KEY',
- *   iosBundleId: 'com.yourcompany.app',
- *   products: [{
- *     id: 'premium_monthly',
- *     type: 'paid subscription',
- *     entitlements: ['premium']
- *   }, {
- *     id: 'coins_100',
- *     type: 'consumable',
- *     tokenType: 'coins',
- *     tokenValue: 100
- *   }]);
- * 
- * // 4. Handle purchases
- * const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
- * if (offer) {
- *   await IapticRN.order(offer); 
- * }
- * 
- * // 5. Check access
+ * // 2. Check access without a backend server
  * if (IapticRN.checkEntitlement('premium')) {
  *   // Unlock premium features
  * }
  * ```
+ * 
+ * With a backend server, you will get webhook calls from iaptic server
+ * and store your user's subscription status (unlocking features server-side, safer).
  * 
  * @packageDocumentation
  */
@@ -89,22 +71,26 @@ export {
 export { PendingPurchases as IapticPendingPurchases } from './classes/PendingPurchases';
 export { NonConsumables as IapticNonConsumables } from './classes/NonConsumables';
 export { Consumables as IapticConsumables } from './classes/Consumables';
-export { TokensManager as IapticTokensManager } from './classes/TokensManager';
-export { Locales as IapticLocales } from './classes/Locales';
+export {
+  IapticTokensManager,
+  IapticTokenTransaction,
+} from './classes/TokensManager';
+export { Locales as IapticLocales, IapticSupportedLocales } from './classes/Locales';
 export { IapticLocale } from './classes/IapticLocale';
 export { IapticLogger } from './classes/IapticLogger';
 
 /**
  * UI Components
  */
+export { IapticTheme } from './IapticTheme';
 export {
   IapticActiveSubscription,
   IapticActiveSubscriptionProps,
 } from './components/ActiveSubscription';
 export {
-  ProductList as IapticProductList,
-  ProductListProps as IapticProductListProps,
-  ProductListStyles as IapticProductListStyles,
+  IapticProductList as IapticProductList,
+  IapticProductListProps as IapticProductListProps,
+  IapticProductListStyles as IapticProductListStyles,
 } from './components/ProductList';
 export {
   IapticSubscriptionView,

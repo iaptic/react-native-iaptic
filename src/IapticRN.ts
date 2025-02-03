@@ -16,8 +16,6 @@ import {
   IapticOffer,
   IapticPendingPurchase
 } from "./types";
-import type { md5UUID } from "./functions/md5UUID";
-import type { md5 } from "./functions/md5";
 import { subscriptionViewEvents } from './components/SubscriptionView/Modal';
 
 /**
@@ -30,7 +28,99 @@ export interface IapticConfig extends IapticStoreConfig {
 }
 
 /**
- * Iaptic React Native SDK
+ * Iaptic React Native SDK.
+ * 
+ * This is the entry point for the Iaptic SDK, the main methods are:
+ * 
+ * - {@link initialize}
+ * - {@link destroy}
+ * - {@link addEventListener}
+ * - {@link setApplicationUsername}
+ * - {@link consume}
+ * - {@link checkEntitlement}
+ * 
+ * @example Simplified example (without Subscription UI)
+ * ```tsx
+ * import React, { useEffect, useState } from 'react';
+ * import { View, Text, TouchableOpacity, Alert } from 'react-native';
+ * import { IapticRN, IapticProduct, IapticVerifiedPurchase } from 'react-native-iaptic';
+ *
+ * const App = () => {
+ *   const [products, setProducts] = useState<IapticProduct[]>([]);
+ *   const [entitlements, setEntitlements] = useState<string[]>([]);
+ *   
+ *   useEffect(async () => {
+ *
+ *     // Listen for product and entitlement updates
+ *     IapticRN.addEventListener('products.updated', setProducts);
+ *     IapticRN.addEventListener('purchase.updated', () => {
+ *       setEntitlements(IapticRN.listEntitlements());
+ *     });
+ *
+ *     // Initialize IapticRN with your API key and product definitions
+ *     await IapticRN.initialize({
+ *       appName: 'com.example.app',
+ *       publicKey: 'YOUR_API_KEY',
+ *       iosBundleId: 'com.example.app',
+ *       products: [
+ *         { id: 'pro_monthly', type: 'paid subscription', entitlements: ['pro'] },
+ *         { id: 'premium_lifetime', type: 'non consumable', entitlements: ['premium'] },
+ *       ],
+ *     });
+ *
+ *     // Load products and entitlements
+ *     setEntitlements(IapticRN.listEntitlements());
+ *     setProducts(IapticRN.getProducts());
+ *
+ *     return () => {
+ *       IapticRN.destroy();
+ *     };
+ *   }, []);
+ *
+ *   // Handle purchase button press
+ *   const handlePurchase = async (product: IapticProduct) => {
+ *     try {
+ *       await IapticRN.order(product.offers[0]);
+ *       Alert.alert('Purchase complete!');
+ *     } catch (err) {
+ *       Alert.alert('Purchase failed', err.message);
+ *     }
+ *   };
+ *
+ *   // Restore purchases
+ *   const restorePurchases = async () => {
+ *     try {
+ *       await IapticRN.restorePurchases(() => {});
+ *       Alert.alert('Purchases restored');
+ *     } catch (err) {
+ *       Alert.alert('Restore failed', err.message);
+ *     }
+ *   };
+ *
+ *   return (
+ *     <View>
+ *       {products.map(product => (
+ *         <TouchableOpacity
+ *           key={product.id}
+ *           onPress={() => handlePurchase(product)}
+ *         >
+ *           <Text>{product.title}</Text>
+ *           <Text>{product.offers[0].pricingPhases[0].price}</Text>
+ *         </TouchableOpacity>
+ *       ))}
+ *        
+ *       <Text>Pro entitlement: {entitlements.includes('pro') ? 'Yes' : 'No'}</Text>
+ *       <Text>Premium entitlement: {entitlements.includes('premium') ? 'Yes' : 'No'}</Text>
+ *
+ *       <TouchableOpacity onPress={restorePurchases}>
+ *         <Text>Restore Purchases</Text>
+ *       </TouchableOpacity>
+ *     </View>
+ *   );
+ * };
+ *
+ * export default App;
+ * ```
  */
 export class IapticRN {
 
@@ -41,6 +131,8 @@ export class IapticRN {
 
   /**
    * Singleton instance of IapticStore
+   * 
+   * @internal
    */
   static store: IapticStore | undefined;
 
@@ -57,6 +149,11 @@ export class IapticRN {
    *   appName: 'com.example.app',
    *   publicKey: '1234567890',
    *   iosBundleId: 'com.example.app',
+   *   products: [
+   *     { id: 'pro_monthly', type: 'paid subscription', entitlements: ['pro'] },
+   *     { id: 'premium_lifetime', type: 'non consumable', entitlements: ['premium'] },
+   *     { id: 'coins_100', type: 'consumable', tokenType: 'coins', tokenValue: 100 },
+   *   ],
    * });
    * ```
    */
@@ -82,6 +179,8 @@ export class IapticRN {
    * Instanciate the singleton instance of IapticStore
    * 
    * For advanced use-cases only.
+   * 
+   * @internal
    */
   static createStore(config: IapticConfig): IapticStore {
     IapticRN.store = new IapticStore(config);
@@ -89,7 +188,7 @@ export class IapticRN {
   }
 
   /**
-   * Destroy the IapticRN singleton, cleanup everything.
+   * Destroy the IapticRN singleton, remove event listeners and cleanup everything.
    */
   static destroy() {
     if (IapticRN.store) IapticRN.store.destroy();
@@ -100,6 +199,8 @@ export class IapticRN {
    * Get the singleton instance of IapticStore
    * 
    * @throws {IapticError} If the store is not initialized
+   * 
+   * @internal
    */
   static getStore(): IapticStore {
     if (!IapticRN.store) throw new IapticError('IapticRN.store is not initialized', {
@@ -112,6 +213,11 @@ export class IapticRN {
     return IapticRN.store;
   }
 
+  /**
+   * Get the singleton instance of IapticStore (wait until it's been instanciated)
+   * 
+   * @internal
+   */
   static async getStoreSync(): Promise<IapticStore> {
     await IapticRN.waitForStore();
     return IapticRN.store!;
@@ -122,8 +228,8 @@ export class IapticRN {
    * 
    * This is used to track which user is making the purchase and associate it with the user's account.
    * 
-   * - On iOS, the application username is also added as an appAccountToken in the form of a UUID formatted MD5 ({@link md5UUID}).
-   * - On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string ({@link md5}).
+   * - On iOS, the application username is also added as an appAccountToken in the form of a UUID formatted MD5 ({@link utils.md5UUID}).
+   * - On Android, the application username is added as an obfuscatedAccountIdAndroid in the form of a 64 characters string ({@link utils.md5}).
    *
    * Don't forget to update the username in the app service if the user changes (login/logout).
    * 
@@ -249,7 +355,7 @@ export class IapticRN {
    * IapticRN.consume(purchase);
    * ```
    * 
-   * @see {@link TokensManager} for a convenient way to handle your consumable products.
+   * @see {@link IapticTokensManager} for a convenient way to handle your consumable products.
    */
   static async consume(purchase: IapticVerifiedPurchase) {
     (await IapticRN.getStoreSync()).consume(purchase);
@@ -316,7 +422,6 @@ export class IapticRN {
    * 
    * @param eventType - Type of event to listen for
    * @param listener - Callback function that will be called when the event occurs
-   * @param context - Optional context to identify the listener (helpful for debugging)
    * 
    * @example
    * ```typescript
@@ -603,42 +708,12 @@ export class IapticRN {
   /**
    * Present a subscription comparison view with product cards and feature grid
    * 
-   * @example Basic usage
+   * @example Usage
    * ```typescript
-   * // Show subscription view with feature labels
-   * IapticRN.presentSubscriptionView({
-   *   entitlementLabels: {
-   *     premium: 'Premium Content',
-   *     adfree: 'Ad-Free Experience',
-   *     downloads: 'Unlimited Downloads'
-   *   }
-   * });
+   * IapticRN.presentSubscriptionView();
    * ```
    * 
-   * @example With custom styling
-   * ```typescript
-   * // Customize the appearance
-   * IapticRN.presentSubscriptionView({
-   *   entitlementLabels: {...},
-   *   styles: {
-   *     productCard: {
-   *       backgroundColor: '#f8f9fa',
-   *       borderWidth: 1,
-   *       borderColor: '#dee2e6'
-   *     },
-   *     ctaButton: {
-   *       backgroundColor: '#4CAF50'
-   *     }
-   *   }
-   * });
-   * ```
-   * 
-   * @param options - Configuration for the subscription view
-   * @param options.entitlementLabels - Localized text for each entitlement/feature
-   * @param options.styles - Custom styles for different parts of the view
-   * @param options.sortProducts - Whether to sort products by number of entitlements (default: true)
-   * 
-   * @note This is a singleton component - render it once at your root component:
+   * @remarks This is a singleton component - Render it once at your root component:
    * ```tsx
    * // In your App.tsx
    * export default function App() {
@@ -653,9 +728,6 @@ export class IapticRN {
    */
   static presentSubscriptionView() {
     subscriptionViewEvents.emit('present');
-    // if (this.subscriptionViewRef?.current) {
-    //   this.subscriptionViewRef.current.show();
-    // }
   }
     
   /**
@@ -665,8 +737,6 @@ export class IapticRN {
     while (!IapticRN.store) await new Promise(resolve => setTimeout(resolve, 100));
   }
 
-  // static setSubscriptionViewRef(ref: RefObject<SubscriptionViewHandle>) {
-  //   this.subscriptionViewRef = ref;
-  // }
+ 
 }
 

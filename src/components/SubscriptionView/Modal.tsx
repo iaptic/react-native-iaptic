@@ -10,6 +10,7 @@ import { ProductPrice } from './ProductPrice';
 import { Locales } from '../../classes/Locales';
 import { IapticError, IapticSeverity } from '../../classes/IapticError';
 import { IapticActiveSubscription } from '../ActiveSubscription';
+import { IapticTheme, defaultTheme } from '../../IapticTheme';
 
 /**
  * Props for IapticSubscriptionView Component
@@ -76,16 +77,23 @@ export interface IapticSubscriptionViewProps {
    * @default true
    */
   showRestorePurchase?: boolean;
+
+  /** 
+   * Theme configuration for colors
+   * @example theme={{ primaryColor: '#FF3B30', backgroundColor: '#F5F5F5' }}
+   */
+  theme?: Partial<IapticTheme>;
 }
 
-const defaultStyles = StyleSheet.create({
+// Convert defaultStyles to a function that accepts theme
+const defaultStyles = (theme: IapticTheme) => StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   contentContainer: {
-    backgroundColor: 'white',
+    backgroundColor: theme.backgroundColor,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -100,17 +108,17 @@ const defaultStyles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.textColor,
   },
   closeButton: {
     padding: 8,
   },
   closeButtonText: {
     fontSize: 18,
-    color: '#007AFF',
+    color: theme.primaryColor,
   },
   productCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.backgroundColor,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 8,
@@ -124,28 +132,28 @@ const defaultStyles = StyleSheet.create({
   },
   productCardSelected: {
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: theme.primaryColor,
   },
   productTitle: {
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#1a1a1a',
+    color: theme.textColor,
   },
   productPrice: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#007AFF',
+    color: theme.primaryColor,
     marginBottom: 8,
   },
   productPriceSentence: {
     fontSize: 16,
-    color: '#666',
+    color: theme.secondaryTextColor,
     marginBottom: 8,
   },
   productDescription: {
     fontSize: 14,
-    color: '#666',
+    color: theme.secondaryTextColor,
     marginBottom: 16,
   },
   billingSelector: {
@@ -157,19 +165,19 @@ const defaultStyles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: theme.borderColor,
     marginHorizontal: 4,
   },
   billingOptionSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#e6f3ff',
+    borderColor: theme.primaryColor,
+    backgroundColor: `${theme.primaryColor}10`,
   },
   billingOptionText: {
-    color: '#333',
+    color: theme.textColor,
     fontWeight: '500',
   },
   ctaButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.primaryColor,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -181,7 +189,7 @@ const defaultStyles = StyleSheet.create({
     fontWeight: '600',
   },
   changePlanButton: {
-    backgroundColor: '#202020',
+    backgroundColor: theme.primaryColor,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -189,13 +197,13 @@ const defaultStyles = StyleSheet.create({
   offersTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.textColor,
     marginTop: 16,
   },
   featuresTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.textColor,
     marginVertical: 16,
   },
   ctaButtonDisabled: {
@@ -203,14 +211,14 @@ const defaultStyles = StyleSheet.create({
     opacity: 0.7,
   },
   currentPlanCard: {
-    borderColor: '#4CAF50',
+    borderColor: theme.secondaryColor,
     borderWidth: 2,
   },
   currentPlanBadge: {
     position: 'absolute',
     top: -3,
     right: 8,
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.secondaryColor,
     borderRadius: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -221,7 +229,7 @@ const defaultStyles = StyleSheet.create({
     fontWeight: '600',
   },
   ctaButtonCurrentPlan: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.secondaryColor,
   },
   processingContainer: {
     // flex: 1,
@@ -232,7 +240,7 @@ const defaultStyles = StyleSheet.create({
   processingTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.textColor,
     marginBottom: 24,
     textAlign: 'center',
   },
@@ -244,13 +252,13 @@ const defaultStyles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.primaryColor,
     borderRadius: 4,
     width: '33%', // Will be updated based on status
   },
   statusText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.secondaryTextColor,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -260,7 +268,7 @@ const defaultStyles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#007AFF',
+    color: theme.primaryColor,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -270,24 +278,24 @@ const defaultStyles = StyleSheet.create({
   },
   termsText: {
     fontSize: 12,
-    color: '#666',
+    color: theme.secondaryTextColor,
     textAlign: 'center',
   },
   termsLink: {
     textDecorationLine: 'underline',
-    color: '#007AFF',
+    color: theme.primaryColor,
   },
   fixedFooter: {
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: theme.borderColor,
   },
   restoreButton: {
     marginTop: 16,
     alignItems: 'center',
   },
   restoreButtonText: {
-    color: '#007AFF',
+    color: theme.primaryColor,
     fontSize: 14,
     textDecorationLine: 'underline',
   },
@@ -303,11 +311,11 @@ const defaultStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
-    color: '#1a1a1a',
+    color: theme.textColor,
   },
   restoringProgress: {
     fontSize: 14,
-    color: '#666',
+    color: theme.secondaryTextColor,
     marginTop: 8,
   },
 });
@@ -338,12 +346,17 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
     sortProducts = true,
     termsUrl,
     showRestorePurchase = true,
+    theme: customTheme = {},
   } = props;
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscape = windowWidth > windowHeight;
   const [visible, setVisible] = useState(false);
-  const styles = { ...defaultStyles, ...StyleSheet.create(customStyles) };
+  const theme = { ...defaultTheme, ...customTheme };
+  const styles = { 
+    ...defaultStyles(theme), 
+    ...StyleSheet.create(customStyles) 
+  };
   const portraitScrollRef = useRef<ScrollView>(null);
   const landscapeScrollRef = useRef<ScrollView>(null);
   const productRefs = useRef<Array<React.RefObject<TouchableOpacity>>>([]);
@@ -405,7 +418,7 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
   useEffect(() => {
     const listeners = [
       IapticRN.addEventListener('pendingPurchase.updated', purchase => {
-        setPendingPurchase(purchase.status === 'completed' || purchase.status === 'cancelled' ? null : purchase);
+        setPendingPurchase((purchase.status === 'completed' || purchase.status === 'cancelled') ? null : purchase);
         if (purchase.status === 'completed') {
           if (onPurchaseComplete) onPurchaseComplete();
           dismissSubscriptionView();
@@ -536,7 +549,7 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
               </TouchableOpacity>
             </View>
 
-            <IapticActiveSubscription styles={customStyles} entitlementLabels={entitlementLabels} />
+            <IapticActiveSubscription styles={customStyles} entitlementLabels={entitlementLabels} theme={theme} />
 
             <TouchableOpacity
               style={[styles.changePlanButton, { marginTop: 8 }]}
@@ -688,6 +701,7 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
                 <EntitlementGrid
                   entitlements={selectedProduct.entitlements || []}
                   labels={entitlementLabels ?? {}}
+                  theme={theme}
                 />
 
                 {/* Billing Options */
@@ -853,10 +867,6 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
               {Locales.get(`SubscriptionView_ProcessingStatus_${pendingPurchase.status}`)}
             </Text>
 
-            {/* <Text style={styles.statusText}>
-                  {Locales.get('SubscriptionView_PleaseWait')}
-                </Text> */}
-
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => {
@@ -877,7 +887,7 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
               {Locales.get('SubscriptionView_RestoringTitle')}
               </Text>
               
-              <ActivityIndicator size="large" color="#007AFF" />
+              <ActivityIndicator size="large" color={theme.primaryColor} />
               
               {restoreProgress && restoreProgress.processed >= 0 && restoreProgress.total > 0 && (
                 <Text style={styles.restoringProgress}>

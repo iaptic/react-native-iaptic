@@ -825,7 +825,12 @@ const PT: IapticLocale = {
 /**
  * List of supported languages.
  */
-const LANGUAGES: Record<string, IapticLocale> = {
+export type IapticSupportedLocales = 'en' | 'en_uk' | 'en_au' | 'es' | 'fr' | 'de' | 'ja' | 'zh' | 'pt';
+
+/**
+ * List of supported languages.
+ */
+export const IapticLanguages: Record<IapticSupportedLocales, IapticLocale> = {
   en: EN,
   en_uk: EN_UK,
   en_au: EN_AU,
@@ -855,8 +860,8 @@ const LANGUAGES: Record<string, IapticLocale> = {
  */
 export class Locales {
   
-  private static currentLanguage: string = 'en';
-  private static fallbackLanguage: string = 'en';
+  private static currentLanguage: IapticSupportedLocales = 'en';
+  private static fallbackLanguage: IapticSupportedLocales = 'en';
 
   /**
    * Adds a new language to the locales
@@ -865,7 +870,7 @@ export class Locales {
    * @param messages The messages for the language
    */
   static addLanguage(language: string, messages: IapticLocale) {
-    LANGUAGES[language] = messages;
+    IapticLanguages[language as IapticSupportedLocales] = messages;
   }
 
   /**
@@ -875,7 +880,8 @@ export class Locales {
    * @param fallbackLanguage The fallback language code to use if the current language is not supported
    */
   static setLanguage(language: string, fallbackLanguage: string = 'en') {
-    this.currentLanguage = language;
+    this.currentLanguage = language as IapticSupportedLocales;
+    this.fallbackLanguage = fallbackLanguage as IapticSupportedLocales;
   }
 
   /**
@@ -901,7 +907,7 @@ export class Locales {
     if (!placeholders?.length) {
       placeholders = ['0', '1', '2', '3']; // Default to numeric placeholders
     }
-    let value = LANGUAGES[this.currentLanguage][key] || LANGUAGES[this.fallbackLanguage][key];
+    let value = IapticLanguages[this.currentLanguage][key] || IapticLanguages[this.fallbackLanguage as IapticSupportedLocales][key];
     if (!value) {
       logger.warn(`Locale key ${key} not found for language ${this.currentLanguage}`);
       value = fallbackMessage;
@@ -919,25 +925,36 @@ export class Locales {
    * Gets the device language and returns a supported language code
    * Defaults to 'en' if the device language is not supported
    */
-  static getDeviceLanguage(): string {
+  static getDeviceLanguage(): [IapticSupportedLocales, IapticSupportedLocales] {
     // Get device language
     const deviceLanguage = 
       (Platform.OS === 'ios'
         ? NativeModules.SettingsManager?.settings?.AppleLocale || // iOS
           NativeModules.SettingsManager?.settings?.AppleLanguages[0] // iOS fallback
         : NativeModules.I18nManager?.localeIdentifier) || 'en'; // Android
+    const fallbackLanguage = (Platform.OS === 'ios'
+      ? NativeModules.SettingsManager?.settings?.AppleLanguages[0] ||
+        NativeModules.SettingsManager?.settings?.AppleLanguages[1] ||
+        'en' // iOS fallback
+      : 'en'); // Android fallback
     
     const fullCode = deviceLanguage.toLowerCase().replace(/[_-]/g, '_');
     const shortCode = fullCode.split('_')[0];
     // Return the language if supported, otherwise return 'en'
-    return LANGUAGES.hasOwnProperty(fullCode) ? fullCode : LANGUAGES.hasOwnProperty(shortCode) ? shortCode : 'en';
+    const primary = IapticLanguages.hasOwnProperty(fullCode) ? fullCode : IapticLanguages.hasOwnProperty(shortCode) ? shortCode : 'en';
+    return [
+      primary as IapticSupportedLocales,
+      fallbackLanguage as IapticSupportedLocales
+    ];
   }
 
   /**
    * Initializes the locales with the device language
    */
   static initialize() {
-    this.currentLanguage = this.getDeviceLanguage();
+    const [primary, fallback] = this.getDeviceLanguage();
+    this.currentLanguage = primary;
+    this.fallbackLanguage = fallback;
   }
 }
 

@@ -21,8 +21,8 @@
     "prepare": "npm run build",
     "test": "jest --setupFiles ./jest.setup.js",
     "lint": "eslint src/**/*.ts",
-    "docs": "typedoc --excludeInternal --excludePrivate src/index.ts",
-    "docs-md": "typedoc --excludeInternal --excludePrivate --plugin typedoc-plugin-markdown --out ./docs-markdown.tmp --outputFileStrategy modules src/index.ts && ./postprocessMarkdown",
+    "docs": "typedoc --excludeInternal --excludePrivate --includeHierarchySummary false src/index.ts",
+    "docs-md": "typedoc --excludeInternal --excludePrivate --includeHierarchySummary false --excludeReferences --plugin typedoc-plugin-markdown --out ./docs-markdown.tmp --outputFileStrategy modules src/index.ts && ./postprocessMarkdown",
     "prepublishOnly": "npm run build && npm run docs-md"
   },
   "dependencies": {

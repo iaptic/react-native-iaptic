@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { Locales } from '../classes/Locales';
 import { IapticRN } from '../IapticRN';
+import { IapticTheme, defaultTheme } from '../IapticTheme';
 
 /**
  * Real-time subscription status display component with built-in management links.
@@ -96,6 +97,8 @@ export interface IapticActiveSubscriptionProps {
     /** Style for the "Manage Subscriptions" and "Manage Billing" links */
     manageLink?: TextStyle;
   };
+  /** Theme configuration */
+  theme?: Partial<IapticTheme>;
 }
 
 /**
@@ -127,9 +130,8 @@ export interface IapticActiveSubscriptionProps {
  * />
  * ```
  * 
- * @remarks React Component
+ * @remarks This React Component
  * 
- * @remarks
  * - Automatically subscribes to subscription updates
  * - Shows nothing when no active subscription exists
  * - Handles platform-specific management links (opens native UI)
@@ -166,7 +168,10 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
   const {
     entitlementLabels = {},
     styles: customStyles = {},
+    theme: customTheme = {},
   } = props;
+
+  const theme = { ...defaultTheme, ...customTheme };
 
   // Track subscription state
   const [state, setState] = useState({
@@ -207,13 +212,13 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
   };
 
   return (
-    <View style={[styles.subscriptionItem, customStyles?.container]}>
-      <Text style={[styles.subscriptionTitle, customStyles?.title]}>
+    <View style={[styles(theme).subscriptionItem, customStyles?.container]}>
+      <Text style={[styles(theme).subscriptionTitle, customStyles?.title]}>
         {state.products.find(p => p.id === state.subscription?.productId)?.title ?? state.subscription.productId}
       </Text>
       <Text style={[
-        styles.subscriptionStatus,
-        { color: !state.subscription.isExpired ? 'green' : 'red' },
+        styles(theme).subscriptionStatus,
+        { color: !state.subscription.isExpired ? theme.successColor : theme.errorColor },
         customStyles?.status
       ]}>
         {state.subscription.isExpired && Locales.get('ActiveSubscription_Status_Expired')}
@@ -224,11 +229,11 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
           `${Locales.get('ActiveSubscription_WillRenew', formatDateTime(state.subscription.expiryDate))}`
         )}
       </Text>
-      <View style={[styles.tagsContainer, customStyles?.tagContainer]}>
+      <View style={[styles(theme).tagsContainer, customStyles?.tagContainer]}>
         {state.subscription.isTrialPeriod && 
           <Text style={[
-            styles.tag, 
-            styles.trialTag,
+            styles(theme).tag, 
+            styles(theme).trialTag,
             customStyles?.baseTag,
             customStyles?.trialTag
           ]}>
@@ -237,8 +242,8 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
         }
         {state.subscription.isBillingRetryPeriod && 
           <Text style={[
-            styles.tag, 
-            styles.retryTag,
+            styles(theme).tag, 
+            styles(theme).retryTag,
             customStyles?.baseTag,
             customStyles?.retryTag
           ]}>
@@ -247,7 +252,7 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
         }
         {state.entitlements.map((entitlement: string) => (
           <Text key={entitlement} style={[
-            styles.tag, 
+            styles(theme).tag, 
             customStyles?.baseTag,
             customStyles?.entitlementTag
           ]}>
@@ -258,14 +263,14 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
       <TouchableOpacity onPress={
         () => IapticRN.manageSubscriptions()
       }>
-        <Text style={[styles.manageLink, customStyles?.manageLink]}>
+        <Text style={[styles(theme).manageLink, customStyles?.manageLink]}>
           {Locales.get('ActiveSubscription_ManageSubscriptions')}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={
         () => IapticRN.manageBilling()
       }>
-        <Text style={[styles.manageLink, customStyles?.manageLink]}>
+        <Text style={[styles(theme).manageLink, customStyles?.manageLink]}>
           {Locales.get('ActiveSubscription_ManageBilling')}
         </Text>
       </TouchableOpacity>
@@ -273,10 +278,10 @@ export const IapticActiveSubscription: React.FC<IapticActiveSubscriptionProps> =
   );
 };
 
-const styles = StyleSheet.create({
+const styles = (theme: IapticTheme) => StyleSheet.create({
   subscriptionItem: {
     padding: 10,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.backgroundColor,
     borderRadius: 8,
     marginBottom: 10,
   },
@@ -302,8 +307,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   trialTag: {
-    backgroundColor: '#f3e5f5',
-    color: '#6200ee',
+    backgroundColor: `${theme.primaryColor}20`, // 20% opacity
+    color: theme.primaryColor,
   },
   retryTag: {
     backgroundColor: '#fff3e0',
@@ -314,7 +319,7 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
   },
   manageLink: {
-    color: '#007AFF',
+    color: theme.primaryColor,
     textDecorationLine: 'underline',
     marginTop: 3,
     marginBottom: 3,

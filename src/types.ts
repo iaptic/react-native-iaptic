@@ -284,7 +284,7 @@ export interface IapticValidateErrorPayload {
   };
 }
 
-export const ERROR_CODES_BASE = 6777000;
+const ERROR_CODES_BASE = 6777000;
 
 /**
  * Error codes
@@ -433,7 +433,7 @@ export type IapticSubscriptionReason = 'renewed' | 'cancelled' | 'expired' | 'ch
 export interface IapticValidateRequest {
 
   /**
-   * Identifier of the product you want to validate. On iOS, can be set to your application identifier. @required
+   * Identifier of the product you want to validate. On iOS, can be set to your application identifier.
    */
   id?: string;
 
@@ -447,8 +447,6 @@ export interface IapticValidateRequest {
    * <li>`consumable` – A consumable product.</li>
    * <li>`non consumable` – A non-consumable product.</li>
    * </ul>
-   *
-   * @required
    */
   type?: IapticProductType;
 
@@ -462,8 +460,6 @@ export interface IapticValidateRequest {
    *  <li>A <a href="#api-Types-Validate.TransactionWindows">Windows Transaction</a></li>
    *  <li>A <a href="#api-Types-Validate.TransactionStripe">Stripe Transaction</a></li>
    * </ul>
-   *
-   * @required
    */
   transaction?: IapticValidateRequestTransaction;
 
@@ -472,8 +468,7 @@ export interface IapticValidateRequest {
     /** Attach the purchases to the given application user. Should be a string.
      *
      * See [/documentation/application-username](/documentation/application-username) for more information.
-     *
-     * @optional */
+     */
     applicationUsername?: string | number;
   };
 
@@ -557,10 +552,10 @@ export interface IapticValidateRequestTransactionApple {
   /** Value `"ios-appstore"` */
   type: 'ios-appstore';
 
-  /** Identifier of the transaction to evaluate, or set it to your application identifier if id has been set so. @required */
+  /** Identifier of the transaction to evaluate, or set it to your application identifier if id has been set so. */
   id: string;
 
-  /** Apple appstore receipt, base64 encoded. @required */
+  /** Apple appstore receipt, base64 encoded */
   appStoreReceipt: string;
 }
 
@@ -578,17 +573,16 @@ export interface IapticValidateRequestTransactionGoogle {
    * Corresponds to:
    * - the `orderId` in the receipt from Google.
    * - the `transactionId` in the receipt from Apple (or bundleID for the application receipt).
-   *
-   * @required */
+   */
   id: string;
 
-  /** Google purchase token. @required */
+  /** Google purchase token. */
   purchaseToken: string;
 
-  /** Google receipt in a JSON-encoded string. @required */
+  /** Google receipt in a JSON-encoded string. */
   receipt: string;
 
-  /** Google receipt signature (used to validate the local receipt). @required */
+  /** Google receipt signature (used to validate the local receipt). */
   signature: string;
 }
 

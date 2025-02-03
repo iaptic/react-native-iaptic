@@ -3,9 +3,9 @@ import { IapticVerifiedPurchase } from "../types";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * A transaction that has occurred
+ * A transaction that has occurred.
  */
-interface TokenTransaction {
+export interface IapticTokenTransaction {
     /** Unique identifier from the store */
     transactionId: string;
   
@@ -34,17 +34,17 @@ interface TokenTransaction {
  * 
  * @example
  * ```typescript
- * const tokensManager = new TokensManager(iaptic);
+ * const tokensManager = new IapticTokensManager(iaptic);
  * // ... tokensManager is now tracking consumable purchases that have a tokenType defined.
  * const balance = tokensManager.getBalance('coin');
  * ```
  */
-export class TokensManager {
+export class IapticTokensManager {
   
     /**
      * Using a Map with transactionId as key ensures each transaction is only stored once
      */
-    private transactions: Map<string, TokenTransaction>;
+    private transactions: Map<string, IapticTokenTransaction>;
 
     /**
      * Key used to store transactions in localStorage
@@ -80,7 +80,7 @@ export class TokensManager {
       try {
         const storedTransactions = await AsyncStorage.getItem(this.storageKey);
         if (storedTransactions) {
-          const parsedTransactions: TokenTransaction[] = JSON.parse(storedTransactions);
+          const parsedTransactions: IapticTokenTransaction[] = JSON.parse(storedTransactions);
           this.transactions = new Map(
             parsedTransactions.map(t => [t.transactionId, t])
           );
@@ -164,7 +164,7 @@ export class TokensManager {
     /**
      * Get transaction history for a specific token type
      */
-    getTransactions(tokenType?: string): TokenTransaction[] {
+    getTransactions(tokenType?: string): IapticTokenTransaction[] {
       const transactions = Array.from(this.transactions.values());
       return tokenType 
         ? transactions.filter(t => t.type === tokenType)

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Locales } from '../../classes/Locales';
+import { defaultTheme, IapticTheme } from '../../IapticTheme';
 
 /**
  * Props for the EntitlementGrid component
@@ -8,11 +9,21 @@ import { Locales } from '../../classes/Locales';
  * @internal
  */
 export interface EntitlementGridProps {
+  /**
+   * Entitlements to display
+   */
   entitlements: string[];
+  /**
+   * Labels for each entitlement
+   */
   labels: Record<string, {
     label: string;
     detail?: string;
   }>;
+  /**
+   * Theme configuration
+   */
+  theme?: Partial<IapticTheme>;
 }
 
 /**
@@ -22,31 +33,36 @@ export interface EntitlementGridProps {
  * 
  * @internal
  */
-export const EntitlementGrid = ({ entitlements, labels }: EntitlementGridProps) => (
-  <View style={styles.grid}>
-    {entitlements.map(entitlement => {
-      const { label, detail } = labels[entitlement] || { label: entitlement };
-      return (
-        <View key={entitlement} style={styles.gridItem}>
-          <Text style={styles.check}>
-            {Locales.get('EntitlementGrid_Checkmark')}
-          </Text>
-          <View style={styles.textContainer}>
-            <Text style={styles.label}>{label}</Text>
-            {detail && <Text style={styles.detail}>{detail}</Text>}
+export const EntitlementGrid = (props: EntitlementGridProps) => {
+  const { entitlements, labels, theme: customTheme } = props;
+  const theme = { ...defaultTheme, ...customTheme };
+
+  return (
+    <View style={styles(theme).grid}>
+      {entitlements.map(entitlement => {
+        const { label, detail } = labels[entitlement] || { label: entitlement };
+        return (
+          <View key={entitlement} style={styles(theme).gridItem}>
+            <Text style={styles(theme).check}>
+              {Locales.get('EntitlementGrid_Checkmark')}
+            </Text>
+            <View style={styles(theme).textContainer}>
+              <Text style={styles(theme).label}>{label}</Text>
+              {detail && <Text style={styles(theme).detail}>{detail}</Text>}
+            </View>
           </View>
-        </View>
-      );
-    })}
-  </View>
-);
+        );
+      })}
+    </View>
+  );
+}
 
 /**
  * Styles for the EntitlementGrid component
  * 
  * @internal
  */
-const styles = StyleSheet.create({
+const styles = (theme: IapticTheme) => StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -55,14 +71,14 @@ const styles = StyleSheet.create({
   gridItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: `${theme.primaryColor}08`, // 8% opacity
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
     minWidth: '48%',
   },
   check: {
-    color: '#007AFF',
+    color: theme.primaryColor,
     marginRight: 8,
     fontWeight: 'bold',
   },
@@ -70,12 +86,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   label: {
-    color: '#333',
+    color: theme.textColor,
     fontSize: 14,
     fontWeight: '500',
   },
   detail: {
-    color: '#666',
+    color: theme.secondaryTextColor,
     fontSize: 12,
     lineHeight: 16,
     marginTop: 4,

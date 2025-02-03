@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { IapticOffer, IapticPendingPurchase, IapticProduct } from '../types';
 import { IapticRN } from '../IapticRN';
+import { IapticTheme, defaultTheme } from '../IapticTheme';
 
 /**
+ * Customizable styles for the Iaptic Product List component
+ * 
  * @internal
  */
-export interface ProductListStyles {
+export interface IapticProductListStyles {
   container?: ViewStyle;
   productContainer?: ViewStyle;
   productTitle?: TextStyle;
@@ -19,11 +22,11 @@ export interface ProductListStyles {
 }
 
 /**
- * ProductList component props
+ * Iaptic Product List component props
  * 
  * @internal
  */
-export interface ProductListProps {
+export interface IapticProductListProps {
   /**
    * Filter the products to display (optional)
    */
@@ -35,13 +38,13 @@ export interface ProductListProps {
   /**
    * Custom styles
    */
-  styles?: { [K in keyof ProductListStyles]?: ViewStyle | TextStyle };
+  styles?: { [K in keyof IapticProductListStyles]?: ViewStyle | TextStyle };
 }
 
-const defaultStyles = StyleSheet.create({
+const defaultStyles = (theme: IapticTheme) => StyleSheet.create({
   productContainer: {
     marginBottom: 20,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: theme.backgroundColor,
     borderRadius: 12,
     padding: 12,
   },
@@ -65,7 +68,7 @@ const defaultStyles = StyleSheet.create({
     elevation: 2,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.primaryColor,
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
@@ -87,19 +90,19 @@ const defaultStyles = StyleSheet.create({
 });
 
 /**
- * ProductList component
+ * Iaptic Product List component
  * 
  * @remarks React Component
  * 
  * @internal
  */
-export const ProductList = ({
+export const IapticProductList = ({
   productIds,
   onOrder: onSubscribe,
   styles: customStyles = {},
-}: ProductListProps) => {
+}: IapticProductListProps) => {
   const styles = {
-    ...defaultStyles,
+    ...defaultStyles(defaultTheme),
     ...StyleSheet.create(customStyles),
   };
 
@@ -173,4 +176,4 @@ export const ProductList = ({
   );
 };
 
-export default ProductList; 
+export default IapticProductList; 

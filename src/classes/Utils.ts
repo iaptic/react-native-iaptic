@@ -1,5 +1,7 @@
+import { md5UUID } from "../functions/md5UUID";
+import { md5 } from "../functions/md5";
 import { IapticOffer, IapticPricingPhase, IapticProduct, IapticRecurrenceMode } from "../types";
-import { Locales } from "./Locales";
+import { Locales, IapticSupportedLocales } from "./Locales";
 
 export type DurationISO = `P${number}${'D' | 'W' | 'M' | 'Y'}`;
 
@@ -15,7 +17,7 @@ export class Utils {
   /**
    * Generate a localized version of the billing cycle in a pricing phase.
    * 
-   * For supported languages, check {@link Locales}.
+   * For supported languages, check {@link IapticSupportedLocales}.
    *
    * Example outputs:
    *
@@ -64,48 +66,16 @@ export class Utils {
     return pricingPhase.recurrenceMode;
   }
 
-  /**
-   * Format a simple ISO 8601 duration to plain English.
-   *
-   * This works for non-composite durations, i.e. that have a single unit with associated amount. For example: "P1Y" or "P3W".
-   *
-   * See https://en.wikipedia.org/wiki/ISO_8601#Durations
-   *
-   * This method is provided as a utility for getting simple things done quickly. In your application, you'll probably
-   * need some other method that supports multiple locales.
-   *
-   * @param iso - Duration formatted in IS0 8601
-   * @return The duration in plain english. Example: "1 year" or "3 weeks".
-   *
-  formatDurationEN(iso?: string, options?: { omitOne?: boolean }): string {
-    if (!iso) return '';
-    const l = iso.length;
-    const n = iso.slice(1, l - 1);
-    if (n === '1') {
-      if (options?.omitOne) {
-        return ({ 'D': 'day', 'W': 'week', 'M': 'month', 'Y': 'year', }[iso[l - 1]]) || iso[l - 1];
-      }
-      else {
-        return ({ 'D': '1 day', 'W': '1 week', 'M': '1 month', 'Y': '1 year', }[iso[l - 1]]) || iso[l - 1];
-      }
-    }
-    else {
-      const u = ({ 'D': 'days', 'W': 'weeks', 'M': 'months', 'Y': 'years', }[iso[l - 1]]) || iso[l - 1];
-      return `${n} ${u}`;
-    }
-  }
-  */
-
   // For billing cycles
-  getBillingCycleTemplate(cycles: number, duration: string): string {
+  private getBillingCycleTemplate(cycles: number, duration: string): string {
     return Locales.get('BillingCycle_Finite', [`${cycles}`, duration], '', ['cycles', 'duration']);
   }
 
-  getBillingCycleTemplateNonRecurring(cycles: number, duration: string): string {
+  private getBillingCycleTemplateNonRecurring(cycles: number, duration: string): string {
     return Locales.get('BillingCycle_NonRecurring', [`${cycles}`, duration], '', ['cycles', 'duration']);
   }
 
-  getBillingCycleTemplateInfinite(cycles: number, duration: string): string {
+  private getBillingCycleTemplateInfinite(cycles: number, duration: string): string {
     return Locales.get('BillingCycle_Infinite', [`${cycles}`, duration], '', ['cycles', 'duration']);
   }
 
@@ -222,6 +192,27 @@ export class Utils {
       }
       return cheapest;
     }, product.offers[0]);
+  }
+
+  /**
+   * Generate a UUID v3-like string from an account string.
+   * 
+   * The username is first hashed with MD5, then formatted as a UUID v3-like string by adding dashes between the different parts of the hash.
+   * 
+   * This is used to generate a appAccountToken for Apple App Store purchases.
+   * 
+   * @param account - The account string
+   * @returns The UUID v3-like string
+   */
+  md5UUID(account: string): string {
+    return md5UUID(account);
+  }
+
+  /**
+   * Returns the MD5 hash-value of the passed string.
+   */
+  md5(account: string): string {
+    return md5(account);
   }
 }
 

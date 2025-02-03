@@ -53,33 +53,12 @@ IapticRN.initialize({
 ]);
 ```
 
-## Subscription Management UI
+### Using Subscription UI
 
 The `IapticSubscriptionView` component provides a complete subscription management interface with purchase handling.
 
-### Key Features
-- Automatic product loading and sorting
-- Feature grid
-- Purchase flow feedback
-- Restore purchases functionality
-- Terms & conditions link
-- Style customization
-
-### Basic Usage
-
-```typescript
-// App initialization
-await IapticRN.initialize({
-  appName: 'com.example.app',
-  publicKey: 'YOUR_API_KEY',
-  products: [{
-    id: 'premium_subscription',
-    type: 'paid subscription',
-    entitlements: ['premium']
-  }]
-});
-
-// In your component
+```tsx
+// In your root node, add the modal component
 <IapticSubscriptionView
   entitlementLabels={{
     premium: {
@@ -102,8 +81,7 @@ await IapticRN.initialize({
 | `entitlementLabels` | `Record<string, { label: string, detail?: string }>` | Labels and descriptions for each entitlement |
 | `onPurchaseComplete` | `() => void` | Callback after successful purchase |
 | `termsUrl` | `string` | URL for terms & conditions |
-| `styles` | `Partial<SubscriptionViewStyles>` | Custom style overrides |
-| `showRestorePurchase` | `boolean` | Show restore purchases button (default: true) |
+| `theme` | `object` | Customize colors (see [IapticTheme](https://www.iaptic.com/documentation/api/react-native-iaptic/interfaces/IapticTheme)) |
 
 ### Entitlement Management Example
 
