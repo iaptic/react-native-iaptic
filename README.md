@@ -260,8 +260,8 @@ For complete API documentation, visit our [API Reference](https://www.iaptic.com
 
 ## 🤝 Need Help?
 
-- 📘 [Documentation](https://www.iaptic.com/documentation/api/react-native-iaptic)
-- 🐛 [Issue Tracker](https://github.com/iaptic/iaptic-react-native-sdk/issues)
+- 📘 [API Documentation](https://www.iaptic.com/documentation/api/react-native-iaptic)
+- 🐛 [Issue Tracker](https://github.com/iaptic/react-native-iaptic/issues)
 - 📱 [Demo app](https://github.com/iaptic/react-native-iaptic-demo)
 - 📧 [Support](mailto:support@iaptic.com)
 
