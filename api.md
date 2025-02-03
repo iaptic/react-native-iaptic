@@ -7,12 +7,13 @@ through the Iaptic service.
 
 The API entry point is [IapticRN](#iapticrn).
 
-## Examples
+## Example
 
-```typescript
+```tsx
 import { IapticSubscriptionView } from 'react-native-iaptic';
 const app = (props) => {
   useEffect(() => {
+    // Initialize the SDK with your configuration at startup
     IapticRN.initialize({
       appName: 'com.example.app',
       publicKey: 'YOUR_API_KEY',
@@ -20,7 +21,7 @@ const app = (props) => {
       products: [{
         id: 'premium_subscription',
         type: 'paid subscription',
-        entitlements: ['premium']
+        entitlements: ['basic', 'premium']
       }, {
         id: 'basic_subscription',
         type: 'paid subscription',
@@ -29,47 +30,29 @@ const app = (props) => {
     });
   }, []);
   return (
-    <View> // your root node
-      <TouchableOpacity onPress={() => IapticRN.presentSubscriptionView()}>
-        <Text>Subscribe</Text>
-      </TouchableOpacity>
+    <View>
+      // In your root node, add the modal component
       <IapticSubscriptionView entitlementLabels={{
         premium: 'Premium Features',
         basic: 'Basic Features',
       }} />
+
+      // Anyway in your app, open the Subscription UI
+      <TouchableOpacity onPress={() => IapticRN.presentSubscriptionView()}>
+        <Text>Subscribe</Text>
+      </TouchableOpacity>
     </View>
   );
 };
-```
 
-```typescript
-// 1. Initialize with your configuration
-await IapticRN.initialize({
-  appName: 'com.example.app',
-  publicKey: 'YOUR_API_KEY',
-  iosBundleId: 'com.yourcompany.app',
-  products: [{
-    id: 'premium_monthly',
-    type: 'paid subscription',
-    entitlements: ['premium']
-  }, {
-    id: 'coins_100',
-    type: 'consumable',
-    tokenType: 'coins',
-    tokenValue: 100
-  }]);
-
-// 4. Handle purchases
-const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
-if (offer) {
-  await IapticRN.order(offer); 
-}
-
-// 5. Check access
+// 2. Check access without a backend server
 if (IapticRN.checkEntitlement('premium')) {
   // Unlock premium features
 }
 ```
+
+With a backend server, you will get webhook calls from iaptic server
+and store your user's subscription status (unlocking features server-side, safer).
 
 ## Enumerations
 
@@ -708,7 +691,100 @@ Create .stack property on a target object
 ### IapticRN
 
 
-Iaptic React Native SDK
+Iaptic React Native SDK.
+
+This is the entry point for the Iaptic SDK, the main methods are:
+
+- [initialize](#initialize)
+- [destroy](#destroy)
+- [addEventListener](#addeventlistener)
+- [setApplicationUsername](#setapplicationusername)
+- [consume](#consume)
+- [checkEntitlement](#checkentitlement)
+
+#### Example
+
+```tsx
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { IapticRN, IapticProduct, IapticVerifiedPurchase } from 'react-native-iaptic';
+
+const App = () => {
+  const [products, setProducts] = useState<IapticProduct[]>([]);
+  const [entitlements, setEntitlements] = useState<string[]>([]);
+  
+  useEffect(async () => {
+
+    // Listen for product and entitlement updates
+    IapticRN.addEventListener('products.updated', setProducts);
+    IapticRN.addEventListener('purchase.updated', () => {
+      setEntitlements(IapticRN.listEntitlements());
+    });
+
+    // Initialize IapticRN with your API key and product definitions
+    await IapticRN.initialize({
+      appName: 'com.example.app',
+      publicKey: 'YOUR_API_KEY',
+      iosBundleId: 'com.example.app',
+      products: [
+        { id: 'pro_monthly', type: 'paid subscription', entitlements: ['pro'] },
+        { id: 'premium_lifetime', type: 'non consumable', entitlements: ['premium'] },
+      ],
+    });
+
+    // Load products and entitlements
+    setEntitlements(IapticRN.listEntitlements());
+    setProducts(IapticRN.getProducts());
+
+    return () => {
+      IapticRN.destroy();
+    };
+  }, []);
+
+  // Handle purchase button press
+  const handlePurchase = async (product: IapticProduct) => {
+    try {
+      await IapticRN.order(product.offers[0]);
+      Alert.alert('Purchase complete!');
+    } catch (err) {
+      Alert.alert('Purchase failed', err.message);
+    }
+  };
+
+  // Restore purchases
+  const restorePurchases = async () => {
+    try {
+      await IapticRN.restorePurchases(() => {});
+      Alert.alert('Purchases restored');
+    } catch (err) {
+      Alert.alert('Restore failed', err.message);
+    }
+  };
+
+  return (
+    <View>
+      {products.map(product => (
+        <TouchableOpacity
+          key={product.id}
+          onPress={() => handlePurchase(product)}
+        >
+          <Text>{product.title}</Text>
+          <Text>{product.offers[0].pricingPhases[0].price}</Text>
+        </TouchableOpacity>
+      ))}
+       
+      <Text>Pro entitlement: {entitlements.includes('pro') ? 'Yes' : 'No'}</Text>
+      <Text>Premium entitlement: {entitlements.includes('premium') ? 'Yes' : 'No'}</Text>
+
+      <TouchableOpacity onPress={restorePurchases}>
+        <Text>Restore Purchases</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default App;
+```
 
 #### Constructors
 
@@ -905,14 +981,14 @@ IapticRN.consume(purchase);
 
 ###### See
 
-TokensManager for a convenient way to handle your consumable products.
+[IapticTokensManager](#iaptictokensmanager) for a convenient way to handle your consumable products.
 
 ##### destroy()
 
 > `static` **destroy**(): `void`
 
 
-Destroy the IapticRN singleton, cleanup everything.
+Destroy the IapticRN singleton, remove event listeners and cleanup everything.
 
 ###### Returns
 
@@ -1071,6 +1147,11 @@ IapticRN.initialize({
   appName: 'com.example.app',
   publicKey: '1234567890',
   iosBundleId: 'com.example.app',
+  products: [
+    { id: 'pro_monthly', type: 'paid subscription', entitlements: ['pro'] },
+    { id: 'premium_lifetime', type: 'non consumable', entitlements: ['premium'] },
+    { id: 'coins_100', type: 'consumable', tokenType: 'coins', tokenValue: 100 },
+  ],
 });
 ```
 
@@ -1500,7 +1581,7 @@ The balance is the sum of all the amounts in the list.
 #### Example
 
 ```typescript
-const tokensManager = new TokensManager(iaptic);
+const tokensManager = new IapticTokensManager(iaptic);
 // ... tokensManager is now tracking consumable purchases that have a tokenType defined.
 const balance = tokensManager.getBalance('coin');
 ```
@@ -1694,7 +1775,7 @@ FINITE_RECURRING with billingCycles=0 is like INFINITE_RECURRING
 
 Generate a localized version of the billing cycle in a pricing phase.
 
-For supported languages, check Locales.
+For supported languages, check [IapticSupportedLocales](#iapticsupportedlocales).
 
 Example outputs:
 
@@ -3582,18 +3663,20 @@ Type of recurring payment
 
 Reason why a subscription status changed
 
-## Variables
+***
 
-### ERROR\_CODES\_BASE
+### IapticSupportedLocales
 
-> `const` **ERROR\_CODES\_BASE**: `6777000` = `6777000`
+> **IapticSupportedLocales**: `"en"` \| `"en_uk"` \| `"en_au"` \| `"es"` \| `"fr"` \| `"de"` \| `"ja"` \| `"zh"` \| `"pt"`
 
+
+List of supported languages.
 
 ## Functions
 
 ### IapticSubscriptionView()
 
-> **IapticSubscriptionView**(`props`): `any`
+> **IapticSubscriptionView**(`props`): `null` \| `Element`
 
 
 Subscription modal UI component
@@ -3608,7 +3691,7 @@ Propertis
 
 #### Returns
 
-`any`
+`null` \| `Element`
 
 #### Remarks
 
