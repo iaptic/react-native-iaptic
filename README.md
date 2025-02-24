@@ -258,6 +258,10 @@ function showError(error: Error | IapticError) {
 
 For complete API documentation, visit our [API Reference](https://www.iaptic.com/documentation/react-native).
 
+#### Troubleshooting
+
+- If your app fails to load products, check that your XCode project contains the "In-App Purchase" capability (XCode -> Project -> Targets (your app name) -> Capabilities). Hit "+ Capability" and add the In-App Purchase capability if it's missing.
+
 ## 🤝 Need Help?
 
 - 📘 [API Documentation](https://www.iaptic.com/documentation/api/react-native-iaptic)
