@@ -1,5 +1,5 @@
 import { IapticError, IapticSeverity } from "./classes/IapticError";
-import { IapticLogger } from "./classes/IapticLogger";
+import { IapticLogger, logger } from "./classes/IapticLogger";
 import { IapticStore } from "./classes/IapticStore";
 import { Locales } from "./classes/Locales";
 import { IapticLocale } from "./classes/IapticLocale";
@@ -158,20 +158,39 @@ export class IapticRN {
    * ```
    */
   static async initialize(config: IapticConfig) {
-    if (IapticRN.store) throw new IapticError('IapticRN.store is already initialized', {
-      severity: IapticSeverity.ERROR,
-      code: IapticErrorCode.SETUP,
-      localizedTitle: Locales.get('ProgrammingError'),
-      localizedMessage: Locales.get('IapticError_StoreAlreadyInitialized'),
-      debugMessage: 'IapticRN.store is already initialized, call IapticRN.destroy() first',
-    });
-    IapticRN.store = new IapticStore(config);
-    IapticRN.commitPendingEventListeners();
     if (config.verbosity) IapticRN.setVerbosity(config.verbosity);
-    await IapticRN.store.initialize();
+    logger.debug(`Initializing IapticRN with config: ${JSON.stringify(config)}`);
+    if (IapticRN.store) {
+      logger.error('IapticRN.store is already initialized, call IapticRN.destroy() first');
+        throw new IapticError('IapticRN.store is already initialized', {
+        severity: IapticSeverity.ERROR,
+        code: IapticErrorCode.SETUP,
+        localizedTitle: Locales.get('ProgrammingError'),
+        localizedMessage: Locales.get('IapticError_StoreAlreadyInitialized'),
+        debugMessage: 'IapticRN.store is already initialized, call IapticRN.destroy() first',
+      });
+    }
+    logger.debug('Creating IapticStore');
+    IapticRN.store = new IapticStore(config);
+    logger.debug('IapticStore created');
+    logger.debug('Committing pending event listeners');
+    IapticRN.commitPendingEventListeners();
+    logger.debug('Pending event listeners committed');
     if (config.products) {
-      await IapticRN.loadProducts(config.products);
-      await IapticRN.loadPurchases();
+      logger.debug(`Setting product definitions: ${JSON.stringify(config.products)}`);
+      IapticRN.store.setProductDefinitions(config.products);
+    }
+    logger.debug('Initializing IapticStore');
+    await IapticRN.store.initialize();
+    logger.debug('IapticStore initialized');
+    if (config.products) {
+      logger.debug(`Loading products: ${JSON.stringify(config.products)}`);
+      const products = await IapticRN.getProducts();
+      logger.info(`Found products: ${products.map(p => p.id).join(', ')}`);
+      const notFound = config.products.filter(p => !products.some(p2 => p2.id === p.id));
+      if (notFound.length > 0) {
+        logger.warn(`Products not found: ${notFound.map(p => p.id).join(', ')}`);
+      }
     }
   }
 
@@ -257,6 +276,7 @@ export class IapticRN {
    */
   static setVerbosity(verbosity: IapticVerbosity) {
     IapticLogger.VERBOSITY = verbosity;
+    logger.verbosity = verbosity;
     if (IapticRN.store) IapticRN.store.setVerbosity(verbosity);
   }
 
@@ -727,6 +747,10 @@ export class IapticRN {
    * ```
    */
   static presentSubscriptionView() {
+    if (IapticRN.getProducts().length === 0) {
+      logger.error('IapticRN.presentSubscriptionView: no products found, make sure the store is correctly configured (with "products" in the config) and initialized.');
+      return;
+    }
     subscriptionViewEvents.emit('present');
   }
     

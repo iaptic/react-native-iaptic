@@ -15,6 +15,7 @@ export class IapticLogger {
   verbosity: IapticVerbosity = IapticLogger.VERBOSITY;
 
   constructor(verbosity: IapticVerbosity) {
+    console.log(`IapticLogger constructor with verbosity: ${verbosity}`);
     this.verbosity = verbosity;
   }
 

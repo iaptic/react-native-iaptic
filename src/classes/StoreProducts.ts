@@ -111,27 +111,41 @@ export class StoreProducts {
    * @returns The loaded products
    */
   async load(definitions?: IapticProductDefinition[]): Promise<IapticProduct[]> {
-    if (!definitions) {
+    if (definitions === undefined) {
       definitions = this.definitions;
     }
-    logger.info(`load: ${definitions.map(d => d.id).join(', ')}`);
+    logger.info(`StoreProducts.load: ${definitions.map(d => d.id).join(', ')}`);
+    if (definitions.length === 0) {
+      logger.warn('StoreProducts.load: no definitions to load');
+      return [];
+    }
     let subscriptions: IAP.Subscription[] = [];
     let products: IAP.Product[] = [];
     const subscriptionIds = definitions.filter(d => d.type === 'paid subscription').map(d => d.id);
     if (subscriptionIds.length > 0) {
-      logger.debug(`subscriptions to load: ${subscriptionIds.join(', ')}`);
+      logger.debug(`StoreProducts.load: subscriptions to load: ${subscriptionIds.join(', ')}`);
       subscriptions = await IAP.getSubscriptions({
         skus: subscriptionIds
       });
-      logger.debug(`subscriptions loaded: ${JSON.stringify(subscriptions)}`);
+      if (subscriptions.length === 0) {
+        logger.warn('StoreProducts.load: no subscriptions loaded');
+      }
+      else {
+        logger.debug(`StoreProducts.load: subscriptions loaded: ${JSON.stringify(subscriptions)}`);
+      }
     }
     const productIds = definitions.filter(d => d.type !== 'paid subscription').map(d => d.id);
     if (productIds.length > 0) {
-      logger.debug(`products to load: ${productIds.join(', ')}`);
+      logger.debug(`StoreProducts.load: products to load: ${productIds.join(', ')}`);
       products = await IAP.getProducts({
         skus: productIds
       });
-      logger.debug(`products loaded: ${JSON.stringify(products)}`);
+      if (products.length === 0) {
+        logger.warn('StoreProducts.load: no products loaded');
+      }
+      else {
+        logger.debug(`StoreProducts.load: products loaded: ${JSON.stringify(products)}`);
+      }
     }
     this.add(definitions, subscriptions, products);
     return this.definitions.map(d => this.toIapticProduct(d)).filter(p => p !== undefined);
