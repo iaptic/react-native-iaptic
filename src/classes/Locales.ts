@@ -19,7 +19,7 @@ const EN: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "The requested product is not available.",
   PurchaseError_E_NETWORK_ERROR: "A network error occurred.",
   PurchaseError_E_SERVICE_ERROR: "The service returned an error.",
-  PurchaseError_E_RECEIPT_FAILED: "Failed to validate receipt.",
+  PurchaseError_E_RECEIPT_FAILED: "Failed to load your purchase receipt.",
   PurchaseError_E_NOT_PREPARED: "The purchase cannot be completed because it has not been prepared.",
   PurchaseError_E_DEVELOPER_ERROR: "An error occurred in the application.",
   PurchaseError_E_ALREADY_OWNED: "This item has already been purchased.",
@@ -152,7 +152,7 @@ const ES: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "El producto solicitado no está disponible.",
   PurchaseError_E_NETWORK_ERROR: "Se produjo un error de red.",
   PurchaseError_E_SERVICE_ERROR: "El servicio devolvió un error.",
-  PurchaseError_E_RECEIPT_FAILED: "No se pudo validar el recibo.",
+  PurchaseError_E_RECEIPT_FAILED: "Error al cargar el recibo de compra",  // Updated from "No se pudo validar el recibo"
   PurchaseError_E_NOT_PREPARED: "La compra no puede ser completada porque no ha sido preparada.",
   PurchaseError_E_DEVELOPER_ERROR: "Se produjo un error en la aplicación.",
   PurchaseError_E_ALREADY_OWNED: "Este elemento ya ha sido comprado.",
@@ -267,7 +267,7 @@ const FR: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "Le produit demandé n'est pas disponible.",
   PurchaseError_E_NETWORK_ERROR: "Une erreur réseau est survenue.",
   PurchaseError_E_SERVICE_ERROR: "Le service a renvoyé une erreur.",
-  PurchaseError_E_RECEIPT_FAILED: "Échec de la validation du reçu.",
+  PurchaseError_E_RECEIPT_FAILED: "Échec de la récupération du reçu.",
   PurchaseError_E_NOT_PREPARED: "L'achat ne peut être complété car il n'a pas été préparé.",
   PurchaseError_E_DEVELOPER_ERROR: "Une erreur s'est produite dans l'application.",
   PurchaseError_E_ALREADY_OWNED: "Cet article a déjà été acheté.",
@@ -381,7 +381,7 @@ const DE: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "Das angeforderte Produkt ist nicht verfügbar.",
   PurchaseError_E_NETWORK_ERROR: "Ein Netzwerkfehler ist aufgetreten.",
   PurchaseError_E_SERVICE_ERROR: "Der Dienst hat einen Fehler zurückgegeben.",
-  PurchaseError_E_RECEIPT_FAILED: "Kassenbon konnte nicht validiert werden.",
+  PurchaseError_E_RECEIPT_FAILED: "Fehler beim Laden des Kaufbelegs",  // Updated from "Kassenbon konnte nicht validiert werden"
   PurchaseError_E_NOT_PREPARED: "Der Kauf kann nicht abgeschlossen werden, da er nicht vorbereitet wurde.",
   PurchaseError_E_DEVELOPER_ERROR: "Ein Fehler ist in der Anwendung aufgetreten.",
   PurchaseError_E_ALREADY_OWNED: "Dieser Artikel wurde bereits gekauft.",
@@ -495,7 +495,7 @@ const JA: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "リクエストされた商品は利用できません。",
   PurchaseError_E_NETWORK_ERROR: "ネットワークエラーが発生しました。",
   PurchaseError_E_SERVICE_ERROR: "サービスからエラーが返されました。",
-  PurchaseError_E_RECEIPT_FAILED: "領収書の検証に失敗しました。",
+  PurchaseError_E_RECEIPT_FAILED: "購入領収書の読み込みに失敗しました",  // Updated from "領収書の検証に失敗しました"
   PurchaseError_E_NOT_PREPARED: "準備が完了していないため、購入を完了できません。",
   PurchaseError_E_DEVELOPER_ERROR: "アプリケーションでエラーが発生しました。",
   PurchaseError_E_ALREADY_OWNED: "この商品は既に購入済みです。",
@@ -609,7 +609,7 @@ const ZH: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "请求的商品不可用。",
   PurchaseError_E_NETWORK_ERROR: "网络错误。",
   PurchaseError_E_SERVICE_ERROR: "服务返回错误。",
-  PurchaseError_E_RECEIPT_FAILED: "收据验证失败。",
+  PurchaseError_E_RECEIPT_FAILED: "加载购买收据失败",  // Updated from "收据验证失败"
   PurchaseError_E_NOT_PREPARED: "购买未准备完成，无法继续。",
   PurchaseError_E_DEVELOPER_ERROR: "应用程序发生错误。",
   PurchaseError_E_ALREADY_OWNED: "此商品已购买。",
@@ -723,7 +723,7 @@ const PT: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "O produto solicitado não está disponível.",
   PurchaseError_E_NETWORK_ERROR: "Ocorreu um erro de rede.",
   PurchaseError_E_SERVICE_ERROR: "O serviço retornou um erro.",
-  PurchaseError_E_RECEIPT_FAILED: "Falha ao validar o recibo.",
+  PurchaseError_E_RECEIPT_FAILED: "Falha ao carregar o recibo de compra",  // Updated from "Falha ao validar o recibo"
   PurchaseError_E_NOT_PREPARED: "A compra não pode ser concluída porque não foi preparada.",
   PurchaseError_E_DEVELOPER_ERROR: "Ocorreu um erro no aplicativo.",
   PurchaseError_E_ALREADY_OWNED: "Este item já foi comprado.",

@@ -66,6 +66,18 @@ export function toIapticErrorCode(code: IAP.ErrorCode | undefined): IapticErrorC
   }
 }
 
+function isPurchaseError(err: IAP.PurchaseError | Error): err is IAP.PurchaseError {
+  if (!err) return false;
+  if (err instanceof IAP.PurchaseError) {
+    return true;
+  }
+  const code = (err as any).code;
+  if (code && typeof code === 'string' && code.startsWith('E_')) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Convert an error from react-native-iap to an Iaptic error
  * 
@@ -77,7 +89,7 @@ export function toIapticErrorCode(code: IAP.ErrorCode | undefined): IapticErrorC
  * @internal
  */
 export function toIapticError(err: IAP.PurchaseError | Error, severity: IapticSeverity, defaultCode: IapticErrorCode = IapticErrorCode.UNKNOWN, extraDebugMessage: string = ''): IapticError {
-  if (err instanceof IAP.PurchaseError) {
+  if (isPurchaseError(err)) {
     return new IapticError(err.message, {
       severity,
       code: toIapticErrorCode(err.code),

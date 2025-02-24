@@ -64,6 +64,9 @@ export class IapticStore {
   /** The application username */
   private applicationUsername: string | undefined;
 
+  /** Flag to check if the user can make payments */
+  private canMakePayment = false;
+
   /**
    * Creates a new instance of IapticRN
    * @param config - Configuration for the iaptic service
@@ -104,8 +107,8 @@ export class IapticStore {
     }
     this.initialized = true;
     try {
-      await IAP.initConnection();
-      logger.info('initialized');
+      this.canMakePayment = await IAP.initConnection();
+      logger.info('initialized (canMakePayment: ' + this.canMakePayment + ')');
       this.iapEventsProcessor.addListeners();
       return null;
     } catch (err: any) {
@@ -114,6 +117,7 @@ export class IapticStore {
       throw toIapticError(err, IapticSeverity.WARNING, IapticErrorCode.SETUP, 'Failed to initialize the in-app purchase library, check your configuration.');
     }
   }
+
 
   /**
    * Initializes the In-App Purchase component.
@@ -150,6 +154,7 @@ export class IapticStore {
    */
   destroy() {
     logger.info('destroy()');
+    IAP.endConnection();
     this.iapEventsProcessor.removeListeners();
     this.events.removeAllEventListeners();
     this.initialized = false;
@@ -344,7 +349,7 @@ export class IapticStore {
    * @param definitions - The products to load
    */
   async loadProducts(definitions?: IapticProductDefinition[]) {
-    logger.info('loadProducts()');
+    logger.info('IapticStore.loadProducts()');
     return this.products.load(definitions);
   }
 
@@ -359,14 +364,14 @@ export class IapticStore {
    * @returns List of verified purchases.
    */
   async loadPurchases(): Promise<IapticVerifiedPurchase[]> {
-    logger.info('loadPurchases()');
+    logger.info('IapticStore.loadPurchases()');
     if (Platform.OS === 'ios' && !IAP.isIosStorekit2()) {
       return this.getVerifiedPurchasesStorekit1(this.applicationUsername);
     }
     const purchases = await IAP.getAvailablePurchases();
-    logger.info('Found ' + purchases.length + ' pending purchases');
+    logger.info('IapticStore.loadPurchases: Found ' + purchases.length + ' pending purchases');
     const results = await Promise.all(purchases.map(p => this.validate(p)));
-    logger.info('Validation results: ' + JSON.stringify(results));
+    logger.info('IapticStore.loadPurchases: Validation results: ' + JSON.stringify(results));
     return results.filter(r => r !== undefined);
   }
 
@@ -379,13 +384,27 @@ export class IapticStore {
    * @returns List of verified purchases.
    */
   private async getVerifiedPurchasesStorekit1(applicationUsername?: string): Promise<IapticVerifiedPurchase[]> {
-    const receipt = await IAP.getReceiptIOS({ forceRefresh: false });
+    logger.debug('IapticStore.getVerifiedPurchasesStorekit1()');
+    let receipt = await IAP.getReceiptIOS({ forceRefresh: false });
     if (!receipt) {
+      logger.debug('IapticStore.getVerifiedPurchasesStorekit1: receipt not found, trying to refresh');
+      try {
+        receipt = await IAP.getReceiptIOS({ forceRefresh: true });
+      }
+      catch (err: any) {
+        logger.error('IapticStore.getVerifiedPurchasesStorekit1: error refreshing receipt: ' + err.message);
+        throw toIapticError(err, IapticSeverity.ERROR, IapticErrorCode.VERIFICATION_FAILED, 'Failed to refresh receipt, check your configuration, make sure your iOS project has the "In App Purchase" capability enabled, make sure your store has Paid Apps agreements and banking setup...');
+      }
+    }
+    if (!receipt) {
+      logger.error('IapticStore.getVerifiedPurchasesStorekit1: receipt not found');
       throw new Error('Receipt not found');
     }
     if (!this.config.iosBundleId) {
+      logger.error('IapticStore.getVerifiedPurchasesStorekit1: iOS bundle ID is not set');
       throw new Error('iOS bundle ID is not set');
     }
+    logger.debug('IapticStore.getVerifiedPurchasesStorekit1: validating receipt');
     const bundleId = this.config.iosBundleId;
     const result = await validateReceipt({
       productId: bundleId,
