@@ -456,15 +456,7 @@ export class IapticStore {
    * @returns True if the user has active access to the specified feature
    */
   checkEntitlement(featureId: string): boolean {
-    for (const purchase of this.purchases.list()) {
-      if (this.owned(purchase.id)) {
-        const definition = this.products.getDefinition(purchase.id);
-        if (definition?.entitlements?.some(e => e === featureId)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return this.listEntitlements().includes(featureId);
   }
 
   /**
@@ -490,9 +482,11 @@ export class IapticStore {
   listEntitlements(): string[] {
     const entitlements = new Set<string>();
     for (const purchase of this.purchases.list()) {
-      const definition = this.products.getDefinition(purchase.id);
-      if (definition?.entitlements) {
-        definition.entitlements.forEach(e => entitlements.add(e));
+      if (this.owned(purchase.productId)) {
+        const definition = this.products.getDefinition(purchase.productId);
+        if (definition?.entitlements) {
+          definition.entitlements.forEach(e => entitlements.add(e));
+        }
       }
     }
     return Array.from(entitlements);
