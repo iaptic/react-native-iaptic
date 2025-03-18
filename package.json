@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.0",
-    "react-native-iap": "^12.16.1"
+    "react-native-iap": "^12.16.1",
+    "base-64": "^1.0.0"
   },
   "peerDependencies": {
     "react": ">=17",
@@ -45,13 +46,12 @@
     "@typescript-eslint/parser": "^6.15.0",
     "babel-jest": "^29.7.0",
     "babel-plugin-module-resolver": "^5.0.2",
-    "base-64": "^1.0.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.0.0",
     "typedoc": "^0.27.6",
-    "typedoc-plugin-markdown": "^4.4.1"
+    "typedoc-plugin-markdown": "^4.4.1",
+    "typescript": "^5.0.0"
   },
   "keywords": [
     "react-native",
@@ -73,7 +73,9 @@
   "homepage": "https://www.iaptic.com/documentation/react-native",
   "typesVersions": {
     "*": {
-      "*": ["lib/*"]
+      "*": [
+        "lib/*"
+      ]
     }
   }
 }
