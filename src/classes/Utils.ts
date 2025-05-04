@@ -48,7 +48,7 @@ export class Utils {
       default:// INFINITE_RECURRING
         return this.getBillingCycleTemplateInfinite(
           pricingPhase.billingCycles ?? 0,
-          this.formatDuration(pricingPhase.billingPeriod, pricingPhase.billingCycles ?? 0)
+          this.formatDuration(pricingPhase.billingPeriod, pricingPhase.billingCycles ?? 0, true)
         );
     }
   }
@@ -82,15 +82,27 @@ export class Utils {
   // For duration units
   formatDuration(iso: DurationISO, count: number, includeCount?: boolean): string {
     const l = iso.length;
+    
+    // Extract the numeric part from ISO string (e.g., "7" from "P7D")
     const isoCount = parseInt(iso.slice(1, -1));
-    if (count === 0) {
-      count = isoCount;
-    }
+        
+    // Multiply counts if both are greater than 1
     if (count > 1 && isoCount > 1) {
       count = isoCount * count;
     }
+   
+    // If count is 0, use the ISO count instead
+    if (count === 0) {
+      count = isoCount;
+    }
+    
+    // Extract the unit (D, W, M, or Y) from the end of the ISO string
     const unit = iso[l - 1] as 'D' | 'W' | 'M' | 'Y';
+      
+    // Get localized string for the duration unit
     const units = Locales.getForCount(`Duration_${unit}`, count);
+    
+    // Return with or without count based on includeCount parameter
     if (includeCount) {
       return `${count} ${units}`;
     }
