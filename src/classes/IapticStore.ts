@@ -18,7 +18,7 @@ import { Subscriptions } from "./Subscriptions";
 import { validateReceipt } from "../functions/validateReceipt";
 import { IapticError, IapticSeverity, toIapticError } from "./IapticError";
 import { PendingPurchases } from "./PendingPurchases";
-import { IapticLogger, logger } from "./IapticLogger";
+import { logger } from "./IapticLogger";
 import { isUUID, md5UUID } from "../functions/md5UUID";
 import { IapticEvents } from './IapticEvents';
 import { IapticEventType, IapticEventListener } from '../types';
