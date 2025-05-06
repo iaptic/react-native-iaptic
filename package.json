@@ -1,6 +1,6 @@
 {
   "name": "react-native-iaptic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React Native In-App Purchase library with Iaptic receipt validation",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
