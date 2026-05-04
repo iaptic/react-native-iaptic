@@ -1,5 +1,5 @@
 import { Platform, Linking } from "react-native";
-import { getReceiptIOS, ProductPurchase } from "react-native-iap";
+import { getReceiptIOS, ProductPurchase } from "@iaptic/react-native-iap";
 
 import {
   IapticStoreConfig,
@@ -11,7 +11,7 @@ import {
   IapticPurchasePlatform,
   IapticProductDefinition
 } from "../types";
-import * as IAP from 'react-native-iap';
+import * as IAP from '@iaptic/react-native-iap';
 import { StoreProducts } from "./StoreProducts";
 import { Purchases } from "./Purchases";
 import { Subscriptions } from "./Subscriptions";

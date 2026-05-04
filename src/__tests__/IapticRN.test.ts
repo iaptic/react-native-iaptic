@@ -1,18 +1,18 @@
 /// <reference types="jest" />
 
 import { IapticRN } from '../IapticRN';
-import * as IAP from 'react-native-iap';
+import * as IAP from '@iaptic/react-native-iap';
 import { Platform, Linking } from 'react-native';
 import { IapticProductDefinition, IapticProductType, IapticPurchasePlatform, IapticOffer, IapticPricingPhase, IapticErrorCode } from '../types';
 import { IapticStore } from '../classes/IapticStore';
 
 // Mock react-native-iap
-jest.mock('react-native-iap', () => {
+jest.mock('@iaptic/react-native-iap', () => {
   const purchaseUpdatedListener = jest.fn(() => ({ remove: jest.fn() }));
   const purchaseErrorListener = jest.fn(() => ({ remove: jest.fn() }));
   
   // Use the actual error class from react-native-iap
-  const { PurchaseError } = jest.requireActual('react-native-iap');
+  const { PurchaseError } = jest.requireActual('@iaptic/react-native-iap');
   
   return {
     initConnection: jest.fn(),

@@ -1,5 +1,39 @@
 # Release Notes
 
+## 1.2.0
+
+### Breaking change — IAP layer now uses `@iaptic/react-native-iap`
+
+`react-native-iaptic` no longer consumes upstream `react-native-iap` (which was archived on 2026-04-26 and replaced by an OpenIAP/Nitro Modules rewrite at v15+). The SDK now peer-depends on [`@iaptic/react-native-iap@^12.16.5`](https://github.com/iaptic/react-native-iap) — an Iaptic-maintained fork of `12.16.4` with the iOS new-architecture pod fix built in.
+
+Why: the v12.x line will not receive any further upstream patches, so the RN ≥ 0.83 / Expo SDK ≥ 55 build error (`Unable to find a specification for RCT-Folly`) had no future fix path. Maintaining a frozen v12.x fork was lower-cost than asking every user to maintain a `patch-package` patch.
+
+Migration from 1.1.0:
+
+```bash
+# Remove upstream package and any patch-package workaround
+npm uninstall react-native-iap
+rm -f patches/react-native-iap+*.patch
+
+# Install the fork
+npm install @iaptic/react-native-iap @react-native-async-storage/async-storage
+```
+
+If you reference the Expo config plugin in `app.json` / `app.config.js`, change `"react-native-iap"` to `"@iaptic/react-native-iap"`.
+
+The JavaScript API surface, Java/Obj-C/Swift native code, and the `withIAP` Expo plugin behaviour are unchanged from upstream `12.16.4`.
+
+### Verified against
+
+- Expo SDK 55.0.19 / React Native 0.83.6 / new architecture / iOS prebuilt artifacts.
+- `npm install @iaptic/react-native-iap` → `expo prebuild` → `pod install` → full iOS Debug `xcodebuild` (BUILD SUCCEEDED), with no `patch-package` involved.
+
+### Future direction
+
+`react-native-iaptic@2.x` is planned to migrate to the OpenIAP/Nitro Modules-based v15+ react-native-iap (the long-term successor). The fork is a stop-gap for the v12.x line and will be sunset when 2.x ships.
+
+---
+
 ## 1.1.0
 
 ### Breaking change — peer dependencies

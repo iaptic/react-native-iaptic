@@ -1,5 +1,5 @@
 import { IapticErrorCode } from "../types";
-import * as IAP from "react-native-iap";
+import * as IAP from "@iaptic/react-native-iap";
 import { Locales } from "./Locales";
 
 /**

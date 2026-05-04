@@ -1,4 +1,4 @@
-import * as IAP from 'react-native-iap';
+import * as IAP from '@iaptic/react-native-iap';
 import { IapticProductDefinition, IapticProduct, IapticOffer, IapticPricingPhase, IapticProductType, IapticRecurrenceMode, IapticPaymentMode, IapticPurchasePlatform } from '../types';
 import { getPlatform } from '../functions/getPlatform';
 import { logger } from './IapticLogger';

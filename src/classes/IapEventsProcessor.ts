@@ -1,4 +1,4 @@
-import * as IAP from 'react-native-iap';
+import * as IAP from '@iaptic/react-native-iap';
 import { IapticEvents } from './IapticEvents';
 import { DebouncedProcessor } from './DebouncedProcessor';
 import { IapticSeverity, toIapticError } from './IapticError';

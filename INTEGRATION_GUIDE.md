@@ -44,16 +44,16 @@ Architecture in one line: your app calls `IapticRN`, which talks to `react-nativ
 - An **Apple Developer account** with In-App Purchase enabled and an app in App Store Connect.
 - A **Google Play Developer account** with an app and license testers configured.
 - An **Iaptic account** (https://www.iaptic.com) with an app registered. From the Iaptic dashboard you will need the `appName` and `publicKey`.
-- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `react-native-iap >=12.16.1 <14`, `@react-native-async-storage/async-storage >=1.19.0 <4`.
+- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^12.16.5`, `@react-native-async-storage/async-storage >=1.19.0 <4`.
 
 ---
 
 ## 3. Installation
 
-As of 1.1.0, `react-native-iap` and `@react-native-async-storage/async-storage` are **peer dependencies** — install them yourself so you can pin and patch them independently, and so the `react-native-iap` Expo config plugin (`withIAP`) resolves at the project root. Pin `react-native-iap` to the 12.x line; 13.x ships the same JS API but trips the iOS build error described in §14, and 14.x is a Nitro Modules rewrite that's not yet supported.
+As of 1.2.0, `react-native-iaptic` consumes [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) — an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix baked in (see §14 / [Why the fork](#why-the-fork) below). The JavaScript API and Expo config plugin behaviour are identical to upstream `12.16.4`.
 
 ```bash
-npm install --save 'react-native-iap@^12.16.1' @react-native-async-storage/async-storage
+npm install --save @iaptic/react-native-iap @react-native-async-storage/async-storage
 npm install --save react-native-iaptic
 # iOS only
 cd ios && pod install && cd ..
@@ -63,29 +63,33 @@ Verify in `package.json`:
 
 ```json
 "dependencies": {
+  "@iaptic/react-native-iap": "^12.16.5",
   "@react-native-async-storage/async-storage": "^2.1.0",
-  "react-native-iap": "^12.16.1",
-  "react-native-iaptic": "^1.1.0"
+  "react-native-iaptic": "^1.2.0"
 }
 ```
 
-> ⚠️ **Upgrading from 1.0.x?** `react-native-iap` and `@react-native-async-storage/async-storage` moved from `dependencies` to `peerDependencies` in 1.1.0. Install them explicitly as shown above.
+> ⚠️ **Upgrading from 1.1.0?** `react-native-iaptic` no longer consumes upstream `react-native-iap`. Remove it (and any `patch-package` workaround you applied for the RN ≥ 0.83 podspec issue) and install `@iaptic/react-native-iap` instead — the fix is built into the fork.
+>
+> **Upgrading from 1.0.x?** Both peer modules are now installed by you (the package no longer pulls them in transitively). Use the install commands above.
 
 ### Expo
 
-Add the `react-native-iap` config plugin to `app.json` / `app.config.js` so the Android `missingDimensionStrategy` (Play Store flavor) is wired up at prebuild time:
+Add the config plugin to `app.json` / `app.config.js` so the Android `missingDimensionStrategy` (Play Store flavor) is wired up at prebuild time:
 
 ```js
-// app.config.js (or "plugins": ["react-native-iap"] in app.json's "expo" object)
+// app.config.js — equivalent to "plugins": ["@iaptic/react-native-iap"] in app.json's "expo" object
 export default {
   expo: {
-    plugins: ['react-native-iap'],
+    plugins: ['@iaptic/react-native-iap'],
     // ...
   },
 };
 ```
 
-The plugin only resolves when `react-native-iap` is hoisted to the project root, which is exactly what the peer-dep model in 1.1.0 guarantees.
+### Why the fork
+
+Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-iap) was archived on 2026-04-26; development moved to the [OpenIAP monorepo](https://github.com/hyodotdev/openiap/tree/main/libraries/react-native-iap), where it shipped as a Nitro Modules rewrite (v15+) with a different API and a hard `react-native-nitro-modules` peer. The 12.x line therefore won't get any further upstream patches — including the iOS new-architecture pod fix needed on React Native ≥ 0.83 / Expo SDK ≥ 55. `@iaptic/react-native-iap@12.16.5` is `12.16.4` with that one fix applied. Iaptic plans to migrate `react-native-iaptic@2.x` to OpenIAP/Nitro on a future schedule; until then, the fork is the supported IAP layer.
 
 ---
 
@@ -691,41 +695,32 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 
 **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`.**
 
-Cause: `react-native-iap`'s `RNIap.podspec` (≤ 13.0.4 at the time of writing) depends directly on `RCT-Folly`, `RCTRequired`, `RCTTypeSafety`, and `ReactCommon/turbomodule/core` under `RCT_NEW_ARCH_ENABLED=1`. RN ≥ 0.83's prebuilt-artifacts pipeline ships those inside the `ReactNativeDependencies` pod and no longer publishes them as standalone podspecs, so CocoaPods can't resolve them.
+You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. As of 1.2.0 the SDK consumes the Iaptic-maintained fork, which has the fix built in. Switch to it (see §3 / [Why the fork](#why-the-fork)) and the error goes away — no `patch-package` needed.
 
-Workaround using [`patch-package`](https://github.com/ds300/patch-package):
+If you must keep upstream `react-native-iap` for some reason, the manual workaround is to apply this diff via `patch-package`:
 
-1. `npm install --save-dev patch-package postinstall-postinstall`
-2. Add to your `package.json`:
-   ```json
-   "scripts": { "postinstall": "patch-package" }
-   ```
-3. Save the patch file as `patches/react-native-iap+12.16.4.patch` (adjust the version suffix to match your installed `react-native-iap` version):
-   ```diff
-   diff --git a/node_modules/react-native-iap/RNIap.podspec b/node_modules/react-native-iap/RNIap.podspec
-   --- a/node_modules/react-native-iap/RNIap.podspec
-   +++ b/node_modules/react-native-iap/RNIap.podspec
-   @@ -23,9 +23,13 @@ Pod::Spec.new do |s|
-            "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
-        }
+```diff
+diff --git a/node_modules/react-native-iap/RNIap.podspec b/node_modules/react-native-iap/RNIap.podspec
+--- a/node_modules/react-native-iap/RNIap.podspec
++++ b/node_modules/react-native-iap/RNIap.podspec
+@@ -23,9 +23,13 @@ Pod::Spec.new do |s|
+         "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+     }
 
-   -    s.dependency "RCT-Folly"
-   -    s.dependency "RCTRequired"
-   -    s.dependency "RCTTypeSafety"
-   -    s.dependency "ReactCommon/turbomodule/core"
-   +    if respond_to?(:install_modules_dependencies, true)
-   +      install_modules_dependencies(s)
-   +    else
-   +      s.dependency "RCT-Folly"
-   +      s.dependency "RCTRequired"
-   +      s.dependency "RCTTypeSafety"
-   +      s.dependency "ReactCommon/turbomodule/core"
-   +    end
-      end
-    end
-   ```
-4. Run `npm install` (or `npx patch-package` once) to apply, then `cd ios && pod install`.
+-    s.dependency "RCT-Folly"
+-    s.dependency "RCTRequired"
+-    s.dependency "RCTTypeSafety"
+-    s.dependency "ReactCommon/turbomodule/core"
++    if respond_to?(:install_modules_dependencies, true)
++      install_modules_dependencies(s)
++    else
++      s.dependency "RCT-Folly"
++      s.dependency "RCTRequired"
++      s.dependency "RCTTypeSafety"
++      s.dependency "ReactCommon/turbomodule/core"
++    end
+   end
+ end
+```
 
-This swaps the four hard-coded subspecs for React Native's `install_modules_dependencies(s)` helper, which wires up the right pods whether you build RN from source or use the prebuilt artifacts. `@react-native-async-storage/async-storage` and other maintained native modules use the same pattern.
-
-Track upstream at [hyochan/react-native-iap](https://github.com/hyochan/react-native-iap). Once a fixed `react-native-iap` is published, drop the patch and pin to that version.
+`install_modules_dependencies(s)` is React Native's blessed helper for third-party module podspecs; it wires up the right pod set whether the app builds RN from source or uses the prebuilt artifacts.
