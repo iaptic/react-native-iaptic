@@ -1,5 +1,15 @@
 # Release Notes
 
+## 1.2.1
+
+Metadata-only fix:
+
+- Correct the `repository.url` and `bugs.url` fields in `package.json` to point at https://github.com/iaptic/react-native-iaptic (the actual repo) instead of the previous stale URL.
+
+No code or behaviour changes vs. 1.2.0.
+
+---
+
 ## 1.2.0
 
 ### Breaking change — IAP layer now uses `@iaptic/react-native-iap`
