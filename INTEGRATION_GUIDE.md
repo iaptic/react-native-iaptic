@@ -39,33 +39,53 @@ Architecture in one line: your app calls `IapticRN`, which talks to `react-nativ
 ## 2. Prerequisites
 
 - Node.js 18+ and npm or yarn.
-- React Native CLI environment (Expo must be ejected).
+- React Native CLI environment, or Expo (with `npx expo prebuild` / EAS Build — managed-only workflows are not supported because IAP requires native code).
 - Xcode (iOS) and/or Android Studio (Android).
 - An **Apple Developer account** with In-App Purchase enabled and an app in App Store Connect.
 - A **Google Play Developer account** with an app and license testers configured.
 - An **Iaptic account** (https://www.iaptic.com) with an app registered. From the Iaptic dashboard you will need the `appName` and `publicKey`.
-- Tested with React Native 0.76.5 and 0.78. Peer deps: `react >= 17`, `react-native >= 0.64`.
+- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `react-native-iap >=12.16.1 <14`, `@react-native-async-storage/async-storage >=1.19.0 <4`.
 
 ---
 
 ## 3. Installation
 
+As of 1.1.0, `react-native-iap` and `@react-native-async-storage/async-storage` are **peer dependencies** — install them yourself so you can pin and patch them independently, and so the `react-native-iap` Expo config plugin (`withIAP`) resolves at the project root. Pin `react-native-iap` to the 12.x line; 13.x ships the same JS API but trips the iOS build error described in §14, and 14.x is a Nitro Modules rewrite that's not yet supported.
+
 ```bash
-npm install --save react-native-iap react-native-iaptic
+npm install --save 'react-native-iap@^12.16.1' @react-native-async-storage/async-storage
+npm install --save react-native-iaptic
 # iOS only
 cd ios && pod install && cd ..
 ```
-
-`react-native-iap` is a peer of `react-native-iaptic` and must be installed alongside it.
 
 Verify in `package.json`:
 
 ```json
 "dependencies": {
-  "react-native-iap": "^12.16.0",
-  "react-native-iaptic": "^1.0.1"
+  "@react-native-async-storage/async-storage": "^2.1.0",
+  "react-native-iap": "^12.16.1",
+  "react-native-iaptic": "^1.1.0"
 }
 ```
+
+> ⚠️ **Upgrading from 1.0.x?** `react-native-iap` and `@react-native-async-storage/async-storage` moved from `dependencies` to `peerDependencies` in 1.1.0. Install them explicitly as shown above.
+
+### Expo
+
+Add the `react-native-iap` config plugin to `app.json` / `app.config.js` so the Android `missingDimensionStrategy` (Play Store flavor) is wired up at prebuild time:
+
+```js
+// app.config.js (or "plugins": ["react-native-iap"] in app.json's "expo" object)
+export default {
+  expo: {
+    plugins: ['react-native-iap'],
+    // ...
+  },
+};
+```
+
+The plugin only resolves when `react-native-iap` is hoisted to the project root, which is exactly what the peer-dep model in 1.1.0 guarantees.
 
 ---
 
@@ -668,3 +688,44 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 
 **Need detailed logs.**
 - Set `verbosity: IapticVerbosity.DEBUG` in `IapticConfig` and read the device console. Drop to `ERROR` or `NONE` before shipping.
+
+**iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`.**
+
+Cause: `react-native-iap`'s `RNIap.podspec` (≤ 13.0.4 at the time of writing) depends directly on `RCT-Folly`, `RCTRequired`, `RCTTypeSafety`, and `ReactCommon/turbomodule/core` under `RCT_NEW_ARCH_ENABLED=1`. RN ≥ 0.83's prebuilt-artifacts pipeline ships those inside the `ReactNativeDependencies` pod and no longer publishes them as standalone podspecs, so CocoaPods can't resolve them.
+
+Workaround using [`patch-package`](https://github.com/ds300/patch-package):
+
+1. `npm install --save-dev patch-package postinstall-postinstall`
+2. Add to your `package.json`:
+   ```json
+   "scripts": { "postinstall": "patch-package" }
+   ```
+3. Save the patch file as `patches/react-native-iap+12.16.4.patch` (adjust the version suffix to match your installed `react-native-iap` version):
+   ```diff
+   diff --git a/node_modules/react-native-iap/RNIap.podspec b/node_modules/react-native-iap/RNIap.podspec
+   --- a/node_modules/react-native-iap/RNIap.podspec
+   +++ b/node_modules/react-native-iap/RNIap.podspec
+   @@ -23,9 +23,13 @@ Pod::Spec.new do |s|
+            "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+        }
+
+   -    s.dependency "RCT-Folly"
+   -    s.dependency "RCTRequired"
+   -    s.dependency "RCTTypeSafety"
+   -    s.dependency "ReactCommon/turbomodule/core"
+   +    if respond_to?(:install_modules_dependencies, true)
+   +      install_modules_dependencies(s)
+   +    else
+   +      s.dependency "RCT-Folly"
+   +      s.dependency "RCTRequired"
+   +      s.dependency "RCTTypeSafety"
+   +      s.dependency "ReactCommon/turbomodule/core"
+   +    end
+      end
+    end
+   ```
+4. Run `npm install` (or `npx patch-package` once) to apply, then `cd ios && pod install`.
+
+This swaps the four hard-coded subspecs for React Native's `install_modules_dependencies(s)` helper, which wires up the right pods whether you build RN from source or use the prebuilt artifacts. `@react-native-async-storage/async-storage` and other maintained native modules use the same pattern.
+
+Track upstream at [hyochan/react-native-iap](https://github.com/hyochan/react-native-iap). Once a fixed `react-native-iap` is published, drop the patch and pin to that version.
