@@ -29,7 +29,7 @@ npm install react-native-iaptic
 cd ios && pod install && cd ..
 ```
 
-> ⚠️ **Breaking change in 1.2.0** — `react-native-iaptic` now consumes `@iaptic/react-native-iap` instead of upstream `react-native-iap`. If you were on 1.1.0 with `react-native-iap` plus a `patch-package` workaround, remove both and install `@iaptic/react-native-iap` (the fix is built in — no `patch-package` needed). The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream.
+> ⚠️ **Upgrading from 1.0.x?** Install `@iaptic/react-native-iap` and `@react-native-async-storage/async-storage` explicitly — they moved to peer dependencies. The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream `react-native-iap@12.16.4`.
 
 ### Expo
 

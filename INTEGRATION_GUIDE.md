@@ -65,13 +65,11 @@ Verify in `package.json`:
 "dependencies": {
   "@iaptic/react-native-iap": "^12.16.5",
   "@react-native-async-storage/async-storage": "^2.1.0",
-  "react-native-iaptic": "^1.2.0"
+  "react-native-iaptic": "^1.2.1"
 }
 ```
 
-> ⚠️ **Upgrading from 1.1.0?** `react-native-iaptic` no longer consumes upstream `react-native-iap`. Remove it (and any `patch-package` workaround you applied for the RN ≥ 0.83 podspec issue) and install `@iaptic/react-native-iap` instead — the fix is built into the fork.
->
-> **Upgrading from 1.0.x?** Both peer modules are now installed by you (the package no longer pulls them in transitively). Use the install commands above.
+> ⚠️ **Upgrading from 1.0.x?** Both peer modules are now installed by you (the package no longer pulls them in transitively). Use the install commands above.
 
 ### Expo
 
@@ -695,32 +693,4 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 
 **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`.**
 
-You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. As of 1.2.0 the SDK consumes the Iaptic-maintained fork, which has the fix built in. Switch to it (see §3 / [Why the fork](#why-the-fork)) and the error goes away — no `patch-package` needed.
-
-If you must keep upstream `react-native-iap` for some reason, the manual workaround is to apply this diff via `patch-package`:
-
-```diff
-diff --git a/node_modules/react-native-iap/RNIap.podspec b/node_modules/react-native-iap/RNIap.podspec
---- a/node_modules/react-native-iap/RNIap.podspec
-+++ b/node_modules/react-native-iap/RNIap.podspec
-@@ -23,9 +23,13 @@ Pod::Spec.new do |s|
-         "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
-     }
-
--    s.dependency "RCT-Folly"
--    s.dependency "RCTRequired"
--    s.dependency "RCTTypeSafety"
--    s.dependency "ReactCommon/turbomodule/core"
-+    if respond_to?(:install_modules_dependencies, true)
-+      install_modules_dependencies(s)
-+    else
-+      s.dependency "RCT-Folly"
-+      s.dependency "RCTRequired"
-+      s.dependency "RCTTypeSafety"
-+      s.dependency "ReactCommon/turbomodule/core"
-+    end
-   end
- end
-```
-
-`install_modules_dependencies(s)` is React Native's blessed helper for third-party module podspecs; it wires up the right pod set whether the app builds RN from source or uses the prebuilt artifacts.
+You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. The SDK consumes the Iaptic-maintained fork, which has the fix built in — uninstall `react-native-iap`, install `@iaptic/react-native-iap`, then `cd ios && pod install`. See §3 / [Why the fork](#why-the-fork) for context.
