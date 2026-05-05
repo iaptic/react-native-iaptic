@@ -96,6 +96,8 @@ Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-ia
 ### 4.1 iOS
 
 1. **Bundle ID**: open the iOS project in Xcode, set Team and Bundle Identifier to match the App Store Connect record. The bundle ID must equal `IapticConfig.iosBundleId`.
+
+   > ⚠️ **Bundle ID must match everywhere.** `IapticConfig.iosBundleId` must exactly match your Xcode bundle identifier and the `bundleIdentifier` in your `app.json` / `app.config.js` (Expo). In the Iaptic dashboard, the iOS bundle ID field under your app's settings must also match — this is separate from `appName`, which is just an internal Iaptic slug. A mismatch causes receipt validation to fail with no indication of *which* identifier is wrong.
 2. **Add the In-App Purchase capability**: Xcode → Project → Targets → *(your app)* → **Signing & Capabilities** → **+ Capability** → "In-App Purchase". Without this capability, products will silently fail to load.
 3. **Create products in App Store Connect**: subscription group + auto-renewing subscriptions. Note the product IDs; they go into `IapticConfig.products[].id`.
 4. **Sandbox testing**: in App Store Connect, create sandbox testers under Users and Access → Sandbox Testers. On the device, sign out of the production Apple ID (Settings → App Store) so iOS prompts for a sandbox login at first purchase. Sandbox purchases are not charged.
@@ -142,6 +144,10 @@ export class Config {
       { id: 'subscription2',       type: 'paid subscription', entitlements: ['basic', 'premium'] },
       { id: 'monthly_with_intro',  type: 'paid subscription', entitlements: ['basic', 'premium', 'pro'] },
     ],
+
+    // ⚠️ Product IDs that don't exist in App Store Connect / Play Console for the configured
+    // bundle ID will silently not appear in 'products.updated' — no error, no warning.
+    // Make sure every ID above exactly matches an existing store product.
   };
 
   // Labels shown in IapticSubscriptionView — one entry per entitlement key above.
@@ -167,6 +173,7 @@ export class Config {
 | `products[].id` | Store product ID (App Store Connect / Play Console). |
 | `products[].type` | For this guide, always `'paid subscription'`. |
 | `products[].entitlements` | Array of entitlement strings this product grants. |
+| `applicationUsername` | Optional pre-set username. If you call `setApplicationUsername()` after `initialize()` (recommended — the user may change at runtime), omit this field to avoid confusion. |
 
 ### Why entitlements, not product IDs
 
@@ -229,7 +236,8 @@ export class AppService {
 
   async initializeIaptic() {
     try {
-      // Source of truth for entitlement changes (renewals, cancellations, expirations, plan changes).
+      // IMPORTANT: Register the subscription.updated listener BEFORE initialize()
+      // or initial entitlements won't sync.
       IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
         this.log(`subscription.updated: ${reason} for ${JSON.stringify(purchase)}`);
         this.setEntitlements(IapticRN.listEntitlements());
@@ -238,6 +246,8 @@ export class AppService {
       await IapticRN.initialize(Config.iaptic);
 
       // Associate purchases with this user. Use a stable, anonymous ID (e.g. hashed user ID).
+      // Call setApplicationUsername() rather than setting IapticConfig.applicationUsername —
+      // the setter can be called again when the logged-in user changes at runtime.
       IapticRN.setApplicationUsername('iaptic-rn-demo-user');
 
       // Initial UI sync — products may already have been validated.
@@ -281,13 +291,11 @@ The service must survive React re-renders. Use a module-level singleton plus `us
 ```typescript
 // App.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+// Use react-native-safe-area-context instead of the deprecated react-native SafeAreaView.
+// Install it: npm install react-native-safe-area-context
+// SafeAreaView requires SafeAreaProvider as an ancestor — wrap your root with <SafeAreaProvider>.
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { IapticRN, IapticSubscriptionView } from 'react-native-iaptic';
 import { AppService } from './src/AppService';
 import { Config } from './src/Config';
@@ -306,7 +314,8 @@ function App(): React.JSX.Element {
   useEffect(() => iapService.onAppStartup(), []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.productsContainer}
@@ -352,6 +361,7 @@ function App(): React.JSX.Element {
         theme={{ primaryColor: '#FF7A00', secondaryColor: '#FF0000' }}
       />
     </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -431,6 +441,8 @@ Open it from anywhere with:
 ```typescript
 IapticRN.presentSubscriptionView();
 ```
+
+> **Note on mounting strategy:** `IapticSubscriptionView` is designed to be always-mounted at the root and shown/hidden via `presentSubscriptionView()`. Internally it uses a `<Modal>` with `visible={false}` when hidden, and its event listeners remain active — this ensures the component can respond to purchase events that complete while the modal is dismissed. Conditional mounting (`{show && <IapticSubscriptionView .../>}`) is not recommended and may cause flicker or missed events on rapid toggling.
 
 ### Props
 
@@ -667,7 +679,7 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 
 **Products fail to load on iOS.**
 1. Verify the **In-App Purchase** capability is enabled in Xcode (Project → Targets → Signing & Capabilities). This is the most common cause.
-2. Confirm `IapticConfig.iosBundleId` exactly matches the Xcode bundle ID and the App Store Connect record.
+2. Confirm `IapticConfig.iosBundleId` exactly matches the Xcode bundle identifier and the `bundleIdentifier` in `app.json`/`app.config.js` (Expo). Also verify the iOS bundle ID field in the Iaptic dashboard matches — this is separate from `appName` (which is just an internal slug).
 3. Confirm products exist in App Store Connect, are in **Ready to Submit** state, and the device is signed into a sandbox tester (not a production Apple ID).
 4. Sign out of Settings → App Store, then trigger a purchase — iOS will prompt for the sandbox login at the StoreKit dialog, not in Settings.
 
@@ -690,6 +702,9 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 
 **Need detailed logs.**
 - Set `verbosity: IapticVerbosity.DEBUG` in `IapticConfig` and read the device console. Drop to `ERROR` or `NONE` before shipping.
+
+**Fewer products appear than expected (silent missing products).**
+- Product IDs listed in `IapticConfig.products` that don't exist in App Store Connect / Play Console for the same bundle ID / package name simply won't show up — there is no error or warning. Confirm every product ID in your config exactly matches an existing product in the store, and that the bundle ID / package name is consistent (see bundle ID note above).
 
 **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`.**
 
