@@ -1,6 +1,5 @@
 import { IapticRN } from "../IapticRN";
 import { IapticVerifiedPurchase } from "../types";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * A transaction that has occurred.
@@ -20,21 +19,22 @@ export interface IapticTokenTransaction {
 }
 
 /**
- * Simple token balance manager that uses localStorage to store transactions.
+ * Simple token balance manager that persists transactions to AsyncStorage.
  * 
- * To do this, this class the list of all transactions and their corresponding amounts.
+ * Tracks all consumable token transactions and their corresponding amounts.
+ * When a transaction is added, it is appended to the persisted list.
+ * When a transaction is removed (refund), it is removed from the list.
+ * The balance is the sum of all amounts in the list.
  * 
- * When a transaction is added, it is added to the list.
- * When a transaction is removed, it is removed from the list.
- * 
- * The balance is the sum of all the amounts in the list.
+ * @requires @react-native-async-storage/async-storage — install with:
+ *           `npm install @react-native-async-storage/async-storage@~2.1.0`
  * 
  * @see IapticProductDefinition.tokenType
  * @see IapticProductDefinition.tokenValue
  * 
  * @example
  * ```typescript
- * const tokensManager = new IapticTokensManager(iaptic);
+ * const tokensManager = new IapticTokensManager();
  * // ... tokensManager is now tracking consumable purchases that have a tokenType defined.
  * const balance = tokensManager.getBalance('coin');
  * ```
@@ -54,7 +54,9 @@ export class IapticTokensManager {
     constructor(consumePurchases: boolean = true) {
       this.storageKey = (IapticRN.getStore().config.appName ?? 'app') + '.tokens.iaptic';
       this.transactions = new Map();
-      this.loadTransactions(); // Load stored transactions when instantiated
+      this.loadTransactions().catch((error: any) => {
+        console.error('IapticTokensManager: failed to load transactions on init', error);
+      });
       IapticRN.getStore().addEventListener('consumable.purchased', (purchase: IapticVerifiedPurchase) => {
         const product = IapticRN.getStore().products.getDefinition(purchase.id);
         if (product && product.tokenValue && product.tokenType) {
@@ -72,11 +74,32 @@ export class IapticTokensManager {
     private typeSafeTransactionId(purchase: IapticVerifiedPurchase): string {
       return purchase.transactionId ?? purchase.purchaseId ?? purchase.id;
     }
+
+    /**
+     * Lazy-load AsyncStorage with a user-friendly error when not installed.
+     * Uses require() instead of a top-level import so the generated .d.ts
+     * file contains no reference to AsyncStorage, allowing consumers who
+     * don't use IapticTokensManager to skip the dependency entirely.
+     */
+    private getAsyncStorage() {
+      try {
+        return require('@react-native-async-storage/async-storage').default;
+      } catch (error: any) {
+        if (error?.code === 'MODULE_NOT_FOUND') {
+          throw new Error(
+            'IapticTokensManager requires @react-native-async-storage/async-storage. ' +
+            'Install with: npm install @react-native-async-storage/async-storage@~2.1.0'
+          );
+        }
+        throw error;
+      }
+    }
   
     /**
-     * Load transactions from localStorage
+     * Load transactions from AsyncStorage
      */
     private async loadTransactions() {
+      const AsyncStorage = this.getAsyncStorage();
       try {
         const storedTransactions = await AsyncStorage.getItem(this.storageKey);
         if (storedTransactions) {
@@ -85,8 +108,8 @@ export class IapticTokensManager {
             parsedTransactions.map(t => [t.transactionId, t])
           );
         }
-      } catch (error) {
-        console.warn('Failed to load transactions:', error);
+      } catch (error: any) {
+        console.warn('IapticTokensManager: failed to load transactions:', error);
       }
     }
   
@@ -94,6 +117,7 @@ export class IapticTokensManager {
      * Save current transactions to localStorage
      */
     private async saveTransactions() {
+      const AsyncStorage = this.getAsyncStorage();
       const transactionsArray = Array.from(this.transactions.values());
       await AsyncStorage.setItem(
         this.storageKey,

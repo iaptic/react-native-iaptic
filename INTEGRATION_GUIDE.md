@@ -44,7 +44,7 @@ Architecture in one line: your app calls `IapticRN`, which talks to `react-nativ
 - An **Apple Developer account** with In-App Purchase enabled and an app in App Store Connect.
 - A **Google Play Developer account** with an app and license testers configured.
 - An **Iaptic account** (https://www.iaptic.com) with an app registered. From the Iaptic dashboard you will need the `appName` and `publicKey`.
-- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^12.16.5`, `@react-native-async-storage/async-storage >=1.19.0 <4`.
+- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^12.16.6` (required), `@react-native-async-storage/async-storage >=1.19.0 <4` (optional — only needed if using `IapticTokensManager` for consumable token tracking; install `@react-native-async-storage/async-storage@~2.1.0`).
 
 ---
 
@@ -53,7 +53,7 @@ Architecture in one line: your app calls `IapticRN`, which talks to `react-nativ
 As of 1.2.0, `react-native-iaptic` consumes [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) — an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix baked in (see §14 / [Why the fork](#why-the-fork) below). The JavaScript API and Expo config plugin behaviour are identical to upstream `12.16.4`.
 
 ```bash
-npm install --save @iaptic/react-native-iap @react-native-async-storage/async-storage
+npm install --save @iaptic/react-native-iap
 npm install --save react-native-iaptic
 # iOS only
 cd ios && pod install && cd ..
@@ -63,13 +63,17 @@ Verify in `package.json`:
 
 ```json
 "dependencies": {
-  "@iaptic/react-native-iap": "^12.16.5",
-  "@react-native-async-storage/async-storage": "^2.1.0",
-  "react-native-iaptic": "^1.2.1"
+  "@iaptic/react-native-iap": "^12.16.6",
+  "react-native-iaptic": "^1.3.0"
 }
 ```
 
-> ⚠️ **Upgrading from 1.0.x?** Both peer modules are now installed by you (the package no longer pulls them in transitively). Use the install commands above.
+```bash
+# Only if using IapticTokensManager (consumable token tracking):
+npm install --save @react-native-async-storage/async-storage@~2.1.0
+```
+
+> ⚠️ **Upgrading from 1.2.x?** AsyncStorage is now optional. If you were using `IapticTokensManager`, ensure AsyncStorage is installed explicitly. See the [Migration Guide](#142-upgrading-from-12x-to-130).
 
 ### Expo
 
@@ -709,3 +713,29 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`.**
 
 You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. The SDK consumes the Iaptic-maintained fork, which has the fix built in — uninstall `react-native-iap`, install `@iaptic/react-native-iap`, then `cd ios && pod install`. See §3 / [Why the fork](#why-the-fork) for context.
+
+**Android build fails with `Could not find org.asyncstorage.shared_storage:storage-android`.**
+- `@react-native-async-storage/async-storage@2.2.0` through `3.0.2` split their Android module into a separate artifact that isn't published to any public Maven repository. Pin to `~2.1.0` (last safe version) or wait for `>=3.0.3` once upstream fixes the issue.
+- If you don't use `IapticTokensManager`, you don't need AsyncStorage at all — it's now optional.
+
+**Android build fails with Kotlin `Unresolved reference 'currentActivity'`.**
+- This occurs on React Native 0.83+ / Expo SDK 55+ with the new architecture. Upgrade `@iaptic/react-native-iap` to `>=12.16.6` which contains the fix.
+- If you have a local `patch-package` patch for this issue, remove it before upgrading — the fix is now upstream.
+
+### 14.2 Upgrading from 1.2.x to 1.3.0
+
+**AsyncStorage is now optional.** If you use `IapticTokensManager` (consumable token tracking), AsyncStorage must be installed explicitly:
+
+```bash
+npm install --save @react-native-async-storage/async-storage@~2.1.0
+```
+
+If you don't use `IapticTokensManager`, AsyncStorage is no longer needed — you can remove it:
+
+```bash
+npm uninstall @react-native-async-storage/async-storage
+```
+
+**Minimum IAP version bumped.** `@iaptic/react-native-iap@12.16.6+` is now required. If you have a `patch-package` patch for the Kotlin `currentActivity` issue, remove it before upgrading.
+
+**Existing token data is preserved.** No storage backend change — your consumable token balances survive the upgrade.

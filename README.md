@@ -21,15 +21,19 @@ A robust in-app purchase library for React Native that simplifies receipt valida
 
 ## 📦 Installation
 
-`react-native-iaptic` depends on two peer modules: [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) (an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix baked in — see [Why the fork](#why-the-fork) below) and `@react-native-async-storage/async-storage`.
+`react-native-iaptic` requires [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) (an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix baked in — see [Why the fork](#why-the-fork) below). `@react-native-async-storage/async-storage` is optional — only needed if using `IapticTokensManager` for consumable token tracking.
 
 ```bash
-npm install @iaptic/react-native-iap @react-native-async-storage/async-storage
+npm install @iaptic/react-native-iap
 npm install react-native-iaptic
+# iOS only
 cd ios && pod install && cd ..
+
+# Only if using IapticTokensManager (consumable token tracking):
+npm install @react-native-async-storage/async-storage@~2.1.0
 ```
 
-> ⚠️ **Upgrading from 1.0.x?** Install `@iaptic/react-native-iap` and `@react-native-async-storage/async-storage` explicitly — they moved to peer dependencies. The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream `react-native-iap@12.16.4`.
+> ⚠️ **Upgrading from 1.0.x?** Install `@iaptic/react-native-iap` explicitly — it moved to a peer dependency. `@react-native-async-storage/async-storage` is now optional (only needed for `IapticTokensManager`). The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream `react-native-iap@12.16.4`.
 
 ### Expo
 
@@ -39,7 +43,9 @@ Add the config plugin to your `app.json` / `app.config.js` so the Android `missi
 // app.config.js
 export default {
   expo: {
-    plugins: ['@iaptic/react-native-iap'],
+    plugins: [
+      ['@iaptic/react-native-iap', { paymentProvider: 'Play Store' }]
+    ],
     // ...
   },
 };

@@ -1,5 +1,28 @@
 # Release Notes
 
+## 1.3.0
+
+### AsyncStorage now optional
+
+`@react-native-async-storage/async-storage` is no longer a required peer dependency. It is now optional — only needed if using `IapticTokensManager` for consumable token tracking. This resolves a breaking upstream bug where async-storage 2.2.0–3.0.2 fails Android Gradle resolution due to an unpublished Maven artifact.
+
+- If you use `IapticTokensManager`, install AsyncStorage explicitly: `npm install @react-native-async-storage/async-storage@~2.1.0`
+- If you don't use tokens, you can remove AsyncStorage entirely.
+- Existing token data is preserved (no storage backend change).
+
+### Kotlin fix for RN 0.83 / Expo SDK 55 (via `@iaptic/react-native-iap@12.16.6`)
+
+Minimum `@iaptic/react-native-iap` bumped to `^12.16.6`, which contains a fix for the `Unresolved reference 'currentActivity'` Kotlin compile error on React Native 0.83+ with the new architecture.
+
+### Bug fix: unhandled promise rejection in IapticTokensManager
+
+Fixed a pre-existing issue where `IapticTokensManager` constructor called `loadTransactions()` (an async method) without `await` or `.catch()`, causing unhandled promise rejections if loading failed. Errors are now properly caught and logged.
+
+### Documentation
+
+- `INTEGRATION_GUIDE.md`: updated prerequisites and install commands for optional AsyncStorage; added troubleshooting entries for async-storage 2.2.0+ and Kotlin `currentActivity` issues; added migration guide for 1.2.x → 1.3.0.
+- `README.md`: updated dependency description and install commands.
+
 ## 1.2.1
 
 Metadata-only fix:
