@@ -1564,14 +1564,17 @@ IapticRN.setVerbosity(IapticLoggerVerbosityLevel.DEBUG);
 ### IapticTokensManager
 
 
-Simple token balance manager that uses localStorage to store transactions.
+Simple token balance manager that persists transactions to AsyncStorage.
 
-To do this, this class the list of all transactions and their corresponding amounts.
+Tracks all consumable token transactions and their corresponding amounts.
+When a transaction is added, it is appended to the persisted list.
+When a transaction is removed (refund), it is removed from the list.
+The balance is the sum of all amounts in the list.
 
-When a transaction is added, it is added to the list.
-When a transaction is removed, it is removed from the list.
+#### Requires
 
-The balance is the sum of all the amounts in the list.
+@react-native-async-storage/async-storage — install with:
+          `npm install @react-native-async-storage/async-storage@~2.1.0`
 
 #### See
 
@@ -1581,7 +1584,7 @@ The balance is the sum of all the amounts in the list.
 #### Example
 
 ```typescript
-const tokensManager = new IapticTokensManager(iaptic);
+const tokensManager = new IapticTokensManager();
 // ... tokensManager is now tracking consumable purchases that have a tokenType defined.
 const balance = tokensManager.getBalance('coin');
 ```

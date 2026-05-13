@@ -480,7 +480,7 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
     // Calculate scroll positions
     setTimeout(() => {
       const productRef = productRefs.current[index];
-      productRef?.current?.measure((x, y, width, height, pageX, pageY) => {
+      productRef?.current?.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
         if (isLandscape) {
           landscapeScrollRef.current?.scrollTo({
             y: Math.max(0, y - 20),
