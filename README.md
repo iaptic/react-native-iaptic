@@ -30,7 +30,7 @@ npm install react-native-iaptic
 cd ios && pod install && cd ..
 
 # Only if using IapticTokensManager (consumable token tracking):
-npm install @react-native-async-storage/async-storage@~2.1.0
+npm install @react-native-async-storage/async-storage@^3.1.0
 ```
 
 > ⚠️ **Upgrading from 1.0.x?** Install `@iaptic/react-native-iap` explicitly — it moved to a peer dependency. `@react-native-async-storage/async-storage` is now optional (only needed for `IapticTokensManager`). The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream `react-native-iap@12.16.4`.

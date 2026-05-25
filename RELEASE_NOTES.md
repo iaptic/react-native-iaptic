@@ -4,9 +4,9 @@
 
 ### AsyncStorage now optional
 
-`@react-native-async-storage/async-storage` is no longer a required peer dependency. It is now optional — only needed if using `IapticTokensManager` for consumable token tracking. This resolves a breaking upstream bug where async-storage 2.2.0–3.0.2 fails Android Gradle resolution due to an unpublished Maven artifact.
+`@react-native-async-storage/async-storage` is no longer a required peer dependency. It is now optional — only needed if using `IapticTokensManager` for consumable token tracking. This sidesteps a breaking upstream bug where async-storage 2.2.0–3.0.2 (inclusive) fail Android Gradle resolution due to an unpublished Maven artifact. Upstream fixed it in [3.1.0](https://github.com/react-native-async-storage/async-storage/releases/tag/%40react-native-async-storage%2Fasync-storage%403.1.0) by republishing the split artifact to Maven Central ([upstream issue #1280](https://github.com/react-native-async-storage/async-storage/issues/1280)).
 
-- If you use `IapticTokensManager`, install AsyncStorage explicitly: `npm install @react-native-async-storage/async-storage@~2.1.0`
+- If you use `IapticTokensManager`, install AsyncStorage explicitly: `npm install @react-native-async-storage/async-storage@^3.1.0` (or stay on `~2.1.0`; avoid `2.2.0`–`3.0.2`).
 - If you don't use tokens, you can remove AsyncStorage entirely.
 - Existing token data is preserved (no storage backend change).
 
