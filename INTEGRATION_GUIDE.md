@@ -44,7 +44,7 @@ Architecture in one line: your app calls `IapticRN`, which talks to `react-nativ
 - An **Apple Developer account** with In-App Purchase enabled and an app in App Store Connect.
 - A **Google Play Developer account** with an app and license testers configured.
 - An **Iaptic account** (https://www.iaptic.com) with an app registered. From the Iaptic dashboard you will need the `appName` and `publicKey`.
-- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^12.16.6` (required), `@react-native-async-storage/async-storage >=1.19.0 <4` (optional — only needed if using `IapticTokensManager` for consumable token tracking; install `@react-native-async-storage/async-storage@~2.1.0`).
+- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^12.16.6` (required), `@react-native-async-storage/async-storage >=1.19.0 <4` (optional — only needed if using `IapticTokensManager` for consumable token tracking; install `@react-native-async-storage/async-storage@^3.1.0`, or stay on `~2.1.0` — see [§14.1](#141-common-issues) for the 2.2.0–3.0.2 known-broken window).
 
 ---
 
@@ -70,8 +70,10 @@ Verify in `package.json`:
 
 ```bash
 # Only if using IapticTokensManager (consumable token tracking):
-npm install --save @react-native-async-storage/async-storage@~2.1.0
+npm install --save @react-native-async-storage/async-storage@^3.1.0
 ```
+
+> ℹ️ `@react-native-async-storage/async-storage` versions **2.2.0 through 3.0.2** are known broken on Android (Gradle cannot resolve `storage-android:1.0.0`). Use `^3.1.0` (Maven Central artifact, no manual repo setup) or stay on `~2.1.0`. See [§14.1](#141-common-issues).
 
 > ⚠️ **Upgrading from 1.2.x?** AsyncStorage is now optional. If you were using `IapticTokensManager`, ensure AsyncStorage is installed explicitly. See the [Migration Guide](#142-upgrading-from-12x-to-130).
 
@@ -714,9 +716,11 @@ For exhaustive field lists, see `react-native-iaptic/api.md` (TypeDoc-generated)
 
 You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. The SDK consumes the Iaptic-maintained fork, which has the fix built in — uninstall `react-native-iap`, install `@iaptic/react-native-iap`, then `cd ios && pod install`. See §3 / [Why the fork](#why-the-fork) for context.
 
-**Android build fails with `Could not find org.asyncstorage.shared_storage:storage-android`.**
-- `@react-native-async-storage/async-storage@2.2.0` through `3.0.2` split their Android module into a separate artifact that isn't published to any public Maven repository. Pin to `~2.1.0` (last safe version) or wait for `>=3.0.3` once upstream fixes the issue.
-- If you don't use `IapticTokensManager`, you don't need AsyncStorage at all — it's now optional.
+**Android build fails with `Could not find org.asyncstorage.shared_storage:storage-android:1.0.0`.**
+- `@react-native-async-storage/async-storage@2.2.0` through `3.0.2` (inclusive) split the Android module into a separate artifact that was never published to Maven Central — every Android consumer in that range fails Gradle resolution. **Fixed in `3.1.0`**, which re-publishes the artifact to Maven Central as `io.github.react-native-async-storage:shared-storage-android:1.0.0` — no manual `maven { url ... }` repo step needed.
+- **Recommended**: upgrade to `@react-native-async-storage/async-storage@^3.1.0`. Alternative: stay on `~2.1.0` (the last safe version before the split).
+- Upstream context: [react-native-async-storage#1280](https://github.com/react-native-async-storage/async-storage/issues/1280) · [3.1.0 release notes](https://github.com/react-native-async-storage/async-storage/releases/tag/%40react-native-async-storage%2Fasync-storage%403.1.0).
+- If you don't use `IapticTokensManager`, you don't need AsyncStorage at all — it's `peerDependenciesMeta.optional: true` as of `react-native-iaptic@1.3.0`, so you can leave it uninstalled.
 
 **Android build fails with Kotlin `Unresolved reference 'currentActivity'`.**
 - This occurs on React Native 0.83+ / Expo SDK 55+ with the new architecture. Upgrade `@iaptic/react-native-iap` to `>=12.16.6` which contains the fix.
@@ -727,8 +731,10 @@ You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. 
 **AsyncStorage is now optional.** If you use `IapticTokensManager` (consumable token tracking), AsyncStorage must be installed explicitly:
 
 ```bash
-npm install --save @react-native-async-storage/async-storage@~2.1.0
+npm install --save @react-native-async-storage/async-storage@^3.1.0
 ```
+
+(Or stay on `~2.1.0` — avoid `2.2.0`–`3.0.2`, which fail Android Gradle resolution; see [§14.1](#141-common-issues).)
 
 If you don't use `IapticTokensManager`, AsyncStorage is no longer needed — you can remove it:
 
