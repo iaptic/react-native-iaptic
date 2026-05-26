@@ -359,7 +359,7 @@ export const IapticSubscriptionView = (props: IapticSubscriptionViewProps) => {
   };
   const portraitScrollRef = useRef<ScrollView>(null);
   const landscapeScrollRef = useRef<ScrollView>(null);
-  const productRefs = useRef<Array<React.RefObject<TouchableOpacity>>>([]);
+  const productRefs = useRef<Array<React.RefObject<React.ElementRef<typeof TouchableOpacity>>>>([]);
 
   const [products, setProducts] = useState<IapticProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IapticProduct>();
