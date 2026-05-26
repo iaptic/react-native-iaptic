@@ -1,5 +1,21 @@
 # Release Notes
 
+## 1.3.2
+
+Patch release fixing a TypeScript regression introduced in 1.3.1 that broke the `prepare` script (and therefore every `npm install` of the package).
+
+### Fix `TS2749` in `SubscriptionView/Modal.tsx`
+
+`productRefs` was typed as `useRef<Array<React.RefObject<TouchableOpacity>>>`, which uses the `TouchableOpacity` *value* as a type. Newer TypeScript / `@types/react` rejects this:
+
+```
+src/components/SubscriptionView/Modal.tsx(362,52): error TS2749:
+'TouchableOpacity' refers to a value, but is being used as a type here.
+Did you mean 'typeof TouchableOpacity'?
+```
+
+Replaced with `React.ElementRef<typeof TouchableOpacity>`, which is the canonical React/TS pattern for typing a ref to a component instance. `tsc` now passes cleanly, unblocking `npm install` and any downstream build that consumes `react-native-iaptic` from source.
+
 ## 1.3.1
 
 Docs-only patch. No source, API, or peer-dependency changes — `lib/` is unchanged.
