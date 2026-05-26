@@ -1,9 +1,9 @@
 # Iaptic React Native SDK
 
-[![npm version](https://img.shields.io/npm/v/iaptic-rn)](https://www.npmjs.com/package/iaptic-rn)
-[![npm downloads](https://img.shields.io/npm/dm/iaptic-rn)](https://www.npmjs.com/package/iaptic-rn)
-[![types included](https://img.shields.io/npm/types/iaptic-rn)](https://www.npmjs.com/package/iaptic-rn)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/iaptic-rn)](https://bundlephobia.com/package/iaptic-rn)
+[![npm version](https://img.shields.io/npm/v/react-native-iaptic)](https://www.npmjs.com/package/react-native-iaptic)
+[![npm downloads](https://img.shields.io/npm/dm/react-native-iaptic)](https://www.npmjs.com/package/react-native-iaptic)
+[![types included](https://img.shields.io/npm/types/react-native-iaptic)](https://www.npmjs.com/package/react-native-iaptic)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/react-native-iaptic)](https://bundlephobia.com/package/react-native-iaptic)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Made by Iaptic](https://img.shields.io/badge/made%20by-Iaptic-1e88e5)](https://www.iaptic.com)
 
