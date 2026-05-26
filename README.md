@@ -1,39 +1,87 @@
 # Iaptic React Native SDK
 
 [![npm version](https://img.shields.io/npm/v/iaptic-rn)](https://www.npmjs.com/package/iaptic-rn)
+[![npm downloads](https://img.shields.io/npm/dm/iaptic-rn)](https://www.npmjs.com/package/iaptic-rn)
+[![types included](https://img.shields.io/npm/types/iaptic-rn)](https://www.npmjs.com/package/iaptic-rn)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/iaptic-rn)](https://bundlephobia.com/package/iaptic-rn)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Made by Iaptic](https://img.shields.io/badge/made%20by-Iaptic-1e88e5)](https://www.iaptic.com)
 
-A robust in-app purchase library for React Native that simplifies receipt validation and subscription management through the Iaptic service.
+Drop-in subscription paywall and server-validated in-app purchases for **React Native**, backed by the [Iaptic](https://www.iaptic.com) service. Works on **iOS (StoreKit)** and **Android (Google Play Billing)**, with first-class **TypeScript** support.
+
+> **What is Iaptic?** Iaptic is a hosted receipt-validation and subscription-management service. The SDK never trusts a local receipt — every purchase is verified server-side. [Learn more →](https://www.iaptic.com)
+
+<p align="center">
+  <a href="https://www.iaptic.com/documentation/react-native">
+    <img src="https://www.iaptic.com/images/react-native-iaptic.jpg" alt="IapticSubscriptionView drop-in UI screenshot" width="320" />
+  </a>
+  <br />
+  <em>The <code>IapticSubscriptionView</code> drop-in paywall, rendered on iOS.</em>
+</p>
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Expo](#expo)
+- [Quick Start](#quick-start)
+- [Drop-in Subscription UI](#drop-in-subscription-ui)
+  - [Props reference](#props-reference)
+  - [Customization](#customization)
+- [Core Concepts](#core-concepts)
+  - [Product definitions](#product-definitions)
+  - [Purchase flow](#purchase-flow)
+  - [Restore purchases](#restore-purchases)
+  - [Event handling](#event-handling)
+  - [Feature access control](#feature-access-control)
+- [Manual Purchase Flow](#manual-purchase-flow)
+- [Error Handling](#error-handling)
+- [Troubleshooting](#troubleshooting)
+- [Upgrading](#upgrading)
+- [Why the fork?](#why-the-fork)
+- [Documentation](#documentation)
+- [Support & Community](#support--community)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 
 ## ✨ Features
 
-### Cross-Platform Support
-- 🛒 **Unified Purchasing API** - Single interface for iOS and Android
-- 🔄 **Subscription Management** - Easy status tracking and renewal handling
+- 🛒 Unified iOS + Android purchasing API
+- 🔄 Subscription tracking with renewal events
+- 🔒 Server-side receipt validation via Iaptic
+- 🎨 Themable drop-in paywall (`IapticSubscriptionView`)
+- 📦 Product catalog with entitlements model
+- 🛡 Typed errors with localized messages
+- 🪙 Optional token/credit tracking (`IapticTokensManager`)
+- ⚛️ First-class TypeScript types
 
-### Security & Reliability
-- 🔒 **Secure Receipt Validation** - Server-side validation via Iaptic
-- 🛡 **Error Handling** - Comprehensive error codes and localization
+## Requirements
 
-### Product Management
-- 📦 **Product Catalog** - Structured product definitions with pricing phases
-- 📊 **Entitlement Tracking** - Real-time purchase state management
+| Requirement | Version |
+|---|---|
+| React Native | ≥ 0.71 (tested through 0.85) |
+| Expo SDK | ≥ 49 (new architecture supported on SDK 55+) |
+| iOS deployment target | 13.0 |
+| Android `minSdkVersion` | 24 |
+| Node | ≥ 18 |
+| TypeScript | ≥ 4.7 (types ship with the package) |
+| `@iaptic/react-native-iap` | ^12.16.6 (peer) |
+| `react` | ≥ 17 (peer) |
+| `@react-native-async-storage/async-storage` | optional — `^3.1.0` or `~2.1.0` (only if using `IapticTokensManager`) |
 
-## 📦 Installation
+## Installation
 
-`react-native-iaptic` requires [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) (an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix baked in — see [Why the fork](#why-the-fork) below). `@react-native-async-storage/async-storage` is optional — only needed if using `IapticTokensManager` for consumable token tracking.
+`react-native-iaptic` requires [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap), an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix and the Kotlin `currentActivity` fix baked in. See [Why the fork?](#why-the-fork) below.
 
 ```bash
-npm install @iaptic/react-native-iap
-npm install react-native-iaptic
+npm install @iaptic/react-native-iap react-native-iaptic
 # iOS only
 cd ios && pod install && cd ..
 
 # Only if using IapticTokensManager (consumable token tracking):
 npm install @react-native-async-storage/async-storage@^3.1.0
 ```
-
-> ⚠️ **Upgrading from 1.0.x?** Install `@iaptic/react-native-iap` explicitly — it moved to a peer dependency. `@react-native-async-storage/async-storage` is now optional (only needed for `IapticTokensManager`). The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream `react-native-iap@12.16.4`.
 
 ### Expo
 
@@ -51,158 +99,92 @@ export default {
 };
 ```
 
-### Why the fork
-
-Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-iap) was archived on 2026-04-26; development moved to the [OpenIAP monorepo](https://github.com/hyodotdev/openiap/tree/main/libraries/react-native-iap), where it shipped as a Nitro Modules rewrite (v15+, different API). The 12.x line therefore won't receive any further patches upstream — including the iOS pod fix needed for React Native ≥ 0.83 / Expo SDK ≥ 55 / new architecture (`Unable to find a specification for RCT-Folly depended upon by RNIap`). [`@iaptic/react-native-iap@12.16.5`](https://github.com/iaptic/react-native-iap) is `12.16.4` with that one fix applied — JavaScript / Java / Obj-C / Swift code is otherwise byte-identical to upstream `12.16.4`.
-
-## 🚀 Quick Start
-
-Here's a complete example to get you started:
+## Quick Start
 
 ```typescript
 import { IapticRN } from 'react-native-iaptic';
 
-// 1. Initialize with your configuration
 IapticRN.initialize({
   appName: 'app.example.com',
   publicKey: 'YOUR_PUBLIC_KEY',
   iosBundleId: 'com.yourcompany.app',
-  products: [{
-    id: 'premium_monthly',
-    type: 'paid subscription',
-    entitlements: ['premium']
-  },
-  {
-    id: 'coins_100',
-    type: 'consumable',
-    tokenType: 'coins',
-    tokenValue: 100
-  }
-]);
+  products: [
+    { id: 'premium_monthly', type: 'paid subscription', entitlements: ['premium'] },
+    { id: 'coins_100',       type: 'consumable',        tokenType: 'coins', tokenValue: 100 },
+  ],
+});
 ```
 
-### Using Subscription UI
+That's the minimum needed to load products. From here you can either drop in the prebuilt [subscription UI](#drop-in-subscription-ui), or wire up the [manual purchase flow](#manual-purchase-flow) yourself.
 
-The `IapticSubscriptionView` component provides a complete subscription management interface with purchase handling.
+## Drop-in Subscription UI
+
+`IapticSubscriptionView` is a full-screen subscription picker with built-in purchase, restore, and active-subscription management. Render it once near your app root and open it on demand.
+
+<p align="center">
+  <img src="https://www.iaptic.com/images/react-native-iaptic.jpg" alt="IapticSubscriptionView on iOS" width="280" />
+</p>
 
 ```tsx
-// In your root node, add the modal component
 <IapticSubscriptionView
   entitlementLabels={{
     premium: {
-      label: "Premium Features",
-      detail: "Exclusive content and advanced tools"
-    }
+      label: 'Premium Features',
+      detail: 'Exclusive content and advanced tools',
+    },
   }}
   onPurchaseComplete={() => {
-    // Update app state after purchase
     setEntitlements(IapticRN.listEntitlements());
   }}
   termsUrl="https://yourdomain.com/terms"
 />
 ```
 
-### Props Reference
+The component automatically handles landscape/portrait layouts, localization, purchase states, active-subscription management, and receipt validation.
+
+### Props reference
 
 | Prop | Type | Description |
 |------|------|-------------|
 | `entitlementLabels` | `Record<string, { label: string, detail?: string }>` | Labels and descriptions for each entitlement |
 | `onPurchaseComplete` | `() => void` | Callback after successful purchase |
 | `termsUrl` | `string` | URL for terms & conditions |
-| `theme` | `object` | Customize colors (see [IapticTheme](https://www.iaptic.com/documentation/api/react-native-iaptic/interfaces/IapticTheme)) |
-
-### Entitlement Management Example
-
-```typescript
-// AppState.ts
-interface AppState {
-  entitlements: string[];
-}
-
-// In your component
-<TouchableOpacity
-  onPress={() => checkAccess('premium')}
-  style={styles.button}
->
-  <Text>
-    Premium Access: {appState.entitlements.includes('premium') ? '✅' : '🔒'}
-  </Text>
-</TouchableOpacity>
-```
+| `theme` | `IapticTheme` | Customize colors — see [IapticTheme](https://www.iaptic.com/documentation/api/react-native-iaptic/interfaces/IapticTheme) |
+| `styles` | `Partial<IapticSubscriptionViewStyles>` | Per-element style overrides — see [IapticSubscriptionViewStyles](https://www.iaptic.com/documentation/api/react-native-iaptic/interfaces/IapticSubscriptionViewStyles) |
 
 ### Customization
 
-Customize styles using the `styles` prop:
-
-```typescript
+```tsx
 <IapticSubscriptionView
   styles={{
-    productCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12
-    },
-    ctaButton: {
-      backgroundColor: '#4CAF50'
-    }
+    productCard: { backgroundColor: '#FFFFFF', borderRadius: 12 },
+    ctaButton:   { backgroundColor: '#4CAF50' },
   }}
 />
 ```
 
-The component automatically handles:
-- Landscape/portrait layouts
-- Localization
-- Purchase states
-- Active subscription management
-- Receipt validation
+For the full list of overridable style slots, see [`IapticSubscriptionViewStyles`](https://www.iaptic.com/documentation/api/react-native-iaptic/interfaces/IapticSubscriptionViewStyles).
 
-## Manual Purchase Flow
+## Core Concepts
 
-```typescript
-// 4. Handle purchases
-const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
-if (offer) {
-  await IapticRN.order(offer);
-}
+### Product definitions
 
-// 5. Check access
-if (IapticRN.checkEntitlement('premium')) {
-  // Unlock premium features
-}
-```
-
-## 💡 Core Concepts
-
-### Product Definitions
-
-Products can be subscriptions, consumables, or non-consumables. Each product can grant one or more entitlements:
+Products can be subscriptions, consumables, or non-consumables. Each can grant one or more entitlements:
 
 ```typescript
 IapticRN.setProductDefinitions([
   // Subscription that unlocks premium features
-  { 
-    id: 'premium_monthly',
-    type: 'paid subscription',
-    entitlements: ['premium']
-  },
+  { id: 'premium_monthly', type: 'paid subscription', entitlements: ['premium'] },
+
   // Non-consumable that unlocks a specific feature
-  {
-    id: 'dark_theme',
-    type: 'non consumable',
-    entitlements: ['cool_feature']
-  },
-  // Consumable tokens/currency
-  { 
-    id: 'coins_100',
-    type: 'consumable',
-    tokenType: 'coins',
-    tokenValue: 100
-  }
+  { id: 'dark_theme', type: 'non consumable', entitlements: ['cool_feature'] },
+
+  // Consumable tokens / currency
+  { id: 'coins_100', type: 'consumable', tokenType: 'coins', tokenValue: 100 },
 ]);
 ```
 
-### Purchase Flow
-
-Handle purchases with proper error management:
+### Purchase flow
 
 ```typescript
 try {
@@ -212,57 +194,60 @@ try {
 }
 ```
 
-### Restore Purchases
-
-Allow users to restore their previous purchases:
+### Restore purchases
 
 ```typescript
 try {
   await IapticRN.restorePurchases((processed, total) => {
     console.log(`Processed ${processed} of ${total} purchases`);
   });
-}
-catch (error) {
+} catch (error) {
   showError(error);
 }
 ```
 
-### Event Handling
-
-Listen for purchase and subscription updates:
+### Event handling
 
 ```typescript
-// Listen for subscription updates
 IapticRN.addEventListener('subscription.updated', (reason, purchase) => {
   console.log(`Subscription ${purchase.id} ${reason}`);
 });
 
-// Listen for pending purchase updates
 IapticRN.addEventListener('pendingPurchase.updated', (pendingPurchase) => {
   console.log(`Purchase ${pendingPurchase.productId} is now ${pendingPurchase.status}`);
 });
 
-// Listen for purchase updates
 IapticRN.addEventListener('purchase.updated', (purchase) => {
   console.log(`Purchase ${purchase.id} ${purchase.status}`);
 });
 ```
 
-### Feature Access Control
-
-Check if users have access to specific features:
+### Feature access control
 
 ```typescript
-// Check premium access
 if (IapticRN.checkEntitlement('premium')) {
   showPremiumContent();
 } else {
   showUpgradePrompt();
 }
 
-// List all active entitlements
-const unlockedFeatures = IapticRN.listEntitlements();
-// ['basic', 'premium', 'cool_feature']
+// All currently active entitlements
+const unlocked = IapticRN.listEntitlements(); // ['basic', 'premium', 'cool_feature']
+```
+
+## Manual Purchase Flow
+
+If you don't want the drop-in UI, drive purchases yourself:
+
+```typescript
+const offer = IapticRN.getProduct('premium_monthly')?.offers[0];
+if (offer) {
+  await IapticRN.order(offer);
+}
+
+if (IapticRN.checkEntitlement('premium')) {
+  // Unlock premium features
+}
 ```
 
 ## Error Handling
@@ -282,23 +267,59 @@ function showError(error: Error | IapticError) {
 }
 ```
 
-## 📚 API Reference
+## Troubleshooting
 
-For complete API documentation, visit our [API Reference](https://www.iaptic.com/documentation/react-native).
+- **Products won't load on iOS** — verify your Xcode project has the **In-App Purchase** capability enabled (Xcode → Project → Targets → your app → Signing & Capabilities → **+ Capability** → In-App Purchase).
 
-#### Troubleshooting
+- **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`** — you're depending on upstream `react-native-iap` instead of `@iaptic/react-native-iap`. Switch to the fork (see [Installation](#installation)) and the error goes away. Background: [Why the fork?](#why-the-fork).
 
-- If your app fails to load products, check that your XCode project contains the "In-App Purchase" capability (XCode -> Project -> Targets (your app name) -> Capabilities). Hit "+ Capability" and add the In-App Purchase capability if it's missing.
+- **Android build fails with `Unresolved reference 'currentActivity'`** — bump `@iaptic/react-native-iap` to `^12.16.6`, which contains the Kotlin fix for RN 0.83+ / new architecture.
 
-- **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`** — you're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. Switch to the fork (see [Installation](#installation)) and the error goes away. Background on why the fork exists is in [Why the fork](#why-the-fork).
+- **Android Gradle resolution fails inside `@react-native-async-storage/async-storage`** — versions `2.2.0`–`3.0.2` are broken on Android due to an unpublished Maven artifact. Use `^3.1.0` or stay on `~2.1.0`. See [release notes](./RELEASE_NOTES.md#130) for details.
 
-## 🤝 Need Help?
+For more, see [INTEGRATION_GUIDE.md → Troubleshooting](./INTEGRATION_GUIDE.md#14-troubleshooting).
 
-- 📘 [API Documentation](https://www.iaptic.com/documentation/api/react-native-iaptic)
-- 🐛 [Issue Tracker](https://github.com/iaptic/react-native-iaptic/issues)
-- 📱 [Demo app](https://github.com/iaptic/react-native-iaptic-demo)
-- 📧 [Support](mailto:support@iaptic.com)
+## Upgrading
 
-## 📄 License
+### From 1.2.x → 1.3.0
+
+- Install `@react-native-async-storage/async-storage` explicitly if (and only if) you use `IapticTokensManager`. It is now an **optional** peer dependency.
+- Bump `@iaptic/react-native-iap` to `^12.16.6` to pick up the Kotlin `currentActivity` fix on RN 0.83+.
+
+### From 1.0.x → 1.1+
+
+- Install `@iaptic/react-native-iap` explicitly — it moved from a regular dependency to a peer dependency.
+- The JavaScript API surface and Expo `withIAP` plugin behaviour are identical to upstream `react-native-iap@12.16.4`.
+
+See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for the full changelog.
+
+## Why the fork?
+
+Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-iap) was archived on 2026-04-26; development moved to the [OpenIAP monorepo](https://github.com/hyodotdev/openiap/tree/main/libraries/react-native-iap), where it shipped as a Nitro Modules rewrite (v15+, different API). The 12.x line therefore won't receive any further patches upstream — including the iOS pod fix needed for React Native ≥ 0.83 / Expo SDK ≥ 55 / new architecture (`Unable to find a specification for RCT-Folly depended upon by RNIap`), and the Kotlin `currentActivity` fix for the same RN versions.
+
+[`@iaptic/react-native-iap@12.16.6`](https://github.com/iaptic/react-native-iap) is `12.16.4` with those fixes applied — JavaScript / Java / Kotlin / Obj-C / Swift code is otherwise byte-identical to upstream `12.16.4`. Skeptical readers can verify by browsing the [fork's commit history](https://github.com/iaptic/react-native-iap/commits).
+
+## Documentation
+
+- [**Integration guide**](./INTEGRATION_GUIDE.md) — step-by-step setup for subscriptions (single reference combining install, dashboard, example app, and API)
+- [**API reference**](https://www.iaptic.com/documentation/react-native) — generated TypeDoc for all public types
+- [**Release notes**](./RELEASE_NOTES.md) — changelog and upgrade notes
+- [**Demo app**](https://github.com/iaptic/react-native-iaptic-demo) — a runnable example app
+
+## Support & Community
+
+- 🐛 [Issue tracker](https://github.com/iaptic/react-native-iaptic/issues) — bug reports and feature requests
+- 📧 [support@iaptic.com](mailto:support@iaptic.com) — direct support for Iaptic customers
+- 🌐 [iaptic.com](https://www.iaptic.com) — service status, pricing, dashboard
+
+## Contributing
+
+This repository is maintained by [Iaptic](https://www.iaptic.com). PRs and issue reports are welcome — please file an issue first for non-trivial changes so we can align on direction before you invest the work.
+
+## Security
+
+Receipts are validated **server-side** by Iaptic; no validation logic runs in the app bundle, and your validation secret never ships to clients. To report a security issue, email [security@iaptic.com](mailto:security@iaptic.com) rather than opening a public GitHub issue.
+
+## License
 
 MIT © [Iaptic](https://www.iaptic.com)
