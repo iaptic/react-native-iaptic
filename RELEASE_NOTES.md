@@ -1,5 +1,17 @@
 # Release Notes
 
+## 1.3.1
+
+Docs-only patch. No source, API, or peer-dependency changes — `lib/` is unchanged.
+
+### AsyncStorage guidance corrected
+
+Updated install guidance to recommend `@react-native-async-storage/async-storage@^3.1.0` and explicitly document the `2.2.0`–`3.0.2` broken window (Android Gradle resolution failure due to an unpublished Maven artifact, fixed upstream in [3.1.0](https://github.com/react-native-async-storage/async-storage/releases/tag/%40react-native-async-storage%2Fasync-storage%403.1.0)). The previous manual `maven { url ... }` workaround is no longer needed and has been removed from `INTEGRATION_GUIDE.md` and `README.md` ([#2](https://github.com/iaptic/react-native-iaptic/pull/2)).
+
+### README revamp
+
+`README.md` rewritten for a clearer first impression — restructured feature overview, install steps, and quick-start example ([#3](https://github.com/iaptic/react-native-iaptic/pull/3)). Badge fixes: correct the npm package name (`iaptic-rn` → `react-native-iaptic`, [#4](https://github.com/iaptic/react-native-iaptic/pull/4)) and drop the rate-limited bundlephobia badge ([#5](https://github.com/iaptic/react-native-iaptic/pull/5)).
+
 ## 1.3.0
 
 ### AsyncStorage now optional
