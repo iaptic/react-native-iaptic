@@ -8,6 +8,7 @@ tracking, and a ready-to-use subscription UI.
 
 - [`react-native-iap` podspec breaks on RN ≥ 0.83](lessons/rniap-podspec-rn83.md)
 - [Peer dependencies rationale](lessons/peer-deps-rationale.md)
+- [GPBL V9 migration impact](lessons/gpbl-v9-impact.md)
 
 ## Repro / experiment
 
