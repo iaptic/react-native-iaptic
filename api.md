@@ -359,6 +359,13 @@ Error: Failed to refresh the purchase receipt
 
 Error: Failed to intialize the in-app purchase library
 
+##### STORE\_BLOCKED
+
+> **STORE\_BLOCKED**: `6777033`
+
+
+Error: The Play Store is blocked on this device (OEM kids mode, parental controls, enterprise policies).
+
 ##### SUBSCRIPTION\_UPDATE\_NOT\_AVAILABLE
 
 > **SUBSCRIPTION\_UPDATE\_NOT\_AVAILABLE**: `6777022`
@@ -2474,6 +2481,13 @@ The signature in a payment discount is not valid
 
 Parameters are missing in a payment discount
 
+##### IapticError\_6777033
+
+> **IapticError\_6777033**: `string`
+
+
+The Play Store is blocked on this device (OEM kids mode, parental controls, enterprise policies)
+
 ##### IapticError\_6778003
 
 > **IapticError\_6778003**: `string`
@@ -2620,6 +2634,13 @@ A remote error occurred.
 
 
 The service returned an error.
+
+##### PurchaseError\_E\_STORE\_BLOCKED
+
+> **PurchaseError\_E\_STORE\_BLOCKED**: `string`
+
+
+The Play Store is blocked on this device.
 
 ##### PurchaseError\_E\_UNKNOWN
 
