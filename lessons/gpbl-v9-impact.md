@@ -7,11 +7,11 @@ metadata:
 
 # GPBL V9 Migration — Key Findings for react-native-iaptic
 
-As of 2026-06-05 (updated after migration).
+As of 2026-06-05 (updated after migration + bugfix).
 
 ## Status: COMPLETED ✅
 
-The GPBL V9 migration has been completed. The fork is published as `@iaptic/react-native-iap@13.0.0` and `react-native-iaptic` is updated to v2.0.0.
+The GPBL V9 migration has been completed. The fork is published as `@iaptic/react-native-iap@13.0.1` (patch fix for E_STORE_BLOCKED double-reject) and `react-native-iaptic` is updated to v2.0.0.
 
 ## Key Finding 1: `getPurchaseHistory` removed
 
@@ -51,8 +51,10 @@ Replaced no-arg `enablePendingPurchases()` with `enablePendingPurchases(PendingP
 
 `E_STORE_BLOCKED` added to both the native (PromiseUtils) and JS (ErrorCode) layers. Maps to `IapticErrorCode.STORE_BLOCKED` in the wrapper. Detects "Play Store is blocked" condition (OEM kids mode, parental controls, enterprise policies).
 
+⚠️ **Bug fixed in 13.0.1**: The initial 13.0.0 release had a double-reject bug in `initConnection()` — `isValidResult()` would reject with `E_SERVICE_ERROR` first, then `isPlayStoreBlocked()` tried to reject again with `E_STORE_BLOCKED`. The second rejection was silently swallowed by `safeReject`. Fixed by checking `isPlayStoreBlocked()` before `isValidResult()` so the specific error code is sent.
+
 ## Versioning
 
-- Fork: `@iaptic/react-native-iap@13.0.0` (breaking change from 12.x)
+- Fork: `@iaptic/react-native-iap@13.0.1` (breaking change from 12.x, patch fix for E_STORE_BLOCKED)
 - Wrapper: `react-native-iaptic@2.0.0` (peer dep `^13.0.0`)
 - Consumers pinning to `12.x` can stay on `react-native-iaptic@1.x`
