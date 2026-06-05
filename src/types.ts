@@ -353,6 +353,8 @@ export enum IapticErrorCode {
   INVALID_SIGNATURE = ERROR_CODES_BASE + 31,
   /** Error: Parameters are missing in a payment discount. */
   MISSING_OFFER_PARAMS = ERROR_CODES_BASE + 32,
+  /** Error: The Play Store is blocked on this device (OEM kids mode, parental controls, enterprise policies). */
+  STORE_BLOCKED = ERROR_CODES_BASE + 33,
 
   /**
    * Server code used when a subscription expired.

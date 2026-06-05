@@ -61,6 +61,8 @@ export function toIapticErrorCode(code: IAP.ErrorCode | undefined): IapticErrorC
       return IapticErrorCode.COMMUNICATION;
     case IAP.ErrorCode.E_IAP_NOT_AVAILABLE:
       return IapticErrorCode.SUBSCRIPTIONS_NOT_AVAILABLE;
+    case IAP.ErrorCode.E_STORE_BLOCKED:
+      return IapticErrorCode.STORE_BLOCKED;
     default:
       return IapticErrorCode.UNKNOWN;
   }

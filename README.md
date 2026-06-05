@@ -65,13 +65,13 @@ Drop-in subscription paywall and server-validated in-app purchases for **React N
 | Android `minSdkVersion` | 24 |
 | Node | ≥ 18 |
 | TypeScript | ≥ 4.7 (types ship with the package) |
-| `@iaptic/react-native-iap` | ^12.16.6 (peer) |
+| `@iaptic/react-native-iap` | ^13.0.0 (peer) |
 | `react` | ≥ 17 (peer) |
 | `@react-native-async-storage/async-storage` | optional — `^3.1.0` or `~2.1.0` (only if using `IapticTokensManager`) |
 
 ## Installation
 
-`react-native-iaptic` requires [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap), an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix and the Kotlin `currentActivity` fix baked in. See [Why the fork?](#why-the-fork) below.
+`react-native-iaptic` requires [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap), an Iaptic-maintained fork of `react-native-iap@12.16.4` with GPBL V9 support, the iOS new-architecture pod fix, and the Kotlin `currentActivity` fix baked in. See [Why the fork?](#why-the-fork) below.
 
 ```bash
 npm install @iaptic/react-native-iap react-native-iaptic
@@ -272,13 +272,18 @@ function showError(error: Error | IapticError) {
 
 - **iOS build fails on React Native ≥ 0.83 / Expo SDK ≥ 55 with `Unable to find a specification for RCT-Folly depended upon by RNIap`** — you're depending on upstream `react-native-iap` instead of `@iaptic/react-native-iap`. Switch to the fork (see [Installation](#installation)) and the error goes away. Background: [Why the fork?](#why-the-fork).
 
-- **Android build fails with `Unresolved reference 'currentActivity'`** — bump `@iaptic/react-native-iap` to `^12.16.6`, which contains the Kotlin fix for RN 0.83+ / new architecture.
+- **Android build fails with `Unresolved reference 'currentActivity'`** — bump `@iaptic/react-native-iap` to `^13.0.0`, which contains GPBL V9 support and the Kotlin fix for RN 0.83+ / new architecture.
 
 - **Android Gradle resolution fails inside `@react-native-async-storage/async-storage`** — versions `2.2.0`–`3.0.2` are broken on Android due to an unpublished Maven artifact. Use `^3.1.0` or stay on `~2.1.0`. See [release notes](./RELEASE_NOTES.md#130) for details.
 
 For more, see [INTEGRATION_GUIDE.md → Troubleshooting](./INTEGRATION_GUIDE.md#14-troubleshooting).
 
 ## Upgrading
+
+### From 1.3.x → 2.0.0
+
+- Bump `@iaptic/react-native-iap` to `^13.0.0` for Google Play Billing Library V9 support. This is a **breaking change** — the fork now requires GPBL 9.0.0 and drops the `getPurchaseHistory` API (removed in GPBL V9). Consumers pinning to `@iaptic/react-native-iap@12.x` can stay on `react-native-iaptic@1.x`.
+- Install `@react-native-async-storage/async-storage` explicitly if (and only if) you use `IapticTokensManager`. It is now an **optional** peer dependency.
 
 ### From 1.2.x → 1.3.0
 
@@ -296,7 +301,7 @@ See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for the full changelog.
 
 Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-iap) was archived on 2026-04-26; development moved to the [OpenIAP monorepo](https://github.com/hyodotdev/openiap/tree/main/libraries/react-native-iap), where it shipped as a Nitro Modules rewrite (v15+, different API). The 12.x line therefore won't receive any further patches upstream — including the iOS pod fix needed for React Native ≥ 0.83 / Expo SDK ≥ 55 / new architecture (`Unable to find a specification for RCT-Folly depended upon by RNIap`), and the Kotlin `currentActivity` fix for the same RN versions.
 
-[`@iaptic/react-native-iap@12.16.6`](https://github.com/iaptic/react-native-iap) is `12.16.4` with those fixes applied — JavaScript / Java / Kotlin / Obj-C / Swift code is otherwise byte-identical to upstream `12.16.4`. Skeptical readers can verify by browsing the [fork's commit history](https://github.com/iaptic/react-native-iap/commits).
+[`@iaptic/react-native-iap@13.0.0`](https://github.com/iaptic/react-native-iap) upgrades Google Play Billing Library to V9, drops the `getPurchaseHistory` API (removed in GPBL V9), and includes the iOS new-architecture pod fix and the Kotlin `currentActivity` fix. Consumers who need GPBL V7 can stay on `12.16.6`.
 
 ## Documentation
 

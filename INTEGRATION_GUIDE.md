@@ -44,13 +44,13 @@ Architecture in one line: your app calls `IapticRN`, which talks to `react-nativ
 - An **Apple Developer account** with In-App Purchase enabled and an app in App Store Connect.
 - A **Google Play Developer account** with an app and license testers configured.
 - An **Iaptic account** (https://www.iaptic.com) with an app registered. From the Iaptic dashboard you will need the `appName` and `publicKey`.
-- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^12.16.6` (required), `@react-native-async-storage/async-storage >=1.19.0 <4` (optional — only needed if using `IapticTokensManager` for consumable token tracking; install `@react-native-async-storage/async-storage@^3.1.0`, or stay on `~2.1.0` — see [§14.1](#141-common-issues) for the 2.2.0–3.0.2 known-broken window).
+- Tested with React Native 0.76.5, 0.78, and 0.83.6 (Expo SDK 55, new architecture). Peer deps: `react >= 17`, `react-native >= 0.64`, `@iaptic/react-native-iap ^13.0.0` (required), `@react-native-async-storage/async-storage >=1.19.0 <4` (optional — only needed if using `IapticTokensManager` for consumable token tracking; install `@react-native-async-storage/async-storage@^3.1.0`, or stay on `~2.1.0` — see [§14.1](#141-common-issues) for the 2.2.0–3.0.2 known-broken window).
 
 ---
 
 ## 3. Installation
 
-As of 1.2.0, `react-native-iaptic` consumes [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) — an Iaptic-maintained fork of `react-native-iap@12.16.4` with the iOS new-architecture pod fix baked in (see §14 / [Why the fork](#why-the-fork) below). The JavaScript API and Expo config plugin behaviour are identical to upstream `12.16.4`.
+As of 2.0.0, `react-native-iaptic` consumes [`@iaptic/react-native-iap`](https://github.com/iaptic/react-native-iap) v13+ — an Iaptic-maintained fork with Google Play Billing Library V9 support, the iOS new-architecture pod fix, and the Kotlin `currentActivity` fix. The `getPurchaseHistory` API has been removed (GPBL V9 dropped `queryPurchaseHistoryAsync`).
 
 ```bash
 npm install --save @iaptic/react-native-iap
@@ -63,8 +63,8 @@ Verify in `package.json`:
 
 ```json
 "dependencies": {
-  "@iaptic/react-native-iap": "^12.16.6",
-  "react-native-iaptic": "^1.3.0"
+  "@iaptic/react-native-iap": "^13.0.0",
+  "react-native-iaptic": "^2.0.0"
 }
 ```
 
