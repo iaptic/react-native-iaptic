@@ -58,6 +58,8 @@ export interface IapticLocale {
   PurchaseError_E_INTERRUPTED: string;
   /** In-app purchases are not available. */
   PurchaseError_E_IAP_NOT_AVAILABLE: string;
+  /** The Play Store is blocked on this device. */
+  PurchaseError_E_STORE_BLOCKED: string;
   /** Unknown Error */
   UnknownError_title: string;
   /** An unknown error occurred. */
@@ -126,6 +128,8 @@ export interface IapticLocale {
   IapticError_6777031: string;
   /** Parameters are missing in a payment discount */
   IapticError_6777032: string;
+  /** The Play Store is blocked on this device (OEM kids mode, parental controls, enterprise policies) */
+  IapticError_6777033: string;
   /** Subscription has expired */
   IapticError_6778003: string;
   /** Unsupported platform */
