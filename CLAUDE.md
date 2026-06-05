@@ -17,7 +17,7 @@ Minimal Expo SDK 55 / RN 0.83 / new-arch reproduction project lives at
 
 ## Pre-existing infrastructure issues (unrelated to current work)
 
-- `npm test` fails with `Preset react-native not found` — `jest.config.js`
-  references the `react-native` preset but `react-native` isn't in deps.
-- `npm run lint` fails — no `.eslintrc` config file present.
-- Both have been broken since at least 1.0.1.
+- `npm test` now works — `jest.config.js` was switched from the unresolvable
+  `react-native` preset to `ts-jest` (with react-native + the fork fully
+  mocked). 27 tests pass against `@iaptic/react-native-iap` 13.0.0.
+- `npm run lint` fails — no `.eslintrc` config file present (broken since 1.0.1).
