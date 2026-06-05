@@ -7,54 +7,52 @@ metadata:
 
 # GPBL V9 Migration — Key Findings for react-native-iaptic
 
-As of 2026-06-04.
+As of 2026-06-05 (updated after migration).
 
-## Key Finding 1: `getPurchaseHistory` is NOT used
+## Status: COMPLETED ✅
 
-`react-native-iaptic` does NOT call `IAP.getPurchaseHistory()` anywhere in its source code (verified by grep). This means the V9 removal of `queryPurchaseHistoryAsync` in the native layer does NOT require any changes in the TypeScript layer.
+The GPBL V9 migration has been completed. The fork is published as `@iaptic/react-native-iap@13.0.0` and `react-native-iaptic` is updated to v2.0.0.
 
-The fork (`@iaptic/react-native-iap`) still exposes `getPurchaseHistory()` in its JS API, so the native method must be removed/adapted in the fork, but react-native-iaptic consumers are unaffected.
+## Key Finding 1: `getPurchaseHistory` removed
 
-## Key Finding 2: `queryProductDetailsAsync` callback signature is COMPILE-BREAKING
+`getPurchaseHistoryByType` native method and `getPurchaseHistory()` JS function were **removed** from the fork (GPBL V9 removed `queryPurchaseHistoryAsync`). `react-native-iaptic` never used this API, so no impact on consumers.
 
-The fork at `RNIapModule.kt:279` uses the V7 callback `(BillingResult, List<ProductDetails>)`. In V8+, this changed to `(BillingResult, QueryProductDetailsResult)` where `QueryProductDetailsResult` wraps both `productDetailsList` and `unfetchedProductIds`.
+## Key Finding 2: `queryProductDetailsAsync` callback — COMPILE-BREAKING (FIXED)
 
-**This is a compile-breaking change** — the fork won't build against GPBL 9.0.0 without updating this callback. The cordova plugin already uses the new signature (`PurchasePlugin.java:1281`).
+Changed from `(BillingResult, List<ProductDetails>)` to `(BillingResult, QueryProductDetailsResult)`. The fork now extracts `.productDetailsList` from the result and logs `unfetchedProductIds` as a warning.
 
-Recommendation: Extract `.getProductDetailsList()` from result (as cordova does) to minimize JS bridge impact.
+## Key Finding 3: `enablePendingPurchases()` must use params (FIXED)
 
-## Key Finding 3: `enablePendingPurchases()` must change
-
-The fork's `RNIapModule.kt:46` uses the old no-arg `enablePendingPurchases()` which is removed in V9. Must become `enablePendingPurchases(PendingPurchasesParams)`.
+Replaced no-arg `enablePendingPurchases()` with `enablePendingPurchases(PendingPurchasesParams)` including `enableOneTimeProducts()` and `enablePrepaidPlans()`. Also added `enableAutoServiceReconnection()`.
 
 ⚠️ **Testing gotcha**: Omitting `.enableOneTimeProducts()` silently breaks pending purchase flows in cash-payment markets (JP, DE, BR, MX, ID) — invisible in credit-card test environments.
 
-The cordova plugin already uses the new API:
-```java
-.enablePendingPurchases(
-    PendingPurchasesParams.newBuilder()
-        .enableOneTimeProducts()
-        .enablePrepaidPlans()
-        .build())
-.enableAutoServiceReconnection()
-```
-
 ## Other Findings
 
-- `SubscriptionUpdateParams.setSubscriptionReplacementMode()` is **deprecated** (V8.1+) but **NOT removed** in V9. The fork uses it at `RNIapModule.kt:528`. Can defer migration to `SubscriptionProductReplacementParams` — not a V9 blocker.
-- `Purchase.isSuspended()` was added in V8.1. Neither the fork nor react-native-iaptic currently handle this. Value-add for future.
-- No `externalOffer`/`AlternativeBilling`/`UserChoiceBilling` APIs used in the fork — not applicable.
+- `SubscriptionUpdateParams.setSubscriptionReplacementMode()` is **deprecated** (V8.1+) but **NOT removed** in V9. Deferred to future work.
+- `Purchase.isSuspended()` added in V8.1 — not yet handled. Value-add for future.
+- No `externalOffer`/`AlternativeBilling`/`UserChoiceBilling` APIs used — not applicable.
 
-## Dependency Chain
+## Build Config Changes
 
-- `@iaptic/react-native-iap` v12.16.6 is on GPBL 7.0.0 (fork of react-native-iap 12.16.4)
-- `cordova-plugin-purchase` v13.16.1 is already on GPBL 9.0.0
-- The fork must be upgraded first before react-native-iaptic can bump its peer dependency
+| Property | Before | After |
+|---|---|---|
+| `playBillingSdkVersion` | 7.0.0 | 9.0.0 |
+| `compileSdkVersion` | 33 | 35 |
+| `targetSdkVersion` | 33 | 35 |
+| `minSdkVersion` | 21 | 23 |
+| AGP | 7.4.2 | 8.7.3 |
+| Java compat | 1.8 | 17 |
+| Kotlin stdlib | 1.8.0 | 1.8.22 (forced) |
+| `billing-ktx` | used | replaced with `billing` (KTX merged in V7.1+) |
+| `namespace` | missing | `com.dooboolab.rniap` (required by AGP 8.x) |
 
-**Why:** react-native-iaptic has no native code; all GPBL changes happen in the fork.
+## New Error Code
 
-**How to apply:** When starting GPBL V9 migration work, focus on the fork first. The TS layer changes in react-native-iaptic are minimal (peer dep bump + optional error code additions).
+`E_STORE_BLOCKED` added to both the native (PromiseUtils) and JS (ErrorCode) layers. Maps to `IapticErrorCode.STORE_BLOCKED` in the wrapper. Detects "Play Store is blocked" condition (OEM kids mode, parental controls, enterprise policies).
 
-## Versioning Strategy
+## Versioning
 
-Publish V9-compatible fork as a new major version (e.g., `13.0.0` or `14.0.0`) so consumers can pin to `12.x` until ready. Update `react-native-iaptic` peer dependency accordingly. This follows the same approach used for the `@iaptic/react-native-iap` fork migration (v1.2.0 breaking change).
+- Fork: `@iaptic/react-native-iap@13.0.0` (breaking change from 12.x)
+- Wrapper: `react-native-iaptic@2.0.0` (peer dep `^13.0.0`)
+- Consumers pinning to `12.x` can stay on `react-native-iaptic@1.x`

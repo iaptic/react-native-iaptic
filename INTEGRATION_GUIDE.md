@@ -93,7 +93,7 @@ export default {
 
 ### Why the fork
 
-Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-iap) was archived on 2026-04-26; development moved to the [OpenIAP monorepo](https://github.com/hyodotdev/openiap/tree/main/libraries/react-native-iap), where it shipped as a Nitro Modules rewrite (v15+) with a different API and a hard `react-native-nitro-modules` peer. The 12.x line therefore won't get any further upstream patches — including the iOS new-architecture pod fix needed on React Native ≥ 0.83 / Expo SDK ≥ 55. `@iaptic/react-native-iap@12.16.5` is `12.16.4` with that one fix applied. Iaptic plans to migrate `react-native-iaptic@2.x` to OpenIAP/Nitro on a future schedule; until then, the fork is the supported IAP layer.
+Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-iap) was archived on 2026-04-26; development moved to the [OpenIAP monorepo](https://github.com/hyodotdev/openiap/tree/main/libraries/react-native-iap), where it shipped as a Nitro Modules rewrite (v15+) with a different API and a hard `react-native-nitro-modules` peer. The 12.x line therefore won't get any further upstream patches — including the iOS new-architecture pod fix needed on React Native ≥ 0.83 / Expo SDK ≥ 55. `@iaptic/react-native-iap@13.0.0` upgrades Google Play Billing Library to V9, drops the removed `getPurchaseHistory` API, and includes the iOS pod fix and Kotlin `currentActivity` fix. Iaptic plans to migrate `react-native-iaptic@3.x` to OpenIAP/Nitro on a future schedule; until then, the fork is the supported IAP layer.
 
 ---
 
@@ -723,10 +723,16 @@ You're using upstream `react-native-iap` instead of `@iaptic/react-native-iap`. 
 - If you don't use `IapticTokensManager`, you don't need AsyncStorage at all — it's `peerDependenciesMeta.optional: true` as of `react-native-iaptic@1.3.0`, so you can leave it uninstalled.
 
 **Android build fails with Kotlin `Unresolved reference 'currentActivity'`.**
-- This occurs on React Native 0.83+ / Expo SDK 55+ with the new architecture. Upgrade `@iaptic/react-native-iap` to `>=12.16.6` which contains the fix.
+- This occurs on React Native 0.83+ / Expo SDK 55+ with the new architecture. Upgrade `@iaptic/react-native-iap` to `>=13.0.0` which contains the fix.
 - If you have a local `patch-package` patch for this issue, remove it before upgrading — the fix is now upstream.
 
-### 14.2 Upgrading from 1.2.x to 1.3.0
+### 14.2 Upgrading from 1.3.x to 2.0.0
+
+- **Breaking**: `@iaptic/react-native-iap` peer dependency bumped from `^12.16.6` to `^13.0.0` (Google Play Billing Library V9).
+- The `getPurchaseHistory` function has been removed (GPBL V9 dropped `queryPurchaseHistoryAsync`). Use `getAvailablePurchases` instead.
+- Consumers pinning to `@iaptic/react-native-iap@12.x` can stay on `react-native-iaptic@1.x`.
+
+### 14.3 Upgrading from 1.2.x to 1.3.0
 
 **AsyncStorage is now optional.** If you use `IapticTokensManager` (consumable token tracking), AsyncStorage must be installed explicitly:
 

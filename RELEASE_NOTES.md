@@ -1,5 +1,21 @@
 # Release Notes
 
+## 2.0.0
+
+Breaking peer-dependency bump: `@iaptic/react-native-iap` from `^12.16.6` to `^13.0.0`.
+
+### Google Play Billing Library V9
+
+`@iaptic/react-native-iap@13.0.0` upgrades Google Play Billing Library from V7 to V9. This is a breaking change because GPBL V9 removes `queryPurchaseHistoryAsync` and changes several API signatures:
+
+- **`getPurchaseHistory` removed** — GPBL V9 dropped `queryPurchaseHistoryAsync`. Use `getAvailablePurchases` instead. The `purchaseHistory` state and `getPurchaseHistory` hook helper are also removed from `useIAP`.
+- **`enablePendingPurchases()` now requires `PendingPurchasesParams`** — explicitly enables one-time products and prepaid plans. Omitting `enableOneTimeProducts()` silently breaks pending purchase flows in cash-payment markets.
+- **`queryProductDetailsAsync` callback changed** — the second parameter is now `QueryProductDetailsResult` (wrapping `productDetailsList` + `unfetchedProductIds`) instead of a plain `List<ProductDetails>`. Unfetched product IDs are logged as warnings.
+- **Play Store blocked detection** — GPBL V9 reclassified "Play Store is blocked" errors from `ERROR` to `BILLING_UNAVAILABLE`. A new `E_STORE_BLOCKED` error code is now emitted.
+- **`billing-ktx` → `billing`** — the Kotlin extensions artifact was merged into the main `billing` artifact in V8+.
+- **`enableAutoServiceReconnection()`** added to the `BillingClient` builder.
+- Consumers who need GPBL V7 can stay on `@iaptic/react-native-iap@12.x` / `react-native-iaptic@1.x`.
+
 ## 1.3.2
 
 Patch release fixing a TypeScript regression introduced in 1.3.1 that broke the `prepare` script (and therefore every `npm install` of the package).
