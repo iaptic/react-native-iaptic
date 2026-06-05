@@ -477,6 +477,79 @@ Windows Store
 
 ***
 
+### IapticReplacementMode
+
+
+Replacement mode for subscription changes on Google Play.
+
+Determines how the billing transition is handled when a user changes
+from one subscription to another (upgrade or downgrade).
+
+#### See
+
+[Google Play Replacement Modes](https://developer.android.com/google/play/billing/migrate-gpblv7#replacement-modes)
+
+#### Enumeration Members
+
+##### CHARGE\_FULL\_PRICE
+
+> **CHARGE\_FULL\_PRICE**: `4`
+
+
+Immediate and charge full price — the new subscription takes effect immediately,
+and the user is charged the full price of the new subscription.
+The remaining time from the old subscription is not credited.
+
+##### CHARGE\_PRORATED\_PRICE
+
+> **CHARGE\_PRORATED\_PRICE**: `2`
+
+
+Immediate and charge prorated price — the new subscription takes effect immediately,
+and the user is charged the prorated price difference.
+Use this for upgrades where you want to charge the difference immediately.
+
+##### DEFERRED
+
+> **DEFERRED**: `5`
+
+
+Deferred — the new subscription takes effect when the old subscription expires.
+This is the recommended mode for downgrades to avoid giving users
+unintended access to a higher-tier subscription at a lower price.
+
+##### KEEP\_EXISTING
+
+> **KEEP\_EXISTING**: `6`
+
+
+Keep existing payment schedule — the new subscription replaces the old one
+but keeps the existing payment schedule unchanged.
+Intro/free trial periods carry over from the old subscription.
+Available since GPBL V8.1.
+
+Note: When using this mode, the offer token must NOT be set.
+
+##### WITH\_TIME\_PRORATION
+
+> **WITH\_TIME\_PRORATION**: `1`
+
+
+Immediate with time proration — the new subscription takes effect immediately,
+and the remaining time from the old subscription is prorated and credited.
+This is the default replacement mode.
+
+##### WITHOUT\_PRORATION
+
+> **WITHOUT\_PRORATION**: `3`
+
+
+Immediate without proration — the new subscription takes effect immediately,
+and the new price is charged at the next renewal time.
+The user keeps the remaining time from the old subscription.
+
+***
+
 ### IapticSeverity
 
 
@@ -919,6 +992,73 @@ The locale messages
 IapticRN.addLocale('fr', {...});
 ```
 
+##### changeSubscription()
+
+> `static` **changeSubscription**(`offer`, `oldPurchaseToken`, `replacementMode`?): `Promise`\<`void`\>
+
+
+Change from one subscription to another (upgrade or downgrade).
+
+On Android, this explicitly requires the old purchase token and a
+replacement mode to define how the billing transition is handled.
+On iOS, subscription changes are handled automatically by the App Store.
+
+###### Parameters
+
+###### offer
+
+[`IapticOffer`](#iapticoffer)
+
+The offer for the new subscription
+
+###### oldPurchaseToken
+
+`string`
+
+The purchase token of the current subscription to replace (Android)
+
+###### replacementMode?
+
+[`IapticReplacementMode`](#iapticreplacementmode)
+
+How the billing transition should be handled (Android, default: WITH_TIME_PRORATION)
+
+###### Returns
+
+`Promise`\<`void`\>
+
+###### Examples
+
+```typescript
+import { IapticRN, IapticReplacementMode } from 'react-native-iaptic';
+
+const newOffer = IapticRN.getProduct('premium_yearly')?.offers[0];
+const currentSub = IapticRN.getActiveSubscription();
+if (newOffer && currentSub?.purchaseToken) {
+  await IapticRN.changeSubscription(
+    newOffer,
+    currentSub.purchaseToken,
+    IapticReplacementMode.WITH_TIME_PRORATION,
+  );
+}
+```
+
+```typescript
+const basicOffer = IapticRN.getProduct('basic_monthly')?.offers[0];
+const currentSub = IapticRN.getActiveSubscription();
+if (basicOffer && currentSub?.purchaseToken) {
+  await IapticRN.changeSubscription(
+    basicOffer,
+    currentSub.purchaseToken,
+    IapticReplacementMode.DEFERRED,
+  );
+}
+```
+
+###### See
+
+[IapticReplacementMode](#iapticreplacementmode)
+
 ##### checkEntitlement()
 
 > `static` **checkEntitlement**(`featureId`): `boolean`
@@ -1127,6 +1267,32 @@ const purchases = IapticRN.getPurchases();
 ###### See
 
 [IapticVerifiedPurchase](#iapticverifiedpurchase) for more information on the purchase object
+
+##### getStorefront()
+
+> `static` **getStorefront**(): `Promise`\<`string`\>
+
+
+Get the user's storefront country code.
+
+Returns the ISO 3166-1 alpha-2 country code for the user's storefront.
+Useful for determining the user's market for pricing, feature gating, or analytics.
+
+- On Android, uses Google Play's BillingConfig API (GPBL 6.1+).
+- On iOS, uses StoreKit 2's storefront API (iOS 16+).
+
+###### Returns
+
+`Promise`\<`string`\>
+
+ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP")
+
+###### Example
+
+```typescript
+const storefront = await IapticRN.getStorefront();
+console.log(`User is in ${storefront}`);
+```
 
 ##### initialize()
 
@@ -2078,6 +2244,11 @@ Event argument types mapped to their event names
 > **renewed**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
 
 
+##### subscription.suspended
+
+> **suspended**: \[[`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
+
+
 ##### subscription.updated
 
 > **updated**: \[[`IapticSubscriptionReason`](#iapticsubscriptionreason), [`IapticVerifiedPurchase`](#iapticverifiedpurchase)\]
@@ -2130,6 +2301,13 @@ Active
 
 
 Expired
+
+##### ActiveSubscription\_Status\_Suspended
+
+> **ActiveSubscription\_Status\_Suspended**: `string`
+
+
+"Suspended" — subscription is paused or on hold
 
 ##### ActiveSubscription\_Tag\_Retry
 
@@ -2938,6 +3116,20 @@ Product identifier
 
 Type of product (subscription, consumable, etc.)
 
+##### replacementMode?
+
+> `optional` **replacementMode**: [`IapticReplacementMode`](#iapticreplacementmode)
+
+
+Replacement mode for subscription changes on Google Play (Android only).
+
+When changing from one subscription to another (upgrade or downgrade),
+this determines how the billing transition is handled.
+
+###### See
+
+[IapticReplacementMode](#iapticreplacementmode)
+
 ***
 
 ### IapticPendingPurchase
@@ -3517,6 +3709,20 @@ True when a subscription is expired.
 
 True when a subscription is in introductory pricing period
 
+##### isSuspended?
+
+> `optional` **isSuspended**: `boolean`
+
+
+Whether the subscription is suspended (Google Play only).
+
+A subscription is suspended when the user has paused it or when payment
+has been declined and the subscription is on hold. When suspended, the
+user should NOT have access to the subscription's content.
+
+Available since GPBL V8.1. Note: requires fork v13.0.2+ to be
+populated on Android.
+
 ##### isTrialPeriod?
 
 > `optional` **isTrialPeriod**: `boolean`
@@ -3565,6 +3771,18 @@ Date of first purchase (timestamp).
 
 
 Purchase identifier (optional)
+
+##### quantity?
+
+> `optional` **quantity**: `number`
+
+
+Quantity of the purchased item.
+
+On iOS, this represents the quantity of a consumable in-app purchase.
+On Android, this represents the quantity of a multi-quantity purchase
+(available since GPBL V4.0). Note: requires fork v13.0.2+ to be
+populated on Android.
 
 ##### renewalIntent?
 
@@ -3618,18 +3836,19 @@ Type-safe event listener function
 
 ### IapticEventType
 
-> **IapticEventType**: `"products.updated"` \| `"purchase.updated"` \| `"subscription.updated"` \| `"subscription.renewed"` \| `"subscription.cancelled"` \| `"subscription.expired"` \| `"subscription.changed"` \| `"pendingPurchase.updated"` \| `"nonConsumable.updated"` \| `"nonConsumable.owned"` \| `"nonConsumable.unowned"` \| `"consumable.purchased"` \| `"consumable.refunded"` \| `"error"`
+> **IapticEventType**: `"products.updated"` \| `"purchase.updated"` \| `"subscription.updated"` \| `"subscription.renewed"` \| `"subscription.cancelled"` \| `"subscription.expired"` \| `"subscription.changed"` \| `"subscription.suspended"` \| `"pendingPurchase.updated"` \| `"nonConsumable.updated"` \| `"nonConsumable.owned"` \| `"nonConsumable.unowned"` \| `"consumable.purchased"` \| `"consumable.refunded"` \| `"error"`
 
 
 All possible event types that can be listened to.
 
 - `products.updated` - When any product metadata is updated (title, price, description, etc.)
 - `purchase.updated` - When any purchase is updated (subscription, consumable, non-consumable)
-- `subscription.updated` - When a subscription is updated (renewed, cancelled, expired, changed)
+- `subscription.updated` - When a subscription is updated (renewed, cancelled, expired, changed, suspended)
 - `subscription.renewed` - When a subscription is renewed
 - `subscription.cancelled` - When a subscription is cancelled
 - `subscription.expired` - When a subscription is expired
 - `subscription.changed` - When a subscription is changed
+- `subscription.suspended` - When a subscription is suspended (paused or on hold due to payment decline)
 - `pendingPurchase.updated` - When a pending purchase status changes
 - `nonConsumable.updated` - When a non-consumable status changes (owned, unowned)
 - `nonConsumable.owned` - When a non-consumable purchase is owned
@@ -3682,7 +3901,7 @@ Type of recurring payment
 
 ### IapticSubscriptionReason
 
-> **IapticSubscriptionReason**: `"renewed"` \| `"cancelled"` \| `"expired"` \| `"changed"`
+> **IapticSubscriptionReason**: `"renewed"` \| `"cancelled"` \| `"expired"` \| `"changed"` \| `"suspended"`
 
 
 Reason why a subscription status changed

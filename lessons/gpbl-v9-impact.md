@@ -7,7 +7,7 @@ metadata:
 
 # GPBL V9 Migration — Key Findings for react-native-iaptic
 
-As of 2026-06-05 (updated after migration + bugfix).
+As of 2026-06-05 (updated after migration + bugfix + value-add features).
 
 ## Status: COMPLETED ✅
 
@@ -29,9 +29,23 @@ Replaced no-arg `enablePendingPurchases()` with `enablePendingPurchases(PendingP
 
 ## Other Findings
 
-- `SubscriptionUpdateParams.setSubscriptionReplacementMode()` is **deprecated** (V8.1+) but **NOT removed** in V9. Deferred to future work.
-- `Purchase.isSuspended()` added in V8.1 — not yet handled. Value-add for future.
+- `Purchase.isSuspended()` added in V8.1 — **wrapper type added** in v2.1.0 (Phase 3), native serialization still needed in fork v13.0.2+.
+- `Purchase.getQuantity()` — **wrapper type added** in v2.1.0 (Phase 3), native serialization still needed in fork v13.0.2+.
+- `getStorefront()` — **wrapped** in v2.1.0 (Phase 3). The fork already exposed `IAP.getStorefront()`.
+- `IapticReplacementMode` enum — **added** in v2.1.0 (Phase 3) with correct GPBL integer values (1-6).
+- `changeSubscription()` method — **added** in v2.1.0 (Phase 3) for explicit subscription upgrade/downgrade.
+- `subscription.suspended` event — **added** in v2.1.0 (Phase 3).
 - No `externalOffer`/`AlternativeBilling`/`UserChoiceBilling` APIs used — not applicable.
+
+## Fork Gaps (require native changes in @iaptic/react-native-iap)
+
+| Feature | Fork Status | Wrapper Status |
+|---|---|---|
+| `Purchase.isSuspended` serialization | **NOT serialized** from native | Type added, `owned()` checks it |
+| `Purchase.getQuantity` serialization | **NOT serialized** from native (Android) | Type added |
+| `Purchase.expiryTimeMillis` serialization | **NOT serialized** from native | N/A (handled via validator) |
+| `ReplacementModesAndroid` enum values | **WRONG** (CHARGE_FULL_PRICE=5, DEFERRED=6 instead of 4, 5) | Workaround: cast via `as unknown as` |
+| `KEEP_EXISTING` replacement mode (value 6) | **NOT in native `when` statement** | Enum value added (6) |
 
 ## Build Config Changes
 
@@ -56,5 +70,5 @@ Replaced no-arg `enablePendingPurchases()` with `enablePendingPurchases(PendingP
 ## Versioning
 
 - Fork: `@iaptic/react-native-iap@13.0.1` (breaking change from 12.x, patch fix for E_STORE_BLOCKED)
-- Wrapper: `react-native-iaptic@2.0.0` (peer dep `^13.0.0`)
+- Wrapper: `react-native-iaptic@2.0.0` → `2.1.0` (value-add features, peer dep `^13.0.0`)
 - Consumers pinning to `12.x` can stay on `react-native-iaptic@1.x`

@@ -37,7 +37,7 @@ export class Subscriptions {
    */
   activesOnly(): IapticVerifiedPurchase[] {
     const now = new Date();
-    return this.all().filter(p => p.expiryDate && new Date(p.expiryDate) > now && !p.cancelationReason);
+    return this.all().filter(p => p.expiryDate && new Date(p.expiryDate) > now && !p.cancelationReason && !p.isSuspended);
   }
 
   /**
@@ -80,6 +80,10 @@ export class Subscriptions {
       else if (!existing?.isExpired && purchase.isExpired) {
         this.events.emit('subscription.updated', 'expired', purchase);
         this.events.emit('subscription.expired', purchase);
+      }
+      else if (!existing?.isSuspended && purchase.isSuspended) {
+        this.events.emit('subscription.updated', 'suspended', purchase);
+        this.events.emit('subscription.suspended', purchase);
       }
       else {
         this.events.emit('subscription.updated', 'changed', purchase);

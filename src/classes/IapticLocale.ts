@@ -241,4 +241,7 @@ export interface IapticLocale {
   SubscriptionView_RestoreProgress: string;
   /** "Cancelled" */
   SubscriptionView_ProcessingStatus_cancelled: string;
+
+  /** "Suspended" — subscription is paused or on hold */
+  ActiveSubscription_Status_Suspended: string;
 }

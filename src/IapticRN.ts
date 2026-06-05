@@ -14,7 +14,8 @@ import {
   IapticEventListener,
   IapticProduct,
   IapticOffer,
-  IapticPendingPurchase
+  IapticPendingPurchase,
+  IapticReplacementMode,
 } from "./types";
 import { subscriptionViewEvents } from './components/SubscriptionView/Modal';
 
@@ -602,6 +603,52 @@ export class IapticRN {
     return IapticRN.getStore().order(offer);
   }
 
+  /**
+   * Change from one subscription to another (upgrade or downgrade).
+   *
+   * On Android, this explicitly requires the old purchase token and a
+   * replacement mode to define how the billing transition is handled.
+   * On iOS, subscription changes are handled automatically by the App Store.
+   *
+   * @param offer - The offer for the new subscription
+   * @param oldPurchaseToken - The purchase token of the current subscription to replace (Android)
+   * @param replacementMode - How the billing transition should be handled (Android, default: WITH_TIME_PRORATION)
+   *
+   * @example Upgrade subscription with immediate proration
+   * ```typescript
+   * import { IapticRN, IapticReplacementMode } from 'react-native-iaptic';
+   *
+   * const newOffer = IapticRN.getProduct('premium_yearly')?.offers[0];
+   * const currentSub = IapticRN.getActiveSubscription();
+   * if (newOffer && currentSub?.purchaseToken) {
+   *   await IapticRN.changeSubscription(
+   *     newOffer,
+   *     currentSub.purchaseToken,
+   *     IapticReplacementMode.WITH_TIME_PRORATION,
+   *   );
+   * }
+   * ```
+   *
+   * @example Downgrade subscription with deferred change
+   * ```typescript
+   * const basicOffer = IapticRN.getProduct('basic_monthly')?.offers[0];
+   * const currentSub = IapticRN.getActiveSubscription();
+   * if (basicOffer && currentSub?.purchaseToken) {
+   *   await IapticRN.changeSubscription(
+   *     basicOffer,
+   *     currentSub.purchaseToken,
+   *     IapticReplacementMode.DEFERRED,
+   *   );
+   * }
+   * ```
+   *
+   * @see {@link IapticReplacementMode}
+   */
+  static async changeSubscription(offer: IapticOffer, oldPurchaseToken: string, replacementMode?: IapticReplacementMode) {
+    await IapticRN.waitForStore();
+    return IapticRN.getStore().changeSubscription(offer, oldPurchaseToken, replacementMode);
+  }
+
 
   /**
    * Restore purchases from the Store.
@@ -676,6 +723,28 @@ export class IapticRN {
   static isOwned(productId: string): boolean {
     if (!IapticRN.store) return false;
     return IapticRN.getStore().isOwned(productId);
+  }
+
+  /**
+   * Get the user's storefront country code.
+   *
+   * Returns the ISO 3166-1 alpha-2 country code for the user's storefront.
+   * Useful for determining the user's market for pricing, feature gating, or analytics.
+   *
+   * - On Android, uses Google Play's BillingConfig API (GPBL 6.1+).
+   * - On iOS, uses StoreKit 2's storefront API (iOS 16+).
+   *
+   * @returns ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP")
+   *
+   * @example
+   * ```typescript
+   * const storefront = await IapticRN.getStorefront();
+   * console.log(`User is in ${storefront}`);
+   * ```
+   */
+  static async getStorefront(): Promise<string> {
+    await IapticRN.waitForStore();
+    return IapticRN.getStore().getStorefront();
   }
 
   /**

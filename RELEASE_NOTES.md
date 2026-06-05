@@ -1,5 +1,68 @@
 # Release Notes
 
+## 2.1.0
+
+Value-add features on top of the GPBL V9 migration, leveraging Google Play Billing Library V8/V9 capabilities.
+
+### New: `getStorefront()`
+
+```typescript
+const storefront = await IapticRN.getStorefront();
+// Returns ISO 3166-1 alpha-2 country code, e.g. "US", "DE", "JP"
+```
+
+Returns the user's storefront country code. On Android, uses Google Play's `BillingConfig` API (GPBL 6.1+). On iOS, uses StoreKit 2's storefront API (iOS 16+).
+
+### New: `changeSubscription()` and `IapticReplacementMode`
+
+```typescript
+import { IapticRN, IapticReplacementMode } from 'react-native-iaptic';
+
+// Upgrade with immediate proration
+await IapticRN.changeSubscription(
+  newOffer,
+  oldPurchaseToken,
+  IapticReplacementMode.WITH_TIME_PRORATION,
+);
+
+// Downgrade with deferred change (new plan takes effect at next renewal)
+await IapticRN.changeSubscription(
+  basicOffer,
+  oldPurchaseToken,
+  IapticReplacementMode.DEFERRED,
+);
+```
+
+Explicit API for subscription upgrades/downgrades on Android. Requires the old subscription's `purchaseToken` and a `replacementMode` to define how the billing transition is handled. Supports all 6 GPBL replacement modes including `KEEP_EXISTING` (V8.1+).
+
+### New: `isSuspended` and `quantity` on `IapticVerifiedPurchase`
+
+- **`isSuspended`** — `true` when a subscription has been paused or put on hold due to payment decline. A suspended subscription is not considered "owned" by `IapticRN.isOwned()` or `IapticRN.checkEntitlement()`. Note: full functionality requires fork v13.0.2+ to serialize `isSuspended` from native Android.
+- **`quantity`** — the number of items purchased (for multi-quantity purchases on iOS and Android). Note: full functionality requires fork v13.0.2+ to serialize `quantity` from native Android.
+
+### New: `subscription.suspended` event
+
+A new event type emitted when a subscription transitions to a suspended state (paused by user or on hold due to payment decline).
+
+```typescript
+IapticRN.addEventListener('subscription.suspended', (purchase) => {
+  console.log(`Subscription ${purchase.productId} is suspended`);
+});
+```
+
+### Locale updates
+
+Added `ActiveSubscription_Status_Suspended` locale key to all 7 supported languages (EN, ES, FR, DE, JA, ZH, PT).
+
+### ⚠️ Fork gaps (require `@iaptic/react-native-iap` v13.0.2+)
+
+| Feature | Fork status | Wrapper status |
+|---|---|---|
+| `Purchase.isSuspended` native serialization | Not serialized | Type + `owned()` check ready |
+| `Purchase.getQuantity` native serialization | Not serialized (Android) | Type ready |
+| `ReplacementModesAndroid` enum values | Wrong (CHARGE_FULL_PRICE=5, DEFERRED=6) | Workaround: cast via `as unknown as` |
+| `KEEP_EXISTING` mode (value 6) | Not in native `when` statement | Enum value added |
+
 ## 2.0.0
 
 Breaking peer-dependency bump: `@iaptic/react-native-iap` from `^12.16.6` to `^13.0.0`.

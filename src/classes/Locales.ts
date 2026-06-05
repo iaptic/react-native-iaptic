@@ -121,6 +121,7 @@ const EN: IapticLocale = {
   SubscriptionView_RestorePurchase: "Restore Purchases",
   SubscriptionView_RestoringTitle: "Restoring Purchases...",
   SubscriptionView_RestoreProgress: "Processed {0} of {1} purchases",
+  ActiveSubscription_Status_Suspended: "Suspended",
 };
 
 /**
@@ -129,6 +130,7 @@ const EN: IapticLocale = {
 const EN_UK: IapticLocale = {
   ...EN,
   SubscriptionView_ProcessingStatus_finishing: "finalising...",
+  ActiveSubscription_Status_Suspended: "Suspended",
 };
 
 /**
@@ -140,6 +142,7 @@ const EN_AU: IapticLocale = {
   PurchaseError_E_ITEM_UNAVAILABLE: "The requested product is unavailable",
   SubscriptionView_ProcessingStatus_finishing: "finalising...",
   SubscriptionView_TermsLink: "Terms and Conditions",
+  ActiveSubscription_Status_Suspended: "Suspended",
 };
 
 const ES: IapticLocale = {
@@ -254,11 +257,8 @@ const ES: IapticLocale = {
   SubscriptionView_RestorePurchase: "Restaurar Compras",
   SubscriptionView_RestoringTitle: "Restaurando Compras...",
   SubscriptionView_RestoreProgress: "Procesado {0} de {1} compras",
+  ActiveSubscription_Status_Suspended: "Suspendida",
 };
-
-/**
- * French (France) locale.
- */
 const FR: IapticLocale = {
   Error: "Erreur",
   ProgrammingError: "Erreur de programmation",
@@ -370,6 +370,7 @@ const FR: IapticLocale = {
   SubscriptionView_RestorePurchase: "Restaurer les achats",
   SubscriptionView_RestoringTitle: "Restauration des achats...",
   SubscriptionView_RestoreProgress: "Traitement {0} sur {1} achats",
+  ActiveSubscription_Status_Suspended: "Suspendu",
 };
 
 /**
@@ -486,6 +487,7 @@ const DE: IapticLocale = {
   SubscriptionView_RestorePurchase: "Käufe wiederherstellen",
   SubscriptionView_RestoringTitle: "Wiederherstellen...",
   SubscriptionView_RestoreProgress: "Verarbeitet {0} von {1} Käufen",
+  ActiveSubscription_Status_Suspended: "Ausgesetzt",
 };
 
 /**
@@ -602,6 +604,7 @@ const JA: IapticLocale = {
   SubscriptionView_RestorePurchase: "購入を復元する",
   SubscriptionView_RestoringTitle: "復元中...",
   SubscriptionView_RestoreProgress: "処理中 {0} 件 / 合計 {1} 件",
+  ActiveSubscription_Status_Suspended: "一時停止中",
 };
 
 /**
@@ -718,6 +721,7 @@ const ZH: IapticLocale = {
   SubscriptionView_RestorePurchase: "恢复购买",
   SubscriptionView_RestoringTitle: "恢复中...",
   SubscriptionView_RestoreProgress: "处理中 {0} 件 / 合計 {1} 件",
+  ActiveSubscription_Status_Suspended: "已暂停",
 };
 
 /**
@@ -834,6 +838,7 @@ const PT: IapticLocale = {
   SubscriptionView_RestorePurchase: "Restaurar Compras",
   SubscriptionView_RestoringTitle: "Restaurando...",
   SubscriptionView_RestoreProgress: "Processado {0} de {1} compras",
+  ActiveSubscription_Status_Suspended: "Suspensa",
 };
 
 /**

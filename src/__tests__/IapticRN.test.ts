@@ -3,7 +3,7 @@
 import { IapticRN } from '../IapticRN';
 import * as IAP from '@iaptic/react-native-iap';
 import { Platform, Linking } from 'react-native';
-import { IapticProductDefinition, IapticProductType, IapticPurchasePlatform, IapticOffer, IapticPricingPhase, IapticErrorCode } from '../types';
+import { IapticProductDefinition, IapticProductType, IapticPurchasePlatform, IapticOffer, IapticPricingPhase, IapticErrorCode, IapticReplacementMode } from '../types';
 import { IapticStore } from '../classes/IapticStore';
 
 // Mock react-native-iap
@@ -49,7 +49,8 @@ jest.mock('@iaptic/react-native-iap', () => {
       E_INTERRUPTED: 'E_INTERRUPTED',
       E_IAP_NOT_AVAILABLE: 'E_IAP_NOT_AVAILABLE',
       E_STORE_BLOCKED: 'E_STORE_BLOCKED'
-    }
+    },
+    getStorefront: jest.fn().mockResolvedValue('US'),
   };
 });
 
@@ -450,7 +451,7 @@ describe('IapticRN', () => {
       expect(manager).toBeDefined();
       expect(manager.getBalance('coin')).toBe(0);
     });
-    
+
     it('has a clear error message for when AsyncStorage is missing', () => {
       // This test validates the error message format.
       // The actual module-not-found behavior is tested in the Metro bundle
@@ -458,14 +459,140 @@ describe('IapticRN', () => {
       const expectedMessage =
         'IapticTokensManager requires @react-native-async-storage/async-storage. ' +
         'Install with: npm install @react-native-async-storage/async-storage@~2.1.0';
-      
+
       // Verify the message is actionable
       expect(expectedMessage).toContain('requires @react-native-async-storage/async-storage');
       expect(expectedMessage).toContain('npm install @react-native-async-storage/async-storage@~2.1.0');
-      
+
       // Verify the message is the right length (not truncated, not bloated)
       expect(expectedMessage.length).toBeGreaterThan(100);
       expect(expectedMessage.length).toBeLessThan(250);
+    });
+  });
+
+  describe('value-add features (GPBL V8/V9)', () => {
+    describe('getStorefront', () => {
+      it('returns storefront country code', async () => {
+        const storefront = await iaptic.getStorefront();
+        expect(IAP.getStorefront).toHaveBeenCalled();
+        expect(storefront).toBe('US');
+      });
+    });
+
+    describe('IapticReplacementMode enum', () => {
+      it('has correct GPBL integer values', () => {
+        expect(IapticReplacementMode.WITH_TIME_PRORATION).toBe(1);
+        expect(IapticReplacementMode.CHARGE_PRORATED_PRICE).toBe(2);
+        expect(IapticReplacementMode.WITHOUT_PRORATION).toBe(3);
+        expect(IapticReplacementMode.CHARGE_FULL_PRICE).toBe(4);
+        expect(IapticReplacementMode.DEFERRED).toBe(5);
+        expect(IapticReplacementMode.KEEP_EXISTING).toBe(6);
+      });
+    });
+
+    describe('changeSubscription', () => {
+      beforeEach(() => {
+        Platform.OS = 'android';
+        Object.defineProperty(iaptic.products, 'getType', {
+          value: jest.fn().mockImplementation((productId: string) => {
+            return 'paid subscription';
+          })
+        });
+      });
+
+      it('passes replacement mode and old purchase token on Android', async () => {
+        const offer: IapticOffer = {
+          id: 'premium_offer',
+          platform: IapticPurchasePlatform.GOOGLE_PLAY,
+          pricingPhases: [mockPricingPhase],
+          productId: 'premium_monthly',
+          offerType: 'Default',
+          offerToken: 'test_offer_token',
+        };
+        (IAP.requestSubscription as jest.Mock).mockResolvedValueOnce({
+          productId: 'premium_monthly',
+          transactionId: 'test_transaction'
+        });
+
+        await iaptic.changeSubscription(offer, 'old_purchase_token', IapticReplacementMode.DEFERRED);
+        expect(IAP.requestSubscription).toHaveBeenCalledWith(
+          expect.objectContaining({
+            purchaseTokenAndroid: 'old_purchase_token',
+            replacementModeAndroid: IapticReplacementMode.DEFERRED,
+          })
+        );
+      });
+
+      it('defaults to WITH_TIME_PRORATION when no replacement mode specified', async () => {
+        const offer: IapticOffer = {
+          id: 'premium_offer',
+          platform: IapticPurchasePlatform.GOOGLE_PLAY,
+          pricingPhases: [mockPricingPhase],
+          productId: 'premium_monthly',
+          offerType: 'Default',
+          offerToken: 'test_offer_token',
+        };
+        (IAP.requestSubscription as jest.Mock).mockResolvedValueOnce({
+          productId: 'premium_monthly',
+          transactionId: 'test_transaction'
+        });
+
+        await iaptic.changeSubscription(offer, 'old_purchase_token');
+        expect(IAP.requestSubscription).toHaveBeenCalledWith(
+          expect.objectContaining({
+            replacementModeAndroid: IapticReplacementMode.WITH_TIME_PRORATION,
+          })
+        );
+      });
+    });
+
+    describe('isSuspended', () => {
+      it('considers suspended subscriptions as not owned', () => {
+        iaptic.setProductDefinitions([{
+          id: 'premium_sub',
+          type: 'paid subscription',
+          entitlements: ['premium']
+        }]);
+
+        const mockPurchase = {
+          id: 'premium_sub',
+          productId: 'premium_sub',
+          isExpired: false,
+          isSuspended: true,
+          cancelationReason: undefined,
+          purchaseDate: Date.now(),
+          platform: IapticPurchasePlatform.TEST,
+          transactionId: 'test_transaction',
+        };
+
+        iaptic.purchases.addPurchase(mockPurchase);
+        expect(iaptic.owned('premium_sub')).toBe(false);
+        expect(iaptic.checkEntitlement('premium')).toBe(false);
+      });
+
+      it('active subscriptions are not suspended', () => {
+        iaptic.setProductDefinitions([{
+          id: 'premium_sub',
+          type: 'paid subscription',
+          entitlements: ['premium']
+        }]);
+
+        const mockPurchase = {
+          id: 'premium_sub',
+          productId: 'premium_sub',
+          isExpired: false,
+          isSuspended: false,
+          cancelationReason: undefined,
+          expiryDate: Date.now() + 86400000, // 1 day from now
+          purchaseDate: Date.now(),
+          platform: IapticPurchasePlatform.TEST,
+          transactionId: 'test_transaction',
+        };
+
+        iaptic.purchases.addPurchase(mockPurchase);
+        expect(iaptic.owned('premium_sub')).toBe(true);
+        expect(iaptic.checkEntitlement('premium')).toBe(true);
+      });
     });
   });
 }); 
