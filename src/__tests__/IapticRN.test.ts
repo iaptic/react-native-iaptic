@@ -2,18 +2,56 @@
 
 import { IapticRN } from '../IapticRN';
 import * as IAP from '@iaptic/react-native-iap';
-import { Platform, Linking } from 'react-native';
 import { IapticProductDefinition, IapticProductType, IapticPurchasePlatform, IapticOffer, IapticPricingPhase, IapticErrorCode, IapticReplacementMode } from '../types';
 import { IapticStore } from '../classes/IapticStore';
 
-// Mock react-native-iap
+// Mock react-native (Platform, Linking, etc.)
+jest.mock('react-native', () => {
+  const platform = { OS: 'ios' };
+  return {
+    Platform: platform,
+    Linking: { openURL: jest.fn() },
+    NativeModules: {},
+    NativeEventEmitter: jest.fn().mockImplementation(() => ({
+      addListener: jest.fn(),
+      removeListeners: jest.fn(),
+    })),
+  };
+});
+
+import { Platform, Linking } from 'react-native';
+
+// Mock UI components (they import react-native deep paths not covered by the top-level mock)
+jest.mock('../components/SubscriptionView/Modal', () => ({
+  subscriptionViewEvents: { on: jest.fn(), off: jest.fn(), emit: jest.fn() },
+}));
+jest.mock('../components/SubscriptionView/EntitlementGrid', () => ({}));
+jest.mock('../components/SubscriptionView/ProductPrice', () => ({}));
+jest.mock('../components/ActiveSubscription', () => ({}));
+jest.mock('../components/ProductList', () => ({}));
+
+// Mock @iaptic/react-native-iap (the fork uses react-native internally, so mock fully)
 jest.mock('@iaptic/react-native-iap', () => {
   const purchaseUpdatedListener = jest.fn(() => ({ remove: jest.fn() }));
   const purchaseErrorListener = jest.fn(() => ({ remove: jest.fn() }));
-  
-  // Use the actual error class from react-native-iap
-  const { PurchaseError } = jest.requireActual('@iaptic/react-native-iap');
-  
+
+  // Mock PurchaseError class (matches the real class signature:
+  // name, message, responseCode, debugMessage, code, productId)
+  class PurchaseError extends Error {
+    code?: string;
+    responseCode?: number;
+    debugMessage?: string;
+    productId?: string;
+    constructor(_name: string, message: string, responseCode: number = 0, debugMessage: string = '', code?: string, productId?: string) {
+      super(message);
+      this.name = 'PurchaseError';
+      this.code = code;
+      this.responseCode = responseCode;
+      this.debugMessage = debugMessage;
+      this.productId = productId;
+    }
+  }
+
   return {
     initConnection: jest.fn(),
     endConnection: jest.fn(),
@@ -29,7 +67,7 @@ jest.mock('@iaptic/react-native-iap', () => {
     getReceiptIOS: jest.fn().mockResolvedValue('mock-receipt'),
     purchaseUpdatedListener,
     purchaseErrorListener,
-    PurchaseError, // Use real error class
+    PurchaseError,
     ErrorCode: {
       E_UNKNOWN: 'E_UNKNOWN',
       E_USER_CANCELLED: 'E_USER_CANCELLED',
@@ -97,13 +135,11 @@ describe('IapticRN', () => {
   };
 
   beforeAll(() => {
-    // Use fake timers
-    jest.useFakeTimers();
+    // No fake timers — they prevent async tests from resolving
   });
 
   afterAll(() => {
     // Restore real timers
-    jest.useRealTimers();
   });
 
   beforeEach(() => {

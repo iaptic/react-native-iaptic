@@ -1,21 +1,25 @@
 module.exports = {
-  preset: 'react-native',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  transformIgnorePatterns: [
-    'node_modules/(?!(@react-native|react-native|react-native-iap)/)'
-  ],
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
-  },
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$',
+  roots: ['<rootDir>/src'],
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: {
+        jsx: 'react-jsx',
+        module: 'commonjs',
+        target: 'ESNext',
+        strict: true,
+        esModuleInterop: true,
+        declaration: false,
+        sourceMap: true,
+        inlineSources: true,
+        skipLibCheck: true,
+      },
+    }],
   },
-}; 
+};
