@@ -7,11 +7,11 @@ metadata:
 
 # GPBL V9 Migration — Key Findings for react-native-iaptic
 
-As of 2026-06-05 (updated after migration + bugfix + value-add features).
+As of 2026-06-08 (updated after testing & release phase).
 
 ## Status: COMPLETED ✅
 
-The GPBL V9 migration has been completed. The fork is published as `@iaptic/react-native-iap@13.0.1` (patch fix for E_STORE_BLOCKED double-reject) and `react-native-iaptic` is updated to v2.0.0.
+The GPBL V9 migration has been completed. The fork is published as `@iaptic/react-native-iap@13.0.1` (patch fix for E_STORE_BLOCKED double-reject) and `react-native-iaptic` is updated to v2.1.0 (value-add features + test fixes).
 
 ## Key Finding 1: `getPurchaseHistory` removed
 
@@ -70,5 +70,13 @@ Replaced no-arg `enablePendingPurchases()` with `enablePendingPurchases(PendingP
 ## Versioning
 
 - Fork: `@iaptic/react-native-iap@13.0.1` (breaking change from 12.x, patch fix for E_STORE_BLOCKED)
-- Wrapper: `react-native-iaptic@2.0.0` → `2.1.0` (value-add features, peer dep `^13.0.0`)
+- Wrapper: `react-native-iaptic@2.1.0` (value-add features, peer dep `^13.0.0`)
 - Consumers pinning to `12.x` can stay on `react-native-iaptic@1.x`
+
+## Testing Phase Results (v2.1.0)
+
+- **TypeScript**: compiles cleanly (`tsc --noEmit` — zero errors)
+- **Unit tests**: 27/27 pass (`npm test` — ts-jest with full react-native + fork mocking)
+- **Test infrastructure fix**: switched from broken `react-native` jest preset to `ts-jest` with inline tsconfig override for JSX. UI components (SubscriptionView/Modal, etc.) mocked out since they import react-native deep paths. `PurchaseError` class mocked in tests instead of using `jest.requireActual()` which pulled in react-native's Flow syntax.
+- **npm publish blocked**: no npm credentials in CI environment. JC must run `npm publish --access public` manually.
+- **Cash-market testing**: `enableOneTimeProducts()` must be verified on a physical Android device with a cash-payment market Google account. This cannot be tested in unit tests — requires manual integration testing.
