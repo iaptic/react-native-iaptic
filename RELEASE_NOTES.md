@@ -37,8 +37,8 @@ Explicit API for subscription upgrades/downgrades on Android. Requires the old s
 
 ### New: `isSuspended` and `quantity` on `IapticVerifiedPurchase`
 
-- **`isSuspended`** — `true` when a subscription has been paused or put on hold due to payment decline. A suspended subscription is not considered "owned" by `IapticRN.isOwned()` or `IapticRN.checkEntitlement()`. Note: full functionality requires fork v13.0.2+ to serialize `isSuspended` from native Android.
-- **`quantity`** — the number of items purchased (for multi-quantity purchases on iOS and Android). Note: full functionality requires fork v13.0.2+ to serialize `quantity` from native Android.
+- **`isSuspended`** — `true` when a subscription has been paused or put on hold due to payment decline. A suspended subscription is not considered "owned" by `IapticRN.isOwned()` or `IapticRN.checkEntitlement()`. Returns `undefined` on Android until `@iaptic/react-native-iap` v13.0.2+, which serialises the field from native.
+- **`quantity`** — the number of items purchased (for multi-quantity purchases on iOS and Android). Returns `undefined` on Android until `@iaptic/react-native-iap` v13.0.2+, which serialises the field from native.
 
 ### New: `subscription.suspended` event
 

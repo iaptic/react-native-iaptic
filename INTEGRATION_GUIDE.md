@@ -27,7 +27,7 @@ This document is the single reference for integrating `react-native-iaptic` into
 
 - A **single, cross-platform purchasing API** (`IapticRN`) that works for both iOS (StoreKit) and Android (Play Billing).
 - **Server-side receipt validation** via Iaptic — clients never trust local receipts.
-- **Real-time subscription tracking** through events (`subscription.updated`, `subscription.renewed`, `subscription.cancelled`, `subscription.expired`, `subscription.changed`).
+- **Real-time subscription tracking** through events (`subscription.updated`, `subscription.renewed`, `subscription.cancelled`, `subscription.expired`, `subscription.changed`, `subscription.suspended`).
 - **Drop-in UI**: `IapticSubscriptionView` is a full-screen subscription picker, `IapticActiveSubscription` shows the active subscription, `IapticProductList` lists products. Theming and per-element style overrides supported.
 - **Entitlements model**: code checks `IapticRN.checkEntitlement('premium')` rather than product IDs, decoupling features from SKUs.
 - **Restore, manage, and re-validate** flows out of the box.
@@ -533,6 +533,7 @@ Subscribe with `IapticRN.addEventListener(eventType, listener)`. The returned `{
 | `subscription.cancelled` | `(purchase)` | User cancelled (still active until expiration). |
 | `subscription.expired` | `(purchase)` | Period ended without renewal. |
 | `subscription.changed` | `(purchase)` | Plan changed (upgrade / downgrade / crossgrade). |
+| `subscription.suspended` | `(purchase)` | Subscription paused by user or on hold due to payment decline. |
 | `purchase.updated` | `(purchase: IapticVerifiedPurchase)` | Any verified purchase changed. |
 | `pendingPurchase.updated` | `(pending: IapticPendingPurchase)` | In-flight purchase moved between `purchasing → processing → validating → finishing → completed/cancelled`. Useful for spinners. |
 | `products.updated` | `(products: IapticProduct[])` | Catalogue refreshed (after `loadProducts` or `initialize`). |
@@ -595,6 +596,16 @@ Typical conventions:
 - `WARNING` — non-fatal hint; on Android use Toast, on iOS use Alert.
 - `ERROR` — Alert. Send `code` to your analytics so you can track conversion drop-offs.
 
+### Common error codes
+
+| Code | Severity | When |
+|---|---|---|
+| `PAYMENT_CANCELLED` | INFO | User cancelled the purchase dialog. |
+| `VERIFICATION_FAILED` | ERROR | Receipt validation failed on the server. |
+| `LOAD` | ERROR | Product metadata could not be loaded. |
+| `SETUP` | ERROR | SDK initialisation failed. |
+| `STORE_BLOCKED` | ERROR | Play Store is blocked on the device (OEM kids mode, parental controls, enterprise policies). Android only. |
+
 ---
 
 ## 13. API reference
@@ -604,7 +615,7 @@ Typical conventions:
 ```typescript
 // Core
 IapticRN, IapticConfig
-IapticError, IapticSeverity
+IapticError, IapticSeverity, IapticReplacementMode
 IapticUtils, IapticLogger
 
 // Domain helpers (rarely needed directly)
@@ -650,6 +661,8 @@ IapticTheme
 | `consume(p: IapticVerifiedPurchase): Promise<void>` | Consumables only — out of scope here. |
 | `manageSubscriptions(): Promise<void>` | Open platform subscription settings. |
 | `manageBilling(): Promise<void>` | Open platform billing settings. |
+| `getStorefront(): Promise<string>` | Returns ISO 3166-1 alpha-2 storefront country code (e.g. `"US"`, `"DE"`). Android: GPBL 6.1+; iOS: StoreKit 2 (iOS 16+). |
+| `changeSubscription(offer, oldPurchaseToken, replacementMode?): Promise<void>` | Switch from one subscription to another (upgrade/downgrade). Android only. |
 | `presentSubscriptionView(): void` | Show the mounted `IapticSubscriptionView`. |
 | `addEventListener<T>(type: T, listener): { remove(): void }` | Subscribe to events. |
 | `removeAllEventListeners(type?): void` | Unsubscribe. |
@@ -666,11 +679,12 @@ IapticTheme
 | `IapticProduct` | Store-loaded product: `{ id, type, title, description, offers, platform, entitlements, tokens? }`. |
 | `IapticOffer` | `{ id, platform, productId, productType, offerType, offerToken?, pricingPhases }`. |
 | `IapticPricingPhase` | `{ price, priceMicros, currency, billingPeriod, billingCycles, recurrenceMode, paymentMode }`. |
-| `IapticVerifiedPurchase` | Server-validated purchase. Includes `productId`, `platform`, `purchaseDate`, `expirationDate`, `isTrial`, `isIntroPrice`, `cancelationReason`, `priceConsentStatus`, etc. |
+| `IapticVerifiedPurchase` | Server-validated purchase. Includes `productId`, `platform`, `purchaseDate`, `expirationDate`, `isTrial`, `isIntroPrice`, `isSuspended`, `quantity`, `cancelationReason`, `priceConsentStatus`, etc. |
 | `IapticPendingPurchase` | `{ productId, status, offerId? }` where `status` is one of `purchasing | processing | validating | finishing | completed | cancelled`. |
 | `IapticTheme` | Color tokens (see §9). |
 | `IapticErrorCode` | Enum of failure modes. Stable identifiers safe to send to analytics. |
 | `IapticCancelationReason` | `CUSTOMER \| DEVELOPER \| SYSTEM \| SYSTEM_REPLACED \| SYSTEM_BILLING_ERROR \| ...`. |
+| `IapticReplacementMode` | `WITH_TIME_PRORATION(1) \| CHARGE_PRORATED_PRICE(2) \| WITHOUT_PRORATION(3) \| CHARGE_FULL_PRICE(4) \| DEFERRED(5) \| KEEP_EXISTING(6)`. Used with `changeSubscription()`. |
 | `IapticPurchasePlatform` | `APPLE_APPSTORE \| GOOGLE_PLAY \| WINDOWS_STORE \| BRAINTREE \| TEST`. |
 | `IapticPaymentMode` | `PayAsYouGo \| UpFront \| FreeTrial`. |
 | `IapticRecurrenceMode` | `NON_RECURRING \| FINITE_RECURRING \| INFINITE_RECURRING`. |
