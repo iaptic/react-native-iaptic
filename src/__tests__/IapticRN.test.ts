@@ -366,13 +366,14 @@ describe('IapticRN', () => {
     it('handles cancelled purchases', async () => {
       const error = new IAP.PurchaseError('PurchaseError', 'User cancelled', 0, '', IAP.ErrorCode.E_USER_CANCELLED);
       (IAP.requestPurchase as jest.Mock).mockRejectedValue(error);
-      
-      await expect(iaptic.order(mockOffer)).rejects.toThrow(
-        expect.objectContaining({
-          name: 'IapticError', 
-          code: IapticErrorCode.PAYMENT_CANCELLED,
-        })
-      );
+
+      try {
+        await iaptic.order(mockOffer);
+        fail('Expected error to be thrown');
+      } catch (e: any) {
+        expect(e.name).toBe('IapticError');
+        expect(e.code).toBe(IapticErrorCode.PAYMENT_CANCELLED);
+      }
     });
   });
 
