@@ -308,7 +308,7 @@ Upstream [`hyochan/react-native-iap`](https://github.com/hyochan/react-native-ia
 - [**Integration guide**](./INTEGRATION_GUIDE.md) — step-by-step setup for subscriptions (single reference combining install, dashboard, example app, and API)
 - [**API reference**](https://www.iaptic.com/documentation/react-native) — generated TypeDoc for all public types
 - [**Release notes**](./RELEASE_NOTES.md) — changelog and upgrade notes
-- [**Demo app**](https://github.com/iaptic/react-native-iaptic-demo) — a runnable example app
+- [**Demo app**](https://github.com/iaptic/react-native-iap-demo) — a runnable example app
 
 ## Support & Community
 
