@@ -73,10 +73,18 @@ Replaced no-arg `enablePendingPurchases()` with `enablePendingPurchases(PendingP
 - Wrapper: `react-native-iaptic@2.1.0` (value-add features, peer dep `^13.0.0`)
 - Consumers pinning to `12.x` can stay on `react-native-iaptic@1.x`
 
+## Review Feedback Addressed (v2.1.0)
+
+- `findOldPurchaseToken()` now scopes auto-detection by `productGroup` (when declared) and picks the most-recently-purchased candidate (by `transactionDate`) instead of an arbitrary first match.
+- `changeSubscription()` errors surface `PAYMENT_CANCELLED` / `PURCHASE` instead of the misleading `SUBSCRIPTION_UPDATE_NOT_AVAILABLE`.
+- `KEEP_EXISTING` + `offerToken` now drops the token (with a warning) and routes through `order()` — matches GPBL's "offer token must not be set" rule.
+- `getStorefront()` returns `''` on native failure instead of throwing.
+- Restored ES/FR locale JSDoc headers; documented the Android-without-offerToken fallback in `changeSubscription()`.
+
 ## Testing Phase Results (v2.1.0)
 
 - **TypeScript**: compiles cleanly (`tsc --noEmit` — zero errors)
-- **Unit tests**: 27/27 pass (`npm test` — ts-jest with full react-native + fork mocking)
+- **Unit tests**: 31/31 pass (`npm test` — ts-jest with full react-native + fork mocking)
 - **Test infrastructure fix**: switched from broken `react-native` jest preset to `ts-jest` with inline tsconfig override for JSX. UI components (SubscriptionView/Modal, etc.) mocked out since they import react-native deep paths. `PurchaseError` class mocked in tests instead of using `jest.requireActual()` which pulled in react-native's Flow syntax.
 - **npm publish blocked**: no npm credentials in CI environment. JC must run `npm publish --access public` manually.
 - **Cash-market testing**: `enableOneTimeProducts()` must be verified on a physical Android device with a cash-payment market Google account. This cannot be tested in unit tests — requires manual integration testing.

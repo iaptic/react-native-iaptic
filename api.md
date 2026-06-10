@@ -1003,6 +1003,10 @@ On Android, this explicitly requires the old purchase token and a
 replacement mode to define how the billing transition is handled.
 On iOS, subscription changes are handled automatically by the App Store.
 
+When `replacementMode` is [IapticReplacementMode.KEEP\_EXISTING](#keep_existing), the
+offer token must not be set (GPBL requirement) — pass an offer with no
+`offerToken` and the change keeps the existing payment schedule.
+
 ###### Parameters
 
 ###### offer
@@ -1281,11 +1285,14 @@ Useful for determining the user's market for pricing, feature gating, or analyti
 - On Android, uses Google Play's BillingConfig API (GPBL 6.1+).
 - On iOS, uses StoreKit 2's storefront API (iOS 16+).
 
+Returns an empty string if the storefront cannot be determined (e.g. the
+Play Store is unavailable); it does not throw.
+
 ###### Returns
 
 `Promise`\<`string`\>
 
-ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP")
+ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP"), or "" if unavailable
 
 ###### Example
 

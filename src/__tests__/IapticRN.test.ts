@@ -514,6 +514,12 @@ describe('IapticRN', () => {
         expect(IAP.getStorefront).toHaveBeenCalled();
         expect(storefront).toBe('US');
       });
+
+      it('returns empty string when the native call fails', async () => {
+        (IAP.getStorefront as jest.Mock).mockRejectedValueOnce(new Error('Play Store unavailable'));
+        const storefront = await iaptic.getStorefront();
+        expect(storefront).toBe('');
+      });
     });
 
     describe('IapticReplacementMode enum', () => {
@@ -531,9 +537,7 @@ describe('IapticRN', () => {
       beforeEach(() => {
         Platform.OS = 'android';
         Object.defineProperty(iaptic.products, 'getType', {
-          value: jest.fn().mockImplementation((productId: string) => {
-            return 'paid subscription';
-          })
+          value: jest.fn().mockReturnValue('paid subscription')
         });
       });
 
@@ -580,6 +584,62 @@ describe('IapticRN', () => {
             replacementModeAndroid: IapticReplacementMode.WITH_TIME_PRORATION,
           })
         );
+      });
+
+      it('drops the offer token for KEEP_EXISTING and routes through order()', async () => {
+        const offer: IapticOffer = {
+          id: 'premium_offer',
+          platform: IapticPurchasePlatform.GOOGLE_PLAY,
+          pricingPhases: [mockPricingPhase],
+          productId: 'premium_monthly',
+          offerType: 'Default',
+          offerToken: 'test_offer_token',
+        };
+        (IAP.requestSubscription as jest.Mock).mockResolvedValueOnce({
+          productId: 'premium_monthly',
+          transactionId: 'test_transaction'
+        });
+
+        await iaptic.changeSubscription(offer, 'old_purchase_token', IapticReplacementMode.KEEP_EXISTING);
+        // With no offerToken, order() takes the plain subscription path (no replacement params)
+        expect(IAP.requestSubscription).toHaveBeenCalledWith({ sku: 'premium_monthly' });
+      });
+
+      it('reports cancellation with PAYMENT_CANCELLED code', async () => {
+        const offer: IapticOffer = {
+          id: 'premium_offer',
+          platform: IapticPurchasePlatform.GOOGLE_PLAY,
+          pricingPhases: [mockPricingPhase],
+          productId: 'premium_monthly',
+          offerType: 'Default',
+          offerToken: 'test_offer_token',
+        };
+        const error = new IAP.PurchaseError('PurchaseError', 'User cancelled', 0, '', IAP.ErrorCode.E_USER_CANCELLED);
+        (IAP.requestSubscription as jest.Mock).mockRejectedValueOnce(error);
+
+        await expect(iaptic.changeSubscription(offer, 'old_purchase_token', IapticReplacementMode.DEFERRED))
+          .rejects.toThrow(expect.objectContaining({
+            name: 'IapticError',
+            code: IapticErrorCode.PAYMENT_CANCELLED,
+          }));
+      });
+
+      it('falls back to order() on iOS', async () => {
+        Platform.OS = 'ios';
+        const offer: IapticOffer = {
+          id: 'premium_offer',
+          platform: IapticPurchasePlatform.APPLE_APPSTORE,
+          pricingPhases: [mockPricingPhase],
+          productId: 'premium_monthly',
+          offerType: 'Default',
+        };
+        (IAP.requestSubscription as jest.Mock).mockResolvedValueOnce({
+          productId: 'premium_monthly',
+          transactionId: 'test_transaction'
+        });
+
+        await iaptic.changeSubscription(offer, 'ignored_on_ios', IapticReplacementMode.WITH_TIME_PRORATION);
+        expect(IAP.requestSubscription).toHaveBeenCalledWith({ sku: 'premium_monthly' });
       });
     });
 

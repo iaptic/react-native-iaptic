@@ -145,6 +145,9 @@ const EN_AU: IapticLocale = {
   ActiveSubscription_Status_Suspended: "Suspended",
 };
 
+/**
+ * Spanish (Spain) locale.
+ */
 const ES: IapticLocale = {
   Error: "Error",
   ProgrammingError: "Error de programación",
@@ -259,6 +262,10 @@ const ES: IapticLocale = {
   SubscriptionView_RestoreProgress: "Procesado {0} de {1} compras",
   ActiveSubscription_Status_Suspended: "Suspendida",
 };
+
+/**
+ * French (France) locale.
+ */
 const FR: IapticLocale = {
   Error: "Erreur",
   ProgrammingError: "Erreur de programmation",

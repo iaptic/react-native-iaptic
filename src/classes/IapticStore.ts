@@ -287,22 +287,42 @@ export class IapticStore {
    * Find the purchase token for the currently owned subscription that would
    * be replaced by the new offer (for subscription upgrades/downgrades on Android).
    *
-   * Looks for the cached native purchase from the iap events processor.
+   * Looks at the cached native purchases from the iap events processor and
+   * selects the best candidate to replace:
+   * - If the offer declares a `productGroup`, only subscriptions in the same
+   *   group are considered (so buying an unrelated subscription doesn't
+   *   accidentally replace an existing one).
+   * - When several candidates match, the most recently purchased one is used
+   *   (instead of an arbitrary iteration-order match), since that is the most
+   *   likely subscription the user intends to change.
+   *
+   * For deterministic behaviour with multiple active subscriptions, prefer the
+   * explicit {@link changeSubscription} method with an explicit purchase token.
    *
    * @param offer - The offer being ordered
    * @returns The purchase token of the old subscription, or undefined
    */
   private findOldPurchaseToken(offer: IapticOffer): string | undefined {
     if (offer.platform !== IapticPurchasePlatform.GOOGLE_PLAY) return undefined;
-    // Find a cached native purchase for a different subscription product
+    let best: IAP.ProductPurchase | IAP.SubscriptionPurchase | undefined;
     for (const [, nativePurchase] of this.iapEventsProcessor.purchases) {
-      if (nativePurchase.productId !== offer.productId && nativePurchase.purchaseToken) {
-        // Verify this product is a subscription and currently owned
-        if (this.products.getType(nativePurchase.productId) === 'paid subscription' && this.owned(nativePurchase.productId)) {
-          logger.info(`Found old subscription purchase token for ${nativePurchase.productId}`);
-          return nativePurchase.purchaseToken;
-        }
+      if (nativePurchase.productId === offer.productId || !nativePurchase.purchaseToken) continue;
+      // Only consider subscriptions that are currently owned
+      if (this.products.getType(nativePurchase.productId) !== 'paid subscription') continue;
+      if (!this.owned(nativePurchase.productId)) continue;
+      // If a product group is declared, only replace within the same group
+      if (offer.productGroup) {
+        const candidateOffer = this.products.get(nativePurchase.productId)?.offers?.[0];
+        if (candidateOffer?.productGroup && candidateOffer.productGroup !== offer.productGroup) continue;
       }
+      // Keep the most recently purchased candidate
+      if (!best || (nativePurchase.transactionDate ?? 0) > (best.transactionDate ?? 0)) {
+        best = nativePurchase;
+      }
+    }
+    if (best) {
+      logger.info(`Found old subscription purchase token for ${best.productId}`);
+      return best.purchaseToken;
     }
     return undefined;
   }
@@ -313,12 +333,22 @@ export class IapticStore {
    * This is the recommended way to handle subscription changes on Android,
    * as it explicitly requires the old purchase token and replacement mode.
    *
-   * On iOS, subscription changes are handled automatically by the App Store
-   * when the user purchases a new subscription in the same group.
+   * **Platform behaviour:**
+   * - On Google Play with an `offerToken`, the change is sent as a replacement
+   *   of `oldPurchaseToken` using `replacementMode`.
+   * - In every other case — iOS, or an Android offer without an `offerToken`
+   *   (e.g. `KEEP_EXISTING`, where the offer token must not be set) — this
+   *   falls back to a plain {@link order}. On iOS the App Store handles the
+   *   change automatically when the new subscription is in the same group.
+   *
+   * **`KEEP_EXISTING`:** when using {@link IapticReplacementMode.KEEP_EXISTING},
+   * the offer token must NOT be set (GPBL requirement). Pass an offer with no
+   * `offerToken`; the call then routes through {@link order} and keeps the
+   * existing payment schedule.
    *
    * @param offer - The offer for the new subscription
    * @param oldPurchaseToken - The purchase token of the current subscription to replace (Android)
-   * @param replacementMode - How the billing transition should be handled (Android)
+   * @param replacementMode - How the billing transition should be handled (Android, default: WITH_TIME_PRORATION)
    *
    * @example Upgrade subscription with immediate proration
    * ```typescript
@@ -350,9 +380,15 @@ export class IapticStore {
    */
   async changeSubscription(offer: IapticOffer, oldPurchaseToken: string, replacementMode?: IapticReplacementMode): Promise<void> {
     logger.info(`changeSubscription(${offer.productId}, oldPurchaseToken: ${oldPurchaseToken}, replacementMode: ${replacementMode})`);
-    // Inject the old purchase token
-    // The order() method will use findOldPurchaseToken from the cache,
-    // but for explicit changes we pass it directly
+
+    // KEEP_EXISTING requires the offer token to be unset (GPBL constraint).
+    if (replacementMode === IapticReplacementMode.KEEP_EXISTING && offer.offerToken) {
+      logger.warn('changeSubscription: KEEP_EXISTING replacement mode requires no offerToken; ignoring the offerToken on this offer.');
+      offer = { ...offer, offerToken: undefined };
+    }
+
+    // The order() method auto-detects an old purchase token from the cache,
+    // but for explicit changes we pass it directly.
     if (offer.platform === IapticPurchasePlatform.GOOGLE_PLAY && offer.offerToken) {
       this.pendingPurchases.add(offer);
       await (new Promise(resolve => setTimeout(resolve, 10)));
@@ -372,14 +408,15 @@ export class IapticStore {
       } catch (err: any) {
         const iapticError = toIapticError(err,
           (err.code === 'E_USER_CANCELLED') ? IapticSeverity.INFO : IapticSeverity.ERROR,
-          IapticErrorCode.SUBSCRIPTION_UPDATE_NOT_AVAILABLE,
+          IapticErrorCode.PURCHASE,
           'Failed to change subscription. Offer: ' + JSON.stringify(offer));
         logger.info('🔄 Subscription change cancelled: ' + JSON.stringify(err));
         this.pendingPurchases.remove(offer.productId, offer.id, 'cancelled');
         throw iapticError;
       }
     } else {
-      // On iOS, subscription changes happen naturally via the App Store
+      // iOS (App Store handles changes automatically) or an Android offer
+      // without an offerToken (e.g. KEEP_EXISTING): route through order().
       await this.order(offer);
     }
   }
@@ -798,9 +835,18 @@ export class IapticStore {
    * - On Android, uses Google Play's BillingConfig API (GPBL 6.1+).
    * - On iOS, uses StoreKit 2's storefront API (iOS 16+).
    *
-   * @returns ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP")
+   * If the native call fails (e.g. Play Store unavailable, no connection),
+   * an empty string is returned rather than throwing — callers can treat an
+   * empty storefront as "unknown".
+   *
+   * @returns ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP"), or "" if unavailable
    */
   async getStorefront(): Promise<string> {
-    return IAP.getStorefront();
+    try {
+      return await IAP.getStorefront();
+    } catch (e: any) {
+      logger.warn('getStorefront failed: ' + (e?.message ?? e));
+      return '';
+    }
   }
 }

@@ -610,6 +610,10 @@ export class IapticRN {
    * replacement mode to define how the billing transition is handled.
    * On iOS, subscription changes are handled automatically by the App Store.
    *
+   * When `replacementMode` is {@link IapticReplacementMode.KEEP_EXISTING}, the
+   * offer token must not be set (GPBL requirement) — pass an offer with no
+   * `offerToken` and the change keeps the existing payment schedule.
+   *
    * @param offer - The offer for the new subscription
    * @param oldPurchaseToken - The purchase token of the current subscription to replace (Android)
    * @param replacementMode - How the billing transition should be handled (Android, default: WITH_TIME_PRORATION)
@@ -734,7 +738,10 @@ export class IapticRN {
    * - On Android, uses Google Play's BillingConfig API (GPBL 6.1+).
    * - On iOS, uses StoreKit 2's storefront API (iOS 16+).
    *
-   * @returns ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP")
+   * Returns an empty string if the storefront cannot be determined (e.g. the
+   * Play Store is unavailable); it does not throw.
+   *
+   * @returns ISO 3166-1 alpha-2 country code (e.g. "US", "DE", "JP"), or "" if unavailable
    *
    * @example
    * ```typescript

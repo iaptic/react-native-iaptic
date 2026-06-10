@@ -54,6 +54,14 @@ IapticRN.addEventListener('subscription.suspended', (purchase) => {
 
 Added `ActiveSubscription_Status_Suspended` locale key to all 7 supported languages (EN, ES, FR, DE, JA, ZH, PT).
 
+### Review feedback addressed
+
+- **`order()` auto-detection is now scoped** — `findOldPurchaseToken()` only replaces a subscription in the same `productGroup` (when declared) and, among multiple candidates, picks the **most recently purchased** one instead of an arbitrary iteration-order match. This avoids accidentally converting a new subscription purchase into a replacement when the user owns several subscriptions.
+- **`changeSubscription()` error code fixed** — cancellation/failure now surfaces `PAYMENT_CANCELLED` / `PURCHASE` instead of the misleading `SUBSCRIPTION_UPDATE_NOT_AVAILABLE`.
+- **`KEEP_EXISTING` is validated** — when `KEEP_EXISTING` is passed with an `offerToken`, the token is dropped (with a warning) and the call routes through `order()`, matching the GPBL requirement that the offer token must not be set.
+- **`getStorefront()` no longer throws** — returns an empty string if the native call fails (e.g. Play Store unavailable).
+- Restored the Spanish/French locale JSDoc headers and documented the `changeSubscription()` Android-without-offerToken fallback path.
+
 ### ⚠️ Fork gaps (require `@iaptic/react-native-iap` v13.0.2+)
 
 | Feature | Fork status | Wrapper status |
