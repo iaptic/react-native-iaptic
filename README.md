@@ -33,6 +33,9 @@ Drop-in subscription paywall and server-validated in-app purchases for **React N
   - [Restore purchases](#restore-purchases)
   - [Event handling](#event-handling)
   - [Feature access control](#feature-access-control)
+  - [Subscription changes (Android)](#subscription-changes-android)
+  - [Storefront detection](#storefront-detection)
+  - [Suspended subscriptions](#suspended-subscriptions)
 - [Manual Purchase Flow](#manual-purchase-flow)
 - [Error Handling](#error-handling)
 - [Troubleshooting](#troubleshooting)
@@ -48,6 +51,9 @@ Drop-in subscription paywall and server-validated in-app purchases for **React N
 
 - 🛒 Unified iOS + Android purchasing API
 - 🔄 Subscription tracking with renewal events
+- 🔄 Subscription change support (`changeSubscription` with all 6 GPBL replacement modes)
+- 🌍 Storefront detection (`getStorefront`)
+- ⏸️ Suspended subscription handling (`isSuspended` / `subscription.suspended`)
 - 🔒 Server-side receipt validation via Iaptic
 - 🎨 Themable drop-in paywall (`IapticSubscriptionView`)
 - 📦 Product catalog with entitlements model
@@ -232,6 +238,49 @@ if (IapticRN.checkEntitlement('premium')) {
 
 // All currently active entitlements
 const unlocked = IapticRN.listEntitlements(); // ['basic', 'premium', 'cool_feature']
+```
+
+### Subscription changes (Android)
+
+On Android, use `changeSubscription` to switch between subscription tiers. Pass one of the six `IapticReplacementMode` values to control proration:
+
+```typescript
+import { IapticRN, IapticReplacementMode } from 'react-native-iaptic';
+
+const newOffer = IapticRN.getProduct('premium_yearly')?.offers[0];
+const currentSub = IapticRN.getActiveSubscription();
+if (newOffer && currentSub?.purchaseToken) {
+  await IapticRN.changeSubscription(
+    newOffer,
+    currentSub.purchaseToken,
+    IapticReplacementMode.WITH_TIME_PRORATION, // default
+  );
+}
+```
+
+Available modes: `WITH_TIME_PRORATION` (1), `CHARGE_PRORATED_PRICE` (2), `WITHOUT_PRORATION` (3), `CHARGE_FULL_PRICE` (4), `DEFERRED` (5), `KEEP_EXISTING` (6). On iOS, `changeSubscription` falls back to a regular `order()`.
+
+### Storefront detection
+
+```typescript
+const storefront = await IapticRN.getStorefront();
+console.log(`User is in ${storefront}`); // e.g. "US", "DE", "JP"
+```
+
+Returns an ISO 3166-1 alpha-2 country code. Uses StoreKit 2 on iOS 16+ and Google Play Billing Library on Android. Returns an empty string if the storefront cannot be determined.
+
+### Suspended subscriptions
+
+On Android, subscriptions can be suspended (paused by the user or on hold due to payment decline). The SDK exposes this through:
+
+- `IapticVerifiedPurchase.isSuspended` — boolean flag on the purchase object
+- The `subscription.suspended` event — fires when a subscription transitions to suspended state
+- `IapticRN.checkEntitlement()` returns `false` for suspended subscriptions
+
+```typescript
+IapticRN.addEventListener('subscription.suspended', (purchase) => {
+  console.log(`Subscription ${purchase.productId} is suspended`);
+});
 ```
 
 ## Manual Purchase Flow
