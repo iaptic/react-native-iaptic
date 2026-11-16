@@ -34,9 +34,12 @@ codes are `E_USER_CANCELLED` / `E_NETWORK_ERROR` / `E_IAP_NOT_AVAILABLE` / `E_UN
 - `options` (RedeemOption values) is reserved for future use — the iOS 27 SDK exposes no
   public value yet, so anything passed today is ignored.
 - Rejects with an `IapticError` on non-iOS platforms.
-- Requires `@iaptic/react-native-iap` 13.1.0+ (which also exports `TransactionSk2` from
-  its package root). The bridge's deprecated `presentCodeRedemptionSheetIOS()` still
-  works and now wraps the same native path, falling back to the legacy StoreKit 1 sheet
+- The peer dependency on `@iaptic/react-native-iap` is bumped to `^13.1.0` — the release
+  calls a method only 13.1.0 provides (with `^13.0.0` an app holding 13.0.x would install
+  cleanly and fail at the first `presentOfferCodeRedeemSheet()` call). 13.1.0 also exports
+  `TransactionSk2` from its package root. The bridge's deprecated
+  `presentCodeRedemptionSheetIOS()` still works and now wraps the same native path, falling
+  back to the legacy StoreKit 1 sheet
   on iOS < 15.
 
 ## 2.1.0
