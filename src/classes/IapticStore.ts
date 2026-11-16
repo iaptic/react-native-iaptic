@@ -1,5 +1,6 @@
 import { Platform, Linking } from "react-native";
-import { getReceiptIOS, ProductPurchase, RedeemOption, TransactionSk2 } from "@iaptic/react-native-iap";
+import { getReceiptIOS } from "@iaptic/react-native-iap";
+import type { ProductPurchase, RedeemOption, TransactionSk2 } from "@iaptic/react-native-iap";
 
 import {
   IapticStoreConfig,
