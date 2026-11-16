@@ -19,10 +19,14 @@ Presents the App Store "Offer Code Redemption" sheet. The redeemed transaction f
 through the usual `purchase.updated` → validation → finish path, exactly like a
 purchase — no new request field, no extra code.
 
-- **iOS 27+**: the promise resolves with the redeemed transaction and rejects on cancel
-  or error, using the bridge's existing error codes (`E_USER_CANCELLED`, `E_NETWORK_ERROR`,
-  `E_IAP_NOT_AVAILABLE`, `E_UNKNOWN`) — an app's existing purchase error handler works
-  unchanged. The error message carries the Apple case name.
+- **iOS 27+**: the promise resolves with the redeemed transaction (the raw StoreKit 2
+  `TransactionSk2`, not the validated `IapticVerifiedPurchase` — validation arrives
+  through `purchase.updated`). Cancel and error rejections are converted to an
+  `IapticError` the same way `order()` converts them, so an app's existing purchase
+  error handler works unchanged: `PAYMENT_CANCELLED` for a user cancel,
+  `COMMUNICATION` / `SUBSCRIPTIONS_NOT_AVAILABLE` / `UNKNOWN` otherwise. The bridge-level
+codes are `E_USER_CANCELLED` / `E_NETWORK_ERROR` / `E_IAP_NOT_AVAILABLE` / `E_UNKNOWN`;
+  the error message carries the Apple case name.
 - **Below iOS 27**: fire-and-forget on the deprecated sheet APIs (decision FOV-511b) —
   the promise resolves once the sheet has been presented and never reports cancel or
   errors (a documented limitation). A successful redemption still arrives through
@@ -30,8 +34,10 @@ purchase — no new request field, no extra code.
 - `options` (RedeemOption values) is reserved for future use — the iOS 27 SDK exposes no
   public value yet, so anything passed today is ignored.
 - Rejects with an `IapticError` on non-iOS platforms.
-- Requires `@iaptic/react-native-iap` 13.1.0+ (the bridge's deprecated
-  `presentCodeRedemptionSheetIOS()` still works and now wraps the same native path).
+- Requires `@iaptic/react-native-iap` 13.1.0+ (which also exports `TransactionSk2` from
+  its package root). The bridge's deprecated `presentCodeRedemptionSheetIOS()` still
+  works and now wraps the same native path, falling back to the legacy StoreKit 1 sheet
+  on iOS < 15.
 
 ## 2.1.0
 

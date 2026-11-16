@@ -534,11 +534,24 @@ describe('IapticRN', () => {
         expect(IAP.presentOfferCodeRedeemSheet).toHaveBeenCalledWith([]);
       });
 
-      it('propagates bridge rejections (existing purchase error codes)', async () => {
-        const cancelError = new Error('Offer code redemption failed: userCancelled');
-        (cancelError as any).code = 'E_USER_CANCELLED';
+      it('converts a bridge cancellation to an IapticError (PAYMENT_CANCELLED), like order() does', async () => {
+        const cancelError = new Error('Offer code redemption failed: userCancelled') as any;
+        cancelError.code = 'E_USER_CANCELLED';
         (IAP.presentOfferCodeRedeemSheet as jest.Mock).mockRejectedValueOnce(cancelError);
-        await expect(iaptic.presentOfferCodeRedeemSheet()).rejects.toMatchObject({ code: 'E_USER_CANCELLED' });
+        await expect(iaptic.presentOfferCodeRedeemSheet()).rejects.toMatchObject({
+          name: 'IapticError',
+          code: IapticErrorCode.PAYMENT_CANCELLED,
+        });
+      });
+
+      it('converts bridge error codes through the standard mapping (E_IAP_NOT_AVAILABLE → SUBSCRIPTIONS_NOT_AVAILABLE)', async () => {
+        const notAvailableError = new Error('Offer code redemption failed: invalidPresentationContext') as any;
+        notAvailableError.code = 'E_IAP_NOT_AVAILABLE';
+        (IAP.presentOfferCodeRedeemSheet as jest.Mock).mockRejectedValueOnce(notAvailableError);
+        await expect(iaptic.presentOfferCodeRedeemSheet()).rejects.toMatchObject({
+          name: 'IapticError',
+          code: IapticErrorCode.SUBSCRIPTIONS_NOT_AVAILABLE,
+        });
       });
 
       it('throws an IapticError on non-iOS platforms', async () => {

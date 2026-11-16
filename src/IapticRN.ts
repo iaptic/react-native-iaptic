@@ -775,9 +775,9 @@ export class IapticRN {
    * Present the App Store "Offer Code Redemption" sheet (iOS only).
    * 
    * On iOS 27 and later the promise resolves with the redeemed transaction and
-   * rejects on cancel or error, using the bridge's existing error codes
-   * (`E_USER_CANCELLED`, `E_NETWORK_ERROR`, `E_IAP_NOT_AVAILABLE`, `E_UNKNOWN`) —
-   * so an app's existing purchase error handler works unchanged.
+   * rejects on cancel or error, converted to an `IapticError` the same way
+   * `order()` converts them — so an app's existing purchase error handler works
+   * unchanged (`PAYMENT_CANCELLED` for a user cancel).
    * 
    * The redeemed transaction also flows through the usual `purchase.updated` →
    * validation path, exactly like a purchase: it gets validated by iaptic and
@@ -798,7 +798,7 @@ export class IapticRN {
    * try {
    *   await IapticRN.presentOfferCodeRedeemSheet();
    * } catch (error) {
-   *   if (error?.code === 'E_USER_CANCELLED') return; // user closed the sheet
+   *   if (error instanceof IapticError && error.code === IapticErrorCode.PAYMENT_CANCELLED) return; // user closed the sheet
    *   // handle other errors like a purchase error
    * }
    * ```

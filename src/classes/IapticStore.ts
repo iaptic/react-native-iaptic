@@ -1,6 +1,5 @@
 import { Platform, Linking } from "react-native";
-import { getReceiptIOS, ProductPurchase } from "@iaptic/react-native-iap";
-import type {TransactionSk2} from "@iaptic/react-native-iap/lib/typescript/src/types/appleSk2";
+import { getReceiptIOS, ProductPurchase, TransactionSk2 } from "@iaptic/react-native-iap";
 
 import {
   IapticStoreConfig,
@@ -854,9 +853,12 @@ export class IapticStore {
   /**
    * Present the App Store "Offer Code Redemption" sheet (iOS only).
    *
-   * On iOS 27 and later the promise resolves with the redeemed transaction and
-   * rejects on cancel or error, using the bridge's existing error codes
-   * (`E_USER_CANCELLED`, `E_NETWORK_ERROR`, `E_IAP_NOT_AVAILABLE`, `E_UNKNOWN`).
+   * On iOS 27 and later the promise resolves with the redeemed transaction.
+   * Cancel and error outcomes are converted to an `IapticError` the same way
+   * `order()` converts them, so an app's existing purchase error handler
+   * works unchanged (`PAYMENT_CANCELLED` for a user cancel, `COMMUNICATION`,
+   * `SUBSCRIPTIONS_NOT_AVAILABLE`, `UNKNOWN` for the other outcomes).
+   *
    * The redeemed transaction also flows through the usual `purchase.updated` →
    * validation → finish path, exactly like a purchase — no new request field.
    *
@@ -879,6 +881,13 @@ export class IapticStore {
         debugMessage: `presentOfferCodeRedeemSheet called on ${Platform.OS}`,
       });
     }
-    return IAP.presentOfferCodeRedeemSheet(options);
+    try {
+      return await IAP.presentOfferCodeRedeemSheet(options);
+    } catch (err: any) {
+      throw toIapticError(err,
+        (err.code === 'E_USER_CANCELLED') ? IapticSeverity.INFO : IapticSeverity.ERROR,
+        IapticErrorCode.PURCHASE,
+        'Failed to redeem an offer code.');
+    }
   }
 }
