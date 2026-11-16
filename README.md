@@ -305,7 +305,7 @@ try {
 
 The transaction is returned as-is (the validated `IapticVerifiedPurchase` is not yet available at that point — it appears in `IapticRN.getPurchases()` once iaptic has validated it). The same transaction is emitted as a `purchase.updated` event, so the handler you use for `order()` covers redemptions too; `checkEntitlement()` then answers correctly.
 
-`options` is an optional array of Apple's `RedeemOption` values. It is reserved: WWDC26 introduced the parameter, but the Xcode 27.2 SDK exposes no public `RedeemOption` value and no initializer, so nothing can be passed yet — the bridge accepts the argument and ignores it.
+`options` is an optional `RedeemOption[]` — Apple's redemption-option values, typed by the bridge (an alias of `string` today). It is reserved: WWDC26 introduced the parameter, but the Xcode 27.2 SDK exposes no public `RedeemOption` value and no initializer, so there is nothing to pass yet — the bridge accepts the argument and ignores it. Omit it or pass `[]`.
 
 The new API requires the StoreKit 2 module (**iOS 15+**) and `@iaptic/react-native-iap` **13.1.0+**, the bridge release that adds the call. Below iOS 15 it rejects with `E_DEVELOPER_ERROR` and no sheet is presented — only the deprecated `presentCodeRedemptionSheetIOS()` still falls back to the legacy StoreKit 1 sheet there. On non-iOS platforms it rejects with an `IapticError` (`SETUP`).
 

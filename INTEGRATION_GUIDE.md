@@ -678,7 +678,7 @@ IapticTheme
 | `consume(p: IapticVerifiedPurchase): Promise<void>` | Consumables only — out of scope here. |
 | `manageSubscriptions(): Promise<void>` | Open platform subscription settings. |
 | `manageBilling(): Promise<void>` | Open platform billing settings. |
-| `presentOfferCodeRedeemSheet(options?: RedeemOption[]): Promise<…>` | Open Apple's offer-code redemption sheet. iOS 27+ resolves with the redeemed transaction (raw StoreKit 2 `TransactionSk2`, also emitted via `purchase.updated`); below iOS 27 it resolves `null` and the sheet is fire-and-forget. `options` is reserved — no `RedeemOption` value exists in the SDK yet. |
+| `presentOfferCodeRedeemSheet(options?: RedeemOption[]): Promise<TransactionSk2 \| null>` | Open Apple's offer-code redemption sheet. iOS 27+ resolves with the redeemed transaction (raw StoreKit 2 `TransactionSk2`, also emitted via `purchase.updated`); below iOS 27 it resolves `null` and the sheet is fire-and-forget. `options` is reserved: `RedeemOption` is the bridge's exported type (an alias of `string` today, with no defined value), so omit it or pass `[]`. |
 | `getStorefront(): Promise<string>` | Returns ISO 3166-1 alpha-2 storefront country code (e.g. `"US"`, `"DE"`). Android: GPBL 6.1+; iOS: StoreKit 2 (iOS 16+). |
 | `changeSubscription(offer, oldPurchaseToken, replacementMode?): Promise<void>` | Switch from one subscription to another (upgrade/downgrade). Android only. |
 | `presentSubscriptionView(): void` | Show the mounted `IapticSubscriptionView`. |
