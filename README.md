@@ -287,7 +287,7 @@ IapticRN.addEventListener('subscription.suspended', (purchase) => {
 
 ### Offer code redemption
 
-Apple offer codes are single-use codes you hand out outside the App Store (campaigns, promotions, a support gesture). The SDK opens the system redemption sheet on iOS/iPadOS 27+, returning the redeemed transaction (the raw StoreKit 2 `TransactionSk2`, `null` below iOS 27):
+Apple offer codes are single-use codes you hand out outside the App Store (campaigns, promotions, a support gesture). The SDK opens the system redemption sheet on iOS/iPadOS; only on iOS 27+ does the promise report the outcome. It returns the redeemed transaction (the raw StoreKit 2 `TransactionSk2`, `null` below iOS 27):
 
 ```typescript
 import { IapticRN, IapticError, IapticErrorCode } from 'react-native-iaptic';
@@ -307,7 +307,9 @@ The transaction is returned as-is (the validated `IapticVerifiedPurchase` is not
 
 `options` is an optional array of Apple's `RedeemOption` values. It is reserved: WWDC26 introduced the parameter, but the Xcode 27.2 SDK exposes no public `RedeemOption` value and no initializer, so nothing can be passed yet — the bridge accepts the argument and ignores it.
 
-On iOS 27+ the sheet reports its outcome; on **iOS 16–26 it is fire-and-forget** — the sheet closes and neither a cancel nor an error is reported, and the promise resolves with `null`. A successful redemption still arrives through `purchase.updated`. That is an Apple API limitation, not something the SDK can work around.
+The new API requires the StoreKit 2 module (**iOS 15+**). Below iOS 15 it rejects with `E_DEVELOPER_ERROR` and no sheet is presented — only the deprecated `presentCodeRedemptionSheetIOS()` still falls back to the legacy StoreKit 1 sheet there. On non-iOS platforms it rejects with an `IapticError` (`SETUP`).
+
+On iOS 27+ the sheet reports its outcome; **below iOS 27 it is fire-and-forget** — the sheet closes and neither a cancel nor an error is reported, and the promise resolves with `null`. A successful redemption still arrives through `purchase.updated`. That is an Apple API limitation, not something the SDK can work around.
 
 Error codes reuse the purchase ones, so an existing purchase error handler works unchanged:
 

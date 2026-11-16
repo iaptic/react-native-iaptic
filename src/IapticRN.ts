@@ -18,7 +18,7 @@ import {
   IapticReplacementMode,
 } from "./types";
 import { subscriptionViewEvents } from './components/SubscriptionView/Modal';
-import type {TransactionSk2} from "@iaptic/react-native-iap/lib/typescript/src/types/appleSk2";
+import type {RedeemOption, TransactionSk2} from "@iaptic/react-native-iap";
 
 /**
  * Configuration for Iaptic React Native SDK
@@ -803,7 +803,7 @@ export class IapticRN {
    * }
    * ```
    */
-  static async presentOfferCodeRedeemSheet(options?: string[]): Promise<TransactionSk2 | null> {
+  static async presentOfferCodeRedeemSheet(options?: RedeemOption[]): Promise<TransactionSk2 | null> {
     await IapticRN.waitForStore();
     return IapticRN.getStore().presentOfferCodeRedeemSheet(options);
   }

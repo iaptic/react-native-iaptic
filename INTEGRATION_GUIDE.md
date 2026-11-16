@@ -533,7 +533,7 @@ try {
 }
 ```
 
-The redeemed transaction is returned as-is (the validated `IapticVerifiedPurchase` appears via `purchase.updated` and `IapticRN.getPurchases()` once iaptic has validated it), so `checkEntitlement()` reflects it without extra handling. Its optional `options` argument (Apple `RedeemOption` values) is reserved — no value exists in the SDK yet. Offer codes work with consumables, non-consumables, auto-renewable and non-renewing subscriptions. See [README → Offer code redemption](./README.md#offer-code-redemption) for the error-code mapping.
+The redeemed transaction is returned as-is (the validated `IapticVerifiedPurchase` appears via `purchase.updated` and `IapticRN.getPurchases()` once iaptic has validated it), so `checkEntitlement()` reflects it without extra handling. Outcomes are only reported on iOS 27+; below that the call is fire-and-forget. The API needs the StoreKit 2 module (iOS 15+); below iOS 15 it rejects with `E_DEVELOPER_ERROR` and only the deprecated `presentCodeRedemptionSheetIOS()` falls back to the legacy StoreKit 1 sheet. On non-iOS platforms it rejects with an `IapticError` (`SETUP`). Its optional `options` argument (Apple `RedeemOption` values) is reserved — no value exists in the SDK yet. Offer codes work with consumables, non-consumables, auto-renewable and non-renewing subscriptions. See [README → Offer code redemption](./README.md#offer-code-redemption) for the error-code mapping.
 
 Each `IapticProduct` exposes `offers: IapticOffer[]`, and each offer has `pricingPhases` describing intro pricing, free trials, and the full price. For a single-tier monthly subscription you typically have one product with one offer.
 

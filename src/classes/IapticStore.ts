@@ -1,5 +1,5 @@
 import { Platform, Linking } from "react-native";
-import { getReceiptIOS, ProductPurchase, TransactionSk2 } from "@iaptic/react-native-iap";
+import { getReceiptIOS, ProductPurchase, RedeemOption, TransactionSk2 } from "@iaptic/react-native-iap";
 
 import {
   IapticStoreConfig,
@@ -871,7 +871,7 @@ export class IapticStore {
    * @param options RedeemOption values, reserved for future use (default: none).
    * @returns The redeemed transaction on iOS 27+, `null` below.
    */
-  async presentOfferCodeRedeemSheet(options: string[] = []): Promise<TransactionSk2 | null> {
+  async presentOfferCodeRedeemSheet(options: RedeemOption[] = []): Promise<TransactionSk2 | null> {
     if (Platform.OS !== 'ios') {
       throw new IapticError('presentOfferCodeRedeemSheet is only available on iOS', {
         severity: IapticSeverity.ERROR,
