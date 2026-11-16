@@ -89,6 +89,7 @@ jest.mock('@iaptic/react-native-iap', () => {
       E_STORE_BLOCKED: 'E_STORE_BLOCKED'
     },
     getStorefront: jest.fn().mockResolvedValue('US'),
+    presentOfferCodeRedeemSheet: jest.fn().mockResolvedValue(null),
   };
 });
 
@@ -519,6 +520,41 @@ describe('IapticRN', () => {
         (IAP.getStorefront as jest.Mock).mockRejectedValueOnce(new Error('Play Store unavailable'));
         const storefront = await iaptic.getStorefront();
         expect(storefront).toBe('');
+      });
+    });
+
+    describe('presentOfferCodeRedeemSheet', () => {
+      it('calls the bridge with the given options', async () => {
+        await iaptic.presentOfferCodeRedeemSheet(['someOption']);
+        expect(IAP.presentOfferCodeRedeemSheet).toHaveBeenCalledWith(['someOption']);
+      });
+
+      it('defaults to no options', async () => {
+        await iaptic.presentOfferCodeRedeemSheet();
+        expect(IAP.presentOfferCodeRedeemSheet).toHaveBeenCalledWith([]);
+      });
+
+      it('propagates bridge rejections (existing purchase error codes)', async () => {
+        const cancelError = new Error('Offer code redemption failed: userCancelled');
+        (cancelError as any).code = 'E_USER_CANCELLED';
+        (IAP.presentOfferCodeRedeemSheet as jest.Mock).mockRejectedValueOnce(cancelError);
+        await expect(iaptic.presentOfferCodeRedeemSheet()).rejects.toMatchObject({ code: 'E_USER_CANCELLED' });
+      });
+
+      it('throws an IapticError on non-iOS platforms', async () => {
+        Platform.OS = 'android';
+        await expect(iaptic.presentOfferCodeRedeemSheet()).rejects.toMatchObject({
+          name: 'IapticError',
+          code: IapticErrorCode.SETUP,
+        });
+        expect(IAP.presentOfferCodeRedeemSheet).not.toHaveBeenCalled();
+      });
+
+      it('is exposed as IapticRN.presentOfferCodeRedeemSheet', async () => {
+        (IAP.presentOfferCodeRedeemSheet as jest.Mock).mockResolvedValueOnce({ transactionId: '200000123456789' });
+        const transaction = await IapticRN.presentOfferCodeRedeemSheet();
+        expect(IAP.presentOfferCodeRedeemSheet).toHaveBeenCalledWith([]);
+        expect(transaction).toMatchObject({ transactionId: '200000123456789' });
       });
     });
 

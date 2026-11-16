@@ -1,5 +1,6 @@
 import { Platform, Linking } from "react-native";
 import { getReceiptIOS, ProductPurchase } from "@iaptic/react-native-iap";
+import type {TransactionSk2} from "@iaptic/react-native-iap/lib/typescript/src/types/appleSk2";
 
 import {
   IapticStoreConfig,
@@ -848,5 +849,36 @@ export class IapticStore {
       logger.warn('getStorefront failed: ' + (e?.message ?? e));
       return '';
     }
+  }
+
+  /**
+   * Present the App Store "Offer Code Redemption" sheet (iOS only).
+   *
+   * On iOS 27 and later the promise resolves with the redeemed transaction and
+   * rejects on cancel or error, using the bridge's existing error codes
+   * (`E_USER_CANCELLED`, `E_NETWORK_ERROR`, `E_IAP_NOT_AVAILABLE`, `E_UNKNOWN`).
+   * The redeemed transaction also flows through the usual `purchase.updated` →
+   * validation → finish path, exactly like a purchase — no new request field.
+   *
+   * Below iOS 27 the call is fire-and-forget on the deprecated sheet APIs: the
+   * promise resolves once the sheet has been presented and never reports cancel
+   * or errors (a documented limitation).
+   *
+   * On non-iOS platforms this rejects with an `IapticError`.
+   *
+   * @param options RedeemOption values, reserved for future use (default: none).
+   * @returns The redeemed transaction on iOS 27+, `null` below.
+   */
+  async presentOfferCodeRedeemSheet(options: string[] = []): Promise<TransactionSk2 | null> {
+    if (Platform.OS !== 'ios') {
+      throw new IapticError('presentOfferCodeRedeemSheet is only available on iOS', {
+        severity: IapticSeverity.ERROR,
+        code: IapticErrorCode.SETUP,
+        localizedTitle: Locales.get('ProgrammingError'),
+        localizedMessage: 'presentOfferCodeRedeemSheet is only available on iOS',
+        debugMessage: `presentOfferCodeRedeemSheet called on ${Platform.OS}`,
+      });
+    }
+    return IAP.presentOfferCodeRedeemSheet(options);
   }
 }

@@ -54,6 +54,7 @@ Drop-in subscription paywall and server-validated in-app purchases for **React N
 - 🔄 Subscription tracking with renewal events
 - 🔄 Subscription change support (`changeSubscription` with all 6 GPBL replacement modes)
 - 🌍 Storefront detection (`getStorefront`)
+- 🎟️ Offer code redemption (`presentOfferCodeRedeemSheet`, iOS 27+)
 - ⏸️ Suspended subscription handling (`isSuspended` / `subscription.suspended`)
 - 🔒 Server-side receipt validation via Iaptic
 - 🎨 Themable drop-in paywall (`IapticSubscriptionView`)
@@ -269,6 +270,21 @@ console.log(`User is in ${storefront}`); // e.g. "US", "DE", "JP"
 ```
 
 Returns an ISO 3166-1 alpha-2 country code. Uses StoreKit 2 on iOS 16+ and Google Play Billing Library on Android. Returns an empty string if the storefront cannot be determined.
+
+### Offer code redemption
+
+Present the App Store "Offer Code Redemption" sheet so users can redeem subscription offer codes configured in App Store Connect:
+
+```typescript
+try {
+  await IapticRN.presentOfferCodeRedeemSheet();
+} catch (error) {
+  if (error?.code === 'E_USER_CANCELLED') return; // user closed the sheet
+  // handle other errors like a purchase error
+}
+```
+
+The redeemed transaction flows through the usual `purchase.updated` → validation → finish path, exactly like a purchase — no extra code. On iOS 27+ the promise resolves with the transaction and rejects with the bridge's existing error codes on cancel or error; below iOS 27 it is fire-and-forget (the promise resolves once the sheet is presented, and cancel or errors are not reported — a documented limitation). Requires `@iaptic/react-native-iap` 13.1.0+. iOS only.
 
 ### Suspended subscriptions
 

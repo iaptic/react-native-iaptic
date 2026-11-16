@@ -18,6 +18,7 @@ import {
   IapticReplacementMode,
 } from "./types";
 import { subscriptionViewEvents } from './components/SubscriptionView/Modal';
+import type {TransactionSk2} from "@iaptic/react-native-iap/lib/typescript/src/types/appleSk2";
 
 /**
  * Configuration for Iaptic React Native SDK
@@ -768,6 +769,43 @@ export class IapticRN {
   static async manageBilling() {
     await IapticRN.waitForStore();
     return IapticRN.getStore().manageBilling();
+  }
+
+  /**
+   * Present the App Store "Offer Code Redemption" sheet (iOS only).
+   * 
+   * On iOS 27 and later the promise resolves with the redeemed transaction and
+   * rejects on cancel or error, using the bridge's existing error codes
+   * (`E_USER_CANCELLED`, `E_NETWORK_ERROR`, `E_IAP_NOT_AVAILABLE`, `E_UNKNOWN`) —
+   * so an app's existing purchase error handler works unchanged.
+   * 
+   * The redeemed transaction also flows through the usual `purchase.updated` →
+   * validation path, exactly like a purchase: it gets validated by iaptic and
+   * finished by the SDK (for non-consumables and subscriptions) with no extra
+   * code and no new request field.
+   * 
+   * Below iOS 27 the call is fire-and-forget on the deprecated sheet APIs: the
+   * promise resolves once the sheet has been presented and never reports cancel
+   * or errors (a documented limitation). A successful redemption still arrives
+   * through `purchase.updated`.
+   * 
+   * Rejects with an `IapticError` on non-iOS platforms.
+   * 
+   * @param options RedeemOption values, reserved for future use (default: none).
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   await IapticRN.presentOfferCodeRedeemSheet();
+   * } catch (error) {
+   *   if (error?.code === 'E_USER_CANCELLED') return; // user closed the sheet
+   *   // handle other errors like a purchase error
+   * }
+   * ```
+   */
+  static async presentOfferCodeRedeemSheet(options?: string[]): Promise<TransactionSk2 | null> {
+    await IapticRN.waitForStore();
+    return IapticRN.getStore().presentOfferCodeRedeemSheet(options);
   }
 
   /**
