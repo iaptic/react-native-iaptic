@@ -36,6 +36,7 @@ Drop-in subscription paywall and server-validated in-app purchases for **React N
   - [Subscription changes (Android)](#subscription-changes-android)
   - [Storefront detection](#storefront-detection)
   - [Suspended subscriptions](#suspended-subscriptions)
+  - [Offer code redemption](#offer-code-redemption)
 - [Manual Purchase Flow](#manual-purchase-flow)
 - [Error Handling](#error-handling)
 - [Troubleshooting](#troubleshooting)
@@ -53,6 +54,7 @@ Drop-in subscription paywall and server-validated in-app purchases for **React N
 - 🔄 Subscription tracking with renewal events
 - 🔄 Subscription change support (`changeSubscription` with all 6 GPBL replacement modes)
 - 🌍 Storefront detection (`getStorefront`)
+- 🎟️ Offer code redemption (`presentOfferCodeRedeemSheet`, iOS 27+)
 - ⏸️ Suspended subscription handling (`isSuspended` / `subscription.suspended`)
 - 🔒 Server-side receipt validation via Iaptic
 - 🎨 Themable drop-in paywall (`IapticSubscriptionView`)
@@ -282,6 +284,49 @@ IapticRN.addEventListener('subscription.suspended', (purchase) => {
   console.log(`Subscription ${purchase.productId} is suspended`);
 });
 ```
+
+### Offer code redemption
+
+Apple offer codes are single-use codes you hand out outside the App Store (campaigns, promotions, a support gesture). The SDK opens the system redemption sheet on iOS/iPadOS; only on iOS 27+ does the promise report the outcome. It returns the redeemed transaction (the raw StoreKit 2 `TransactionSk2`, `null` below iOS 27):
+
+```typescript
+import { IapticRN, IapticError, IapticErrorCode } from 'react-native-iaptic';
+
+try {
+  const transaction = await IapticRN.presentOfferCodeRedeemSheet();
+  // iOS 27+: the redeemed transaction (raw StoreKit 2 TransactionSk2, null below)
+} catch (error) {
+  if (error instanceof IapticError && error.code === IapticErrorCode.PAYMENT_CANCELLED) {
+    return; // user closed the sheet
+  }
+  showError(error);
+}
+```
+
+The transaction is returned as-is (the validated `IapticVerifiedPurchase` is not yet available at that point — it appears in `IapticRN.getPurchases()` once iaptic has validated it). The same transaction is emitted as a `purchase.updated` event, so the handler you use for `order()` covers redemptions too; `checkEntitlement()` then answers correctly.
+
+`options` is an optional array of Apple's `RedeemOption` values. It is reserved: WWDC26 introduced the parameter, but the Xcode 27.2 SDK exposes no public `RedeemOption` value and no initializer, so nothing can be passed yet — the bridge accepts the argument and ignores it.
+
+The new API requires the StoreKit 2 module (**iOS 15+**) and `@iaptic/react-native-iap` **13.1.0+**, the bridge release that adds the call. Below iOS 15 it rejects with `E_DEVELOPER_ERROR` and no sheet is presented — only the deprecated `presentCodeRedemptionSheetIOS()` still falls back to the legacy StoreKit 1 sheet there. On non-iOS platforms it rejects with an `IapticError` (`SETUP`).
+
+On iOS 27+ the sheet reports its outcome; **below iOS 27 it is fire-and-forget** — the sheet closes and neither a cancel nor an error is reported, and the promise resolves with `null`. A successful redemption still arrives through `purchase.updated`. That is an Apple API limitation, not something the SDK can work around.
+
+Error codes reuse the purchase ones, so an existing purchase error handler works unchanged:
+
+| StoreKit outcome | Bridge error code | `IapticError.code` |
+|---|---|---|
+| `.userCancelled` | `E_USER_CANCELLED` | `PAYMENT_CANCELLED` |
+| `.networkError` | `E_NETWORK_ERROR` | `COMMUNICATION` |
+| `.notEntitled`, `.notAvailableInStorefront`, `.unsupported`, `.invalidPresentationContext` | `E_IAP_NOT_AVAILABLE` | `SUBSCRIPTIONS_NOT_AVAILABLE` |
+| `.systemError`, `.unknown`, unverified transaction | `E_UNKNOWN` | `UNKNOWN` |
+
+`invalidPresentationContext` (new in iOS 27, absent from the locked plan table) is mapped to `E_IAP_NOT_AVAILABLE` / `SUBSCRIPTIONS_NOT_AVAILABLE`: it means the sheet could not be presented in this context — not a user outcome. The message carries Apple's case name (e.g. `notAvailableInStorefront`).
+
+`IapticErrorCode.SUBSCRIPTIONS_NOT_AVAILABLE` is the historical name for the bridge's `E_IAP_NOT_AVAILABLE`, and `order()` maps it the same way — it is not subscription-specific, and a one-time product can land there. The localized message is the generic "In-app purchases are not available.", while the bridge code and Apple's case name stay readable in `localizedTitle` and `message`.
+
+If you were calling the bridge's `presentCodeRedemptionSheetIOS()` directly, move to `IapticRN.presentOfferCodeRedeemSheet()`: the old call remains as a deprecated wrapper that ignores the result.
+
+Nothing changes on the iaptic side — the redeemed transaction is validated like any other purchase, and the offer-code reference lands in `discountId`.
 
 ## Manual Purchase Flow
 

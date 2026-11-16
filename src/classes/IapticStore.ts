@@ -1,5 +1,6 @@
 import { Platform, Linking } from "react-native";
-import { getReceiptIOS, ProductPurchase } from "@iaptic/react-native-iap";
+import { getReceiptIOS } from "@iaptic/react-native-iap";
+import type { ProductPurchase, RedeemOption, TransactionSk2 } from "@iaptic/react-native-iap";
 
 import {
   IapticStoreConfig,
@@ -847,6 +848,47 @@ export class IapticStore {
     } catch (e: any) {
       logger.warn('getStorefront failed: ' + (e?.message ?? e));
       return '';
+    }
+  }
+
+  /**
+   * Present the App Store "Offer Code Redemption" sheet (iOS only).
+   *
+   * On iOS 27 and later the promise resolves with the redeemed transaction.
+   * Cancel and error outcomes are converted to an `IapticError` the same way
+   * `order()` converts them, so an app's existing purchase error handler
+   * works unchanged (`PAYMENT_CANCELLED` for a user cancel, `COMMUNICATION`,
+   * `SUBSCRIPTIONS_NOT_AVAILABLE`, `UNKNOWN` for the other outcomes).
+   *
+   * The redeemed transaction also flows through the usual `purchase.updated` →
+   * validation → finish path, exactly like a purchase — no new request field.
+   *
+   * Below iOS 27 the call is fire-and-forget on the deprecated sheet APIs: the
+   * promise resolves once the sheet has been presented and never reports cancel
+   * or errors (a documented limitation).
+   *
+   * On non-iOS platforms this rejects with an `IapticError`.
+   *
+   * @param options RedeemOption values, reserved for future use (default: none).
+   * @returns The redeemed transaction on iOS 27+, `null` below.
+   */
+  async presentOfferCodeRedeemSheet(options: RedeemOption[] = []): Promise<TransactionSk2 | null> {
+    if (Platform.OS !== 'ios') {
+      throw new IapticError('presentOfferCodeRedeemSheet is only available on iOS', {
+        severity: IapticSeverity.ERROR,
+        code: IapticErrorCode.SETUP,
+        localizedTitle: Locales.get('ProgrammingError'),
+        localizedMessage: 'presentOfferCodeRedeemSheet is only available on iOS',
+        debugMessage: `presentOfferCodeRedeemSheet called on ${Platform.OS}`,
+      });
+    }
+    try {
+      return await IAP.presentOfferCodeRedeemSheet(options);
+    } catch (err: any) {
+      throw toIapticError(err,
+        (err.code === 'E_USER_CANCELLED') ? IapticSeverity.INFO : IapticSeverity.ERROR,
+        IapticErrorCode.PURCHASE,
+        'Failed to redeem an offer code.');
     }
   }
 }

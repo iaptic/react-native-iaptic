@@ -1,5 +1,47 @@
 # Release Notes
 
+## 2.2.0
+
+Offer code redemption on iOS, via `@iaptic/react-native-iap@13.1.0` (iOS 27 result-based StoreKit API).
+
+### New: `presentOfferCodeRedeemSheet()`
+
+```typescript
+try {
+  await IapticRN.presentOfferCodeRedeemSheet();
+} catch (error) {
+  if (error?.code === 'E_USER_CANCELLED') return; // user closed the sheet
+  // handle other errors like a purchase error
+}
+```
+
+Presents the App Store "Offer Code Redemption" sheet. The redeemed transaction flows
+through the usual `purchase.updated` → validation → finish path, exactly like a
+purchase — no new request field, no extra code.
+
+- **iOS 27+**: the promise resolves with the redeemed transaction (the raw StoreKit 2
+  `TransactionSk2`, not the validated `IapticVerifiedPurchase` — validation arrives
+  through `purchase.updated`). Cancel and error rejections are converted to an
+  `IapticError` the same way `order()` converts them, so an app's existing purchase
+  error handler works unchanged: `PAYMENT_CANCELLED` for a user cancel,
+  `COMMUNICATION` / `SUBSCRIPTIONS_NOT_AVAILABLE` / `UNKNOWN` otherwise. The bridge-level
+codes are `E_USER_CANCELLED` / `E_NETWORK_ERROR` / `E_IAP_NOT_AVAILABLE` / `E_UNKNOWN`;
+  the error message carries the Apple case name.
+- **Below iOS 27**: fire-and-forget on the deprecated sheet APIs (decision FOV-511b) —
+  the promise resolves once the sheet has been presented and never reports cancel or
+  errors (a documented limitation). A successful redemption still arrives through
+  `purchase.updated`.
+- `options` (RedeemOption values) is reserved for future use — the iOS 27 SDK exposes no
+  public value yet, so anything passed today is ignored.
+- Rejects with an `IapticError` on non-iOS platforms.
+- The peer dependency on `@iaptic/react-native-iap` is bumped to `^13.1.0` — the release
+  calls a method only 13.1.0 provides (with `^13.0.0` an app holding 13.0.x would install
+  cleanly and fail at the first `presentOfferCodeRedeemSheet()` call). 13.1.0 also exports
+  `TransactionSk2` from its package root. The bridge's deprecated
+  `presentCodeRedemptionSheetIOS()` still works and now wraps the same native path, falling
+  back to the legacy StoreKit 1 sheet
+  on iOS < 15.
+
 ## 2.1.0
 
 Value-add features on top of the GPBL V9 migration, leveraging Google Play Billing Library V8/V9 capabilities.

@@ -518,6 +518,23 @@ IapticRN.manageSubscriptions();   // App Store / Play Store subscription setting
 IapticRN.manageBilling();         // platform billing settings
 ```
 
+To let the user redeem an Apple offer code (a single-use code handed out outside the App Store), open the system redemption sheet:
+
+```typescript
+try {
+  const transaction = await IapticRN.presentOfferCodeRedeemSheet();
+  // iOS 27+: the redeemed transaction (raw StoreKit 2 TransactionSk2); below
+  // iOS 27 this resolves with null.
+} catch (error) {
+  // iOS 27+ only: an IapticError like from order() — PAYMENT_CANCELLED when
+  // the user closes the sheet, the other purchase error codes otherwise.
+  // Below iOS 27 the sheet reports nothing.
+  iapService.showError(error as Error);
+}
+```
+
+The redeemed transaction is returned as-is (the validated `IapticVerifiedPurchase` appears via `purchase.updated` and `IapticRN.getPurchases()` once iaptic has validated it), so `checkEntitlement()` reflects it without extra handling. Outcomes are only reported on iOS 27+; below that the call is fire-and-forget. The API needs the StoreKit 2 module (iOS 15+); below iOS 15 it rejects with `E_DEVELOPER_ERROR` and only the deprecated `presentCodeRedemptionSheetIOS()` falls back to the legacy StoreKit 1 sheet. On non-iOS platforms it rejects with an `IapticError` (`SETUP`). Its optional `options` argument (Apple `RedeemOption` values) is reserved — no value exists in the SDK yet. Offer codes work with consumables, non-consumables, auto-renewable and non-renewing subscriptions. See [README → Offer code redemption](./README.md#offer-code-redemption) for the error-code mapping.
+
 Each `IapticProduct` exposes `offers: IapticOffer[]`, and each offer has `pricingPhases` describing intro pricing, free trials, and the full price. For a single-tier monthly subscription you typically have one product with one offer.
 
 ---
@@ -661,6 +678,7 @@ IapticTheme
 | `consume(p: IapticVerifiedPurchase): Promise<void>` | Consumables only — out of scope here. |
 | `manageSubscriptions(): Promise<void>` | Open platform subscription settings. |
 | `manageBilling(): Promise<void>` | Open platform billing settings. |
+| `presentOfferCodeRedeemSheet(options?: RedeemOption[]): Promise<…>` | Open Apple's offer-code redemption sheet. iOS 27+ resolves with the redeemed transaction (raw StoreKit 2 `TransactionSk2`, also emitted via `purchase.updated`); below iOS 27 it resolves `null` and the sheet is fire-and-forget. `options` is reserved — no `RedeemOption` value exists in the SDK yet. |
 | `getStorefront(): Promise<string>` | Returns ISO 3166-1 alpha-2 storefront country code (e.g. `"US"`, `"DE"`). Android: GPBL 6.1+; iOS: StoreKit 2 (iOS 16+). |
 | `changeSubscription(offer, oldPurchaseToken, replacementMode?): Promise<void>` | Switch from one subscription to another (upgrade/downgrade). Android only. |
 | `presentSubscriptionView(): void` | Show the mounted `IapticSubscriptionView`. |
