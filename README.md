@@ -286,40 +286,40 @@ IapticRN.addEventListener('subscription.suspended', (purchase) => {
 
 ### Offer code redemption
 
-Apple offer codes are single-use codes you hand out outside the App Store (campaigns, promotions, a support gesture). The SDK opens the system redemption sheet on iOS/iPadOS 27+, returning the redeemed purchase the way `requestPurchase` returns one:
+Apple offer codes are single-use codes you hand out outside the App Store (campaigns, promotions, a support gesture). The SDK opens the system redemption sheet on iOS/iPadOS 27+, returning the redeemed transaction the way `requestPurchase` returns one:
 
 ```typescript
-import { IapticRN, IapticError, IapticErrorCode } from 'react-native-iaptic';
+import { IapticRN } from 'react-native-iaptic';
 
 try {
-  const purchase = await IapticRN.presentOfferCodeRedeemSheet();
-  // iOS 27+: the redeemed purchase (also emitted as `purchase.updated`)
-} catch (error) {
-  if (error instanceof IapticError && error.code === IapticErrorCode.PAYMENT_CANCELLED) {
-    return; // user closed the sheet
-  }
+  const transaction = await IapticRN.presentOfferCodeRedeemSheet();
+  // iOS 27+: the redeemed StoreKit transaction; null below iOS 27.
+  // The validated purchase arrives as `purchase.updated`, like any purchase.
+} catch (error: any) {
+  if (error?.code === 'E_USER_CANCELLED') return; // user closed the sheet
+  // other codes: E_NETWORK_ERROR, E_IAP_NOT_AVAILABLE, E_UNKNOWN
   showError(error);
 }
 ```
 
-<!-- TODO(FOV-2767): confirm with RNPGD the resolved type at SDK level (IapticVerifiedPurchase vs. the raw bridge TransactionSk2 vs. undefined until validation) and adjust the snippet. Bridge level is settled: presentOfferCodeRedeemSheet(options: RedeemOption[] = []) => Promise<TransactionSk2 | null>. -->
+Requires `@iaptic/react-native-iap` 13.1.0+. iOS only — on Android the call rejects with an `IapticError` (`code: IapticErrorCode.SETUP`).
 
-The purchase is returned **and** emitted as a `purchase.updated` event once iaptic has validated it, so the handler you use for `order()` covers redemptions too; `checkEntitlement()` then answers correctly.
+The redeemed transaction arrives **both** as the return value and as a `purchase.updated` event, which is then validated by iaptic and finished by the SDK for non-consumables and subscriptions. So the handler you use for `order()` covers redemptions too, and `checkEntitlement()` answers correctly.
 
 `options` is an optional array of Apple's `RedeemOption` values. It is reserved: WWDC26 introduced the parameter, but the Xcode 27.2 SDK exposes no public `RedeemOption` value and no initializer, so nothing can be passed yet — the bridge accepts the argument and ignores it.
 
-On iOS 27+ the sheet reports its outcome; on **iOS 16–26 it is fire-and-forget** — the sheet closes and neither a cancel nor an error is reported, and the promise resolves with `null`. A successful redemption still arrives through `purchase.updated`. That is an Apple API limitation, not something the SDK can work around.
+Below iOS 27 the sheet is fire-and-forget: the promise resolves with `null` and neither a cancel nor an error is reported. A successful redemption still arrives through `purchase.updated`. That is an Apple API limitation, not something the SDK can work around.
 
-Error codes reuse the purchase ones, so an existing purchase error handler works unchanged:
+Error codes reuse the bridge's purchase error codes, so an existing purchase error handler works unchanged. Note that this call rejects with the bridge error itself — unlike `order()`, which wraps it into an `IapticError`:
 
-| StoreKit outcome | Bridge error code | `IapticError.code` |
-|---|---|---|
-| `.userCancelled` | `E_USER_CANCELLED` | `PAYMENT_CANCELLED` |
-| `.networkError` | `E_NETWORK_ERROR` | `COMMUNICATION` |
-| `.notEntitled`, `.notAvailableInStorefront`, `.unsupported` | `E_IAP_NOT_AVAILABLE` | `PAYMENT_NOT_ALLOWED` |
-| `.systemError`, `.unknown`, unverified transaction | `E_UNKNOWN` | `UNKNOWN` |
+| StoreKit outcome | `error.code` you catch |
+|---|---|
+| `.userCancelled` | `E_USER_CANCELLED` |
+| `.networkError` | `E_NETWORK_ERROR` |
+| `.notEntitled`, `.notAvailableInStorefront`, `.unsupported` | `E_IAP_NOT_AVAILABLE` |
+| `.systemError`, `.unknown`, unverified transaction | `E_UNKNOWN` |
 
-`invalidPresentationContext` (new in iOS 27) also lands on `E_UNKNOWN` / `UNKNOWN`: it means the sheet could not be presented — a bug in the app, not a user outcome. The message carries Apple's case name (e.g. `notAvailableInStorefront`).
+`invalidPresentationContext` (new in iOS 27) also lands on `E_UNKNOWN`: it means the sheet could not be presented — a bug in the app, not a user outcome. The message carries Apple's case name (e.g. `notAvailableInStorefront`).
 
 If you were calling the bridge's `presentCodeRedemptionSheetIOS()` directly, move to `IapticRN.presentOfferCodeRedeemSheet()`: the old call remains as a deprecated wrapper that ignores the result.
 
